@@ -6,12 +6,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = new DocumentBuilder()
     .setTitle('ComZone APIs')
-    .setDescription("List of APIs for ComZone's Developers.")
+    .setDescription("List of APIs for ComZone's developers.")
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
+  app.enableCors();
   await app.listen(3000);
 }
 bootstrap();
