@@ -2,19 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Todo } from '../../entities/todos.entity';
 import { Repository } from 'typeorm';
+import { BaseService } from 'src/common/service.base';
 
 @Injectable()
-export class TodosService {
+export class TodosService extends BaseService<Todo> {
   constructor(
     @InjectRepository(Todo) private readonly todoRepository: Repository<Todo>,
-  ) {}
-
-  async getAllTodos() {
-    return await this.todoRepository.find();
+  ) {
+    super(todoRepository);
   }
 
-  async createNewTodo(data: { title: string }) {
-    const todo = this.todoRepository.create(data);
-    return await this.todoRepository.save(todo);
+  async getTodoByTitle(title: string) {
+    return await this.todoRepository.find({
+      where: {
+        title: title,
+      },
+    });
   }
 }
