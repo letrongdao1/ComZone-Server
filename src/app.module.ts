@@ -6,6 +6,7 @@ import { join } from 'path';
 import { TodosModule } from './modules/todos/todos.module';
 import { AuthModule } from './modules/authentication/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { FileUploadModule } from './modules/file-upload/file-upload.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UsersModule } from './modules/users/users.module';
     TodosModule,
     AuthModule,
     UsersModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [],
