@@ -1,5 +1,6 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { Comic } from './comics.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -17,4 +18,7 @@ export class User extends BaseEntity {
 
   @Column()
   fullName: string;
+
+  @OneToMany(() => Comic, (comic) => comic.sellerId)
+  comics: Comic[];
 }

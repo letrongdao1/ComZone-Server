@@ -7,6 +7,8 @@ import { TodosModule } from './modules/todos/todos.module';
 import { AuthModule } from './modules/authentication/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
+import { ComicModule } from './modules/comics/comics.module';
+import { GenreModule } from './modules/genres/genre.module';
 
 @Module({
   imports: [
@@ -27,7 +29,9 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
     }),
     TodosModule,
     AuthModule,
+    ComicModule,
     UsersModule,
+    GenreModule,
     FileUploadModule,
   ],
   controllers: [AppController],
