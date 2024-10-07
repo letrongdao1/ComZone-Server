@@ -15,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(email: string, password: string, fullName: string) {
+  async register(email: string, password: string, name: string) {
     const checkEmail = await this.usersService.findAccountByEmail(email);
     if (checkEmail) {
       throw new ConflictException(
@@ -29,7 +29,7 @@ export class AuthService {
         metadata: await this.usersService.create({
           email,
           password: hashed,
-          fullName,
+          name,
         }),
       };
     }
