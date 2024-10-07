@@ -1,7 +1,9 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Comic } from './comics.entity';
+import { Role } from './roles.entity';
 
-@Entity({ name: 'users' })
+@Entity('users')
 export class User extends BaseEntity {
   @Column({
     name: 'email',
@@ -32,13 +34,8 @@ export class User extends BaseEntity {
   })
   phone: string;
 
-  @Column({
-    name: 'role',
-    type: 'enum',
-    enum: ['MEMBER', 'SELLER', 'MODERATOR', 'ADMIN'],
-    default: 'MEMBER',
-  })
-  role: string;
+  @ManyToOne(() => Role, (role) => role.users)
+  role: Role;
 
   @Column({
     name: 'status',
@@ -61,4 +58,7 @@ export class User extends BaseEntity {
     nullable: true,
   })
   refresh_token: string;
+
+  @OneToMany(() => Comic, (comic) => comic.sellerId)
+  comics: Comic[];
 }

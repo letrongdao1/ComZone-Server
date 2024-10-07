@@ -35,7 +35,19 @@ export class AuthService {
     }
   }
 
-  async signIn(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.usersService.findAccountByEmail(email);
+    if (user && bcrypt.compareSync(pass, user?.password)) {
+      const { password, ...result } = user;
+      console.log(result);
+      return result;
+    } else {
+      console.log('User not found!');
+    }
+    return null;
+  }
+
+  async login(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findAccountByEmail(email);
     if (!user) {
       throw new NotFoundException('Email cannot be found!');
