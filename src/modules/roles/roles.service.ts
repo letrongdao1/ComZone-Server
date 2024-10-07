@@ -1,15 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BaseService } from 'src/common/service.base';
 import { Role } from 'src/entities/roles.entity';
 import { Repository } from 'typeorm';
+import { RoleDTO } from './dto/roleDTO';
 
 @Injectable()
-export class RolesService extends BaseService<Role> {
+export class RolesService {
   constructor(
     @InjectRepository(Role) private readonly rolesRepository: Repository<Role>,
-  ) {
-    super(rolesRepository);
+  ) {}
+
+  async getAll() {
+    return await this.rolesRepository.find();
+  }
+
+  async getOneById(id: number) {
+    return await this.rolesRepository.findOne({
+      where: {
+        id: id,
+      },
+    });
+  }
+
+  async create(role: RoleDTO) {
+    return await this.rolesRepository.save(role);
   }
 
   async getRoleByName(name: string) {
