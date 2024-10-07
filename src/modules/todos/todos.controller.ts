@@ -16,7 +16,7 @@ export class TodosController {
   async getTodoByTitle(@Param('title') title: string) {
     return this.todoService.getTodoByTitle(title);
   }
-  
+
   @Get(':id')
   async getTodoById(@Param('id') id: string) {
     return this.todoService.getOne(id);
