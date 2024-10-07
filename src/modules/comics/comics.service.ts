@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
-import { Genre } from 'src/entities/genre.entity';
+import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 
 @Injectable()

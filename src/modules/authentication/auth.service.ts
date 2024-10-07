@@ -15,7 +15,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(email: string, password: string, fullName: string) {
+  async register(email: string, password: string, name: string) {
     const checkEmail = await this.usersService.findAccountByEmail(email);
     if (checkEmail) {
       throw new ConflictException(
@@ -29,13 +29,25 @@ export class AuthService {
         metadata: await this.usersService.create({
           email,
           password: hashed,
-          fullName,
+          name,
         }),
       };
     }
   }
 
-  async signIn(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.usersService.findAccountByEmail(email);
+    if (user && bcrypt.compareSync(pass, user?.password)) {
+      const { password, ...result } = user;
+      console.log(result);
+      return result;
+    } else {
+      console.log('User not found!');
+    }
+    return null;
+  }
+
+  async login(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findAccountByEmail(email);
     if (!user) {
       throw new NotFoundException('Email cannot be found!');

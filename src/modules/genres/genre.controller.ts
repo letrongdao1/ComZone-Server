@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { GenreService } from './genre.service';
 import { CreateGenreDto, UpdateGenreDto } from './dto/genre.dto';
-import { Genre } from 'src/entities/genre.entity';
+import { Genre } from 'src/entities/genres.entity';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Genres')
