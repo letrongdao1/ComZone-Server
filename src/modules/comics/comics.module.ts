@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ComicService } from './comics.service';
 import { ComicController } from './comics.controller';
 import { Comic } from 'src/entities/comics.entity';
-import { Genre } from 'src/entities/genre.entity';
+import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 
 @Module({

@@ -14,7 +14,9 @@ import {
 } from '@nestjs/platform-express';
 import { extname } from 'path';
 import { storageConfig } from './config';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('File upload')
 @Controller('file')
 export class FileUploadController {
   constructor() {}

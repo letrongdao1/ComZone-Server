@@ -8,12 +8,12 @@ import { Repository } from 'typeorm';
 export class UsersService extends BaseService<User> {
   constructor(
     @InjectRepository(User)
-    private readonly accountRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {
-    super(accountRepository);
+    super(userRepository);
   }
   findAccountByEmail(email: string) {
-    return this.accountRepository.findOne({
+    return this.userRepository.findOne({
       where: {
         email: email,
       },
