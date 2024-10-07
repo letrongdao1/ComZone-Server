@@ -1,42 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Permission } from 'src/entities/permissions.entity';
 import { Role } from 'src/entities/roles.entity';
 import { Repository } from 'typeorm';
 import { RolesService } from '../roles/roles.service';
+import { PermissionDTO } from './dto/permissionDTO';
 
 @Injectable()
 export class PermissionsService extends BaseService<Permission> {
   constructor(
     @InjectRepository(Permission)
     private readonly permissionsRepository: Repository<Permission>,
-    @InjectRepository(Role)
-    private readonly rolesRepository: Repository<Role>,
-    private readonly rolesService: RolesService,
+    @InjectRepository(Role) private readonly rolesRepository: Repository<Role>,
   ) {
     super(permissionsRepository);
   }
 
-  async createNewPermission(
-    permission_description: string,
-    role: string | string[],
-  ) {
-    if (typeof role === 'string') {
-      const newPermission = {
-        permission_description,
-        roles: [await this.rolesService.getRoleByName(role)],
-      };
-      console.log(newPermission);
-      return await this.permissionsRepository.save(newPermission);
+  async createNewPermission(dto: PermissionDTO) {
+    if (typeof dto.roles === 'number') {
+      if (dto.roles > 4 || dto.roles < 1) {
+        throw new BadRequestException('Invalid role id!');
+      }
+    } else if (dto.roles.find((id) => id < 1 || id > 4)) {
+      throw new BadRequestException('Array consists of invalid role id(s)!');
     } else {
-      role.map(async (r) => {
-        const newPermission = {
-          permission_description,
-          roles: [],
-        };
-        return await this.permissionsRepository.save(newPermission);
+      const roles = await this.rolesRepository.find({
+        where: dto.roles.map((id) => ({ id })),
       });
+
+      const newPermission = this.permissionsRepository.create({
+        permission_description: dto.permission_description,
+        roles,
+      });
+
+      return await this.permissionsRepository.save(newPermission);
     }
   }
 }

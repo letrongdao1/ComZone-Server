@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
 import { PermissionDTO } from './dto/permissionDTO';
 
-@ApiTags('Permission')
+@ApiExcludeController()
 @Controller('permissions')
 export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
@@ -15,9 +15,6 @@ export class PermissionsController {
 
   @Post()
   createNewPermission(@Body() permissionDTO: PermissionDTO) {
-    return this.permissionsService.createNewPermission(
-      permissionDTO.permission_description,
-      permissionDTO.roles,
-    );
+    return this.permissionsService.createNewPermission(permissionDTO);
   }
 }

@@ -34,7 +34,7 @@ export class User extends BaseEntity {
   })
   phone: string;
 
-  @ManyToOne(() => Role, (role) => role.users)
+  @ManyToOne(() => Role, (role) => role.users, { eager: true })
   role: Role;
 
   @Column({

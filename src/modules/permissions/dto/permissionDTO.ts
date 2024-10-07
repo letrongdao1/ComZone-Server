@@ -1,4 +1,4 @@
 export class PermissionDTO {
   permission_description: string;
-  roles: string | string[];
+  roles: number | number[];
 }

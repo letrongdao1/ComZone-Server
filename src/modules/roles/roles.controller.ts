@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { RolesService } from './roles.service';
-import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { RoleDTO } from './dto/roleDTO';
 
-@ApiTags('Role')
+@ApiExcludeController()
 @Controller('roles')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
