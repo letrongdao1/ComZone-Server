@@ -14,14 +14,13 @@ export class ComicService {
     private readonly comicRepository: Repository<Comic>,
     @InjectRepository(Genre)
     private readonly genreRepository: Repository<Genre>,
-    @InjectRepository(User) // Injecting UserRepository to handle sellerId
+    @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
 
   async create(createComicDto: CreateComicDto): Promise<Comic> {
     const { genreIds, sellerId, ...comicData } = createComicDto;
 
-    // Fetch the seller (User entity) using sellerId
     const seller = await this.userRepository.findOne({
       where: { id: sellerId },
     });
@@ -29,23 +28,23 @@ export class ComicService {
       throw new Error('Seller not found');
     }
 
-    // Fetch genres using `find` with `where` clause
     const genres = await this.genreRepository.find({
       where: genreIds.map((id) => ({ id })),
     });
 
-    // Create the comic entity and assign the seller and genres
     const comic = this.comicRepository.create({
       ...comicData,
-      sellerId: seller, // Assign the fetched seller (User entity)
-      genres,           // Assign the fetched genres
+      sellerId: seller,
+      genres,
     });
 
     return await this.comicRepository.save(comic);
   }
 
   async findAll(): Promise<Comic[]> {
-    return await this.comicRepository.find({ relations: ['genres', 'sellerId'] });
+    return await this.comicRepository.find({
+      relations: ['genres', 'sellerId'],
+    });
   }
 
   async findOne(id: string): Promise<Comic> {
@@ -74,10 +73,9 @@ export class ComicService {
         })
       : undefined;
 
-    // Update the comic, ensuring relations are updated too
     await this.comicRepository.update(id, {
       ...comicData,
-      sellerId: seller, // Update seller if provided
+      sellerId: seller,
       genres,
     });
 
