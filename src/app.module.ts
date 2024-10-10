@@ -12,6 +12,8 @@ import { RolesModule } from './modules/roles/roles.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { PermissionsGuard } from './modules/authorization/permission.guard';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { OrderItemsModule } from './modules/order-items/order-items.module';
 
 @Module({
   imports: [
@@ -31,13 +33,15 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
       inject: [ConfigService],
     }),
     AuthModule,
+    UsersModule,
     RolesModule,
     PermissionsModule,
-    UsersModule,
     ComicModule,
     GenreModule,
     FileUploadModule,
     NotificationsModule,
+    OrdersModule,
+    OrderItemsModule,
   ],
   controllers: [AppController],
   providers: [

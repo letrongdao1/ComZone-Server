@@ -10,5 +10,6 @@ import { User } from 'src/entities/users.entity';
   imports: [TypeOrmModule.forFeature([Comic, Genre, User])],
   controllers: [ComicController],
   providers: [ComicService],
+  exports: [ComicService],
 })
 export class ComicModule {}

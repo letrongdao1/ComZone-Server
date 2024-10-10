@@ -15,6 +15,7 @@ import { AuthJwtPayload } from './types/auth-jwtPayload';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import { ConfigType } from '@nestjs/config';
 import { RegisterUserDTO } from './dto/register-user.dto';
+import { LoginUserDTO } from './dto/login-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +28,7 @@ export class AuthService {
   ) {}
 
   async register(email: string, password: string, name: string) {
-    const checkEmail = await this.usersService.findAccountByEmail(email);
+    const checkEmail = await this.usersService.getUserByEmail(email);
     if (checkEmail) {
       throw new ConflictException(
         'Email conflict',
@@ -48,11 +49,11 @@ export class AuthService {
     }
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findAccountByEmail(email);
+  async validateUser(loginUserDto: LoginUserDTO): Promise<any> {
+    const user = await this.usersService.getUserByEmail(loginUserDto.email);
     if (!user) {
       throw new NotFoundException('Email cannot be found!');
-    } else if (!bcrypt.compareSync(pass, user?.password)) {
+    } else if (!bcrypt.compareSync(loginUserDto.password, user?.password)) {
       throw new UnauthorizedException('Incorrect password!');
     } else {
       return user;
@@ -66,12 +67,11 @@ export class AuthService {
     }
     return {
       id: user.id,
-      role: user.role.id,
     };
   }
 
   async validateGoogleUser(googleUser: RegisterUserDTO) {
-    const user = await this.usersService.findAccountByEmail(googleUser.email);
+    const user = await this.usersService.getUserByEmail(googleUser.email);
     if (user) return user;
     return await this.usersService.createMemberAccount(googleUser);
   }
@@ -137,7 +137,7 @@ export class AuthService {
     name: string,
     roleId: number,
   ) {
-    const checkEmail = await this.usersService.findAccountByEmail(email);
+    const checkEmail = await this.usersService.getUserByEmail(email);
     if (checkEmail) {
       throw new ConflictException(
         'Email conflict',

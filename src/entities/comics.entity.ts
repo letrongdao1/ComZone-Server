@@ -1,7 +1,15 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 import { User } from './users.entity';
 import { Genre } from './genres.entity';
+import { OrderItem } from './order-items.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -55,4 +63,7 @@ export class Comic extends BaseEntity {
 
   @Column('float')
   comicCommission: number;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.comics)
+  order_item: OrderItem[];
 }
