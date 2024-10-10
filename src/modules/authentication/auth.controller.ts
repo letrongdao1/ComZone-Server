@@ -11,7 +11,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiExcludeEndpoint,
+  ApiTags,
+} from '@nestjs/swagger';
 import { RegisterUserDTO } from './dto/register-user.dto';
 import { LoginUserDTO } from './dto/login-user.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -27,6 +32,7 @@ import { GoogleAuthGuard } from './guards/google-auth.guard';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @ApiCreatedResponse()
   @Post('register')
   register(@Body() registerUserDTO: RegisterUserDTO): Promise<any> {
     return this.authService.register(
@@ -39,16 +45,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@Request() req: any) {
+  login(@Request() req: any, @Body() loginUserDto: LoginUserDTO) {
     return this.authService.login(req.user.id);
   }
 
+  @ApiBearerAuth()
   @UseGuards(RefreshAuthGuard)
   @Post('refresh')
   refreshToken(@Req() req: any) {
     return this.authService.refreshToken(req.user.id);
   }
 
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @Post('logout')
@@ -56,10 +64,12 @@ export class AuthController {
     return this.authService.logout(req.user.id);
   }
 
+  @ApiExcludeEndpoint()
   @UseGuards(GoogleAuthGuard)
   @Get('google/login')
   googleLogin() {}
 
+  @ApiExcludeEndpoint()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleCallback(@Req() req: any, @Res() res: any) {

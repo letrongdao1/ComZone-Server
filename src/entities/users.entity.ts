@@ -2,6 +2,7 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Role } from './roles.entity';
+import { Order } from './orders.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -61,4 +62,10 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Comic, (comic) => comic.sellerId)
   comics: Comic[];
+
+  @OneToMany(() => Order, (order) => order.seller)
+  sold_order: Order[];
+
+  @OneToMany(() => Order, (order) => order.buyer)
+  purchased_order: Order[];
 }

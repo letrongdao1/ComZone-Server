@@ -45,11 +45,18 @@ export class UsersService extends BaseService<User> {
     });
   }
 
-  async findAccountByEmail(email: string) {
+  async getUserByEmail(email: string) {
     return await this.userRepository.findOne({
       where: {
         email: email,
       },
+    });
+  }
+
+  async getUserRole(id: string) {
+    return await this.userRepository.findOne({
+      where: { id },
+      select: ['role'],
     });
   }
 
