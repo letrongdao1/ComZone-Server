@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Req,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -18,6 +20,7 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshAuthGuard } from './guards/refresh-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -51,6 +54,17 @@ export class AuthController {
   @Post('logout')
   logout(@Req() req: any) {
     return this.authService.logout(req.user.id);
+  }
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/login')
+  googleLogin() {}
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  async googleCallback(@Req() req: any, @Res() res: any) {
+    const response = await this.authService.login(req.user.id);
+    res.redirect(`http://localhost:5173?token=${response.accessToken}`);
   }
 
   @Roles(Role.ADMIN)
