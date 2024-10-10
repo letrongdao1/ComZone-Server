@@ -14,6 +14,7 @@ import { jwtConstants } from './constants';
 import { AuthJwtPayload } from './types/auth-jwtPayload';
 import refreshJwtConfig from './config/refresh-jwt.config';
 import { ConfigType } from '@nestjs/config';
+import { RegisterUserDTO } from './dto/register-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -69,6 +70,12 @@ export class AuthService {
     };
   }
 
+  async validateGoogleUser(googleUser: RegisterUserDTO) {
+    const user = await this.usersService.findAccountByEmail(googleUser.email);
+    if (user) return user;
+    return await this.usersService.create(googleUser);
+  }
+
   async login(userId: string) {
     const { accessToken, refreshToken } = await this.generateTokens(userId);
     const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
@@ -101,7 +108,7 @@ export class AuthService {
     );
 
     if (!refreshTokenMatches)
-      throw new UnauthorizedException('Invalid refresh token2!');
+      throw new UnauthorizedException('Invalid refresh token!');
 
     return { id: userId };
   }
