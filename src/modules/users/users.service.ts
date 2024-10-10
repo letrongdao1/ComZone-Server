@@ -19,6 +19,15 @@ export class UsersService extends BaseService<User> {
     super(userRepository);
   }
 
+  async createMemberAccount(user: any): Promise<User> {
+    const memberRole = await this.rolesService.getOneById(1);
+    const newUser = {
+      ...user,
+      role: memberRole.id,
+    };
+    return await this.userRepository.save(newUser);
+  }
+
   async getOne(id: string): Promise<User> {
     return await this.userRepository.findOne({
       where: { id },

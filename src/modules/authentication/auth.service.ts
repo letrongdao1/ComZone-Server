@@ -73,14 +73,13 @@ export class AuthService {
   async validateGoogleUser(googleUser: RegisterUserDTO) {
     const user = await this.usersService.findAccountByEmail(googleUser.email);
     if (user) return user;
-    return await this.usersService.create(googleUser);
+    return await this.usersService.createMemberAccount(googleUser);
   }
 
   async login(userId: string) {
     const { accessToken, refreshToken } = await this.generateTokens(userId);
     const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
     await this.usersService.updateRefreshToken(userId, hashedRefreshToken);
-    console.log({ hashedRefreshToken });
     return {
       id: userId,
       accessToken,
