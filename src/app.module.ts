@@ -14,6 +14,7 @@ import { PermissionsGuard } from './modules/authorization/permission.guard';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { OrderItemsModule } from './modules/order-items/order-items.module';
+import { ZalopayModule } from './modules/zalopay/zalopay.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { OrderItemsModule } from './modules/order-items/order-items.module';
     NotificationsModule,
     OrdersModule,
     OrderItemsModule,
+    ZalopayModule,
   ],
   controllers: [AppController],
   providers: [
