@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomInt, createHmac } from 'crypto';
 import * as dotenv from 'dotenv';
-import dateFormat from '../../tools/date.format';
+import dateFormat from '../../tools/date-format/date.format';
 import { VNPayRequest } from './dto/vnp-payment-url-request';
 
 var querystring = require('qs');
