@@ -2,6 +2,7 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Role } from './roles.entity';
+import { Cart } from './carts.entity';
 import { Order } from './orders.entity';
 
 @Entity('users')
@@ -62,6 +63,8 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Comic, (comic) => comic.sellerId)
   comics: Comic[];
+  @OneToMany(() => Cart, (cart) => cart.user)
+  carts: Cart[];
 
   @OneToMany(() => Order, (order) => order.seller)
   sold_order: Order[];

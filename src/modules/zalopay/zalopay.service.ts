@@ -15,6 +15,7 @@ export class ZalopayService {
 
   async createPaymentLink(data2: any) {
     const embeddata = {
+      redirecturl: 'https://www.google.com',
       merchantinfo: 'embeddata123',
       bankgroup: 'ATM',
     };

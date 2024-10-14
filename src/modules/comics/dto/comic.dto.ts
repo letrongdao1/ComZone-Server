@@ -1,3 +1,5 @@
+import { IsEnum } from 'class-validator';
+
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateComicDto {
@@ -87,4 +89,16 @@ export class UpdateComicDto {
 
   @ApiProperty()
   comicCommission?: number;
+}
+
+export enum ComicStatus {
+  AVAILABLE = 'AVAILABLE',
+  UNAVAILABLE = 'UNAVAILABLE',
+  PENDING = 'PENDING',
+  SOLD = 'SOLD',
+}
+
+export class UpdateComicStatusDto {
+  @IsEnum(ComicStatus)
+  status: ComicStatus;
 }
