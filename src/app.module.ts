@@ -17,6 +17,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { OrderItemsModule } from './modules/order-items/order-items.module';
 import { ZalopayModule } from './modules/zalopay/zalopay.module';
 import { VnpayModule } from './modules/vnpay/vnpay.module';
+import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-address.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { VnpayModule } from './modules/vnpay/vnpay.module';
     OrderItemsModule,
     VnpayModule,
     ZalopayModule,
+    VietNamAddressModule,
   ],
   controllers: [AppController],
   providers: [
