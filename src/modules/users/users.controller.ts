@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Patch, Req, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
@@ -7,6 +7,7 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 
 @ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -27,8 +28,14 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('email/:email')
-  findUserByEmail(@Param('email') email: string) {
-    return this.usersService.findAccountByEmail(email);
+  getUserByEmail(@Param('email') email: string) {
+    return this.usersService.getUserByEmail(email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':userId')
+  getUserById(@Param(':userId') userId: string) {
+    return this.usersService.getOne(userId);
   }
 
   @Roles(Role.MODERATOR)
