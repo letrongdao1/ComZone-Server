@@ -1,6 +1,9 @@
 import {
   BadRequestException,
   Controller,
+  FileTypeValidator,
+  MaxFileSizeValidator,
+  ParseFilePipe,
   Post,
   Req,
   UploadedFile,
@@ -13,7 +16,9 @@ import {
 } from '@nestjs/platform-express';
 import { extname } from 'path';
 import { FirebaseService } from './firebase.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('File upload')
 @Controller('file')
 export class FileUploadController {
   constructor(private readonly firebaseService: FirebaseService) {}
@@ -123,4 +128,32 @@ export class FileUploadController {
       throw new BadRequestException(error.message || 'Image upload failed!');
     }
   }
+  // @Post('image')
+  // @UseInterceptors(FileInterceptor('image'))
+  // async addImage(
+  //   @UploadedFile(
+  //     new ParseFilePipe({
+  //       validators: [
+  //         new MaxFileSizeValidator({ maxSize: 5000000 }), // 5MB max file size
+  //         new FileTypeValidator({ fileType: 'image/*' }), // Allow only image files
+  //       ],
+  //     }),
+  //   )
+  //   file: Express.Multer.File,
+  // ): Promise<any> {
+  //   // Ensure it returns a response
+  //   console.log('Received file:', file); // Log file details
+
+  //   try {
+  //     const updateVoucherImage = await this.firebaseService.uploadImage(file); // Upload file to Firebase
+  //     return {
+  //       message: 'Image uploaded successfully!',
+  //       imageUrl: updateVoucherImage, // Return the download URL
+  //       contentType: file.mimetype,
+  //     };
+  //   } catch (error) {
+  //     console.error('Error uploading file:', error); // Log any errors
+  //     throw new BadRequestException('Error uploading image'); // Return an error response
+  //   }
+  // }
 }

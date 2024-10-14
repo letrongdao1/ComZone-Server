@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
-import { Genre } from 'src/entities/genre.entity';
+import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 
 @Injectable()
@@ -54,6 +54,13 @@ export class ComicService {
     });
   }
 
+  async findByStatus(status: string): Promise<Comic[]> {
+    return await this.comicRepository.find({
+      where: { status },
+      relations: ['genres', 'sellerId'],
+    });
+  }
+
   async update(id: string, updateComicDto: UpdateComicDto): Promise<Comic> {
     const { genreIds, sellerId, ...comicData } = updateComicDto;
 
@@ -85,4 +92,84 @@ export class ComicService {
   async remove(id: string): Promise<void> {
     await this.comicRepository.delete(id);
   }
+
+  async findBySeller(sellerId: string): Promise<Comic[]> {
+    const seller = await this.userRepository.findOne({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new Error('Seller not found');
+    }
+
+    const comics = await this.comicRepository.find({
+      where: { sellerId: { id: seller.id } },
+    });
+
+    return comics;
+  }
+
+  async findOneWithGenres(id: string): Promise<Comic> {
+    return await this.comicRepository.findOne({
+      where: { id },
+      relations: ['genres'], // Include genres relation
+    });
+  }
+
+  async findAllAndSortByPrice(order: 'ASC' | 'DESC' = 'ASC'): Promise<Comic[]> {
+    const options: FindManyOptions<Comic> = {
+      order: {
+        price: order,
+      },
+      relations: ['genres', 'sellerId'],
+    };
+
+    return await this.comicRepository.find(options);
+  }
+  async findByGenresAndAuthor(
+    genreIds: string[],
+    author: string,
+  ): Promise<Comic[]> {
+    return this.comicRepository
+      .createQueryBuilder('comic')
+      .leftJoin('comic.genres', 'genre')
+      .where('genre.id IN (:...genreIds)', { genreIds }) // Filter by genre IDs
+      .andWhere('comic.author = :author', { author }) // Filter by author
+      .groupBy('comic.id')
+      .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Check for at least the provided genres
+      .getMany();
+  }
+
+  async findByGenres(genreIds: string[]): Promise<Comic[]> {
+    return this.comicRepository
+      .createQueryBuilder('comic')
+      .leftJoin('comic.genres', 'genre')
+      .where('genre.id IN (:...genreIds)', { genreIds })
+      .groupBy('comic.id')
+      .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Match at least the provided genres
+      .getMany();
+  }
+  async findByAuthor(author: string): Promise<Comic[]> {
+    return this.comicRepository
+      .createQueryBuilder('comic')
+      .where('comic.author = :author', { author })
+      .getMany();
+  }
+  // async updateStatus(
+  //   id: string,
+  //   updateComicStatusDto: UpdateComicStatusDto,
+  // ): Promise<Comic> {
+  //   const { status } = updateComicStatusDto;
+
+  //   const comic = await this.comicRepository.findOne({
+  //     where: { id },
+  //   });
+
+  //   if (!comic) {
+  //     throw new Error('Comic not found');
+  //   }
+
+  //   comic.status = status;
+  //   return await this.comicRepository.save(comic);
+  // }
 }

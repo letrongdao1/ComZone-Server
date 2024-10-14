@@ -4,7 +4,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { FirebaseModule } from './firebase.module';
 
 @Module({
-  imports: [FirebaseModule, MulterModule.register({ dest: './uploads' })],
+  imports: [FirebaseModule],
   providers: [],
   controllers: [FileUploadController],
 })

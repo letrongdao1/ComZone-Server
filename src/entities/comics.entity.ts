@@ -1,7 +1,7 @@
 import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { User } from './users.entity';
-import { Genre } from './genre.entity';
+import { Genre } from './genres.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -10,7 +10,7 @@ export class Comic extends BaseEntity {
 
   @ManyToMany(() => Genre, (genre) => genre.comics)
   @JoinTable({
-    name: 'comic_genres',
+    name: 'comic_genre',
     joinColumn: { name: 'comic_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'genre_id', referencedColumnName: 'id' },
   })
@@ -28,7 +28,7 @@ export class Comic extends BaseEntity {
   @Column('simple-array')
   coverImage: string[];
 
-  @Column('date')
+  @Column('datetime')
   publishedDate: Date;
 
   @Column('decimal')

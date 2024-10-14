@@ -1,3 +1,5 @@
+import { IsEnum } from 'class-validator';
+
 export class CreateComicDto {
   sellerId: string;
   genreIds: string[];
@@ -30,4 +32,16 @@ export class UpdateComicDto {
   isAuction?: boolean;
   isExchange?: boolean;
   comicCommission?: number;
+}
+
+export enum ComicStatus {
+  AVAILABLE = 'AVAILABLE',
+  UNAVAILABLE = 'UNAVAILABLE',
+  PENDING = 'PENDING',
+  SOLD = 'SOLD',
+}
+
+export class UpdateComicStatusDto {
+  @IsEnum(ComicStatus)
+  status: ComicStatus;
 }

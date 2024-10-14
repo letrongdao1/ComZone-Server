@@ -3,12 +3,16 @@ import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
-import { TodosModule } from './modules/todos/todos.module';
 import { AuthModule } from './modules/authentication/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
 import { ComicModule } from './modules/comics/comics.module';
 import { GenreModule } from './modules/genres/genre.module';
+import { RolesModule } from './modules/roles/roles.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { PermissionsGuard } from './modules/authorization/permission.guard';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CartModule } from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -27,14 +31,22 @@ import { GenreModule } from './modules/genres/genre.module';
       }),
       inject: [ConfigService],
     }),
-    TodosModule,
     AuthModule,
-    ComicModule,
+    RolesModule,
+    PermissionsModule,
     UsersModule,
+    ComicModule,
     GenreModule,
     FileUploadModule,
+    NotificationsModule,
+    CartModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: 'PERMISSION_GUARD',
+      useClass: PermissionsGuard,
+    },
+  ],
 })
 export class AppModule {}
