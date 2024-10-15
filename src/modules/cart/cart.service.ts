@@ -30,13 +30,14 @@ export class CartService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
+    console.log('user:::::::', user);
     // Find the user's cart or create a new one
     let cart = await this.cartRepository.findOne({
-      where: { user },
+      where: { user: { id: user.id } },
       relations: ['comics'],
     });
 
+    console.log('cart::::::::::', cart);
     if (!cart) {
       cart = this.cartRepository.create({
         user,

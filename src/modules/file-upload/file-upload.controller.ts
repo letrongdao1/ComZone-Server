@@ -1,9 +1,6 @@
 import {
   BadRequestException,
   Controller,
-  FileTypeValidator,
-  MaxFileSizeValidator,
-  ParseFilePipe,
   Post,
   Req,
   UploadedFile,
@@ -83,7 +80,7 @@ export class FileUploadController {
   }
 
   // Only handle uploading jpeg/png files with the maximum size of 5MB
-  @Post('upload/image-only')
+  @Post('upload/image')
   @UseInterceptors(
     FileInterceptor('image', {
       fileFilter: (req, file, callback) => {
@@ -122,38 +119,10 @@ export class FileUploadController {
       const imageUrl = await this.firebaseService.uploadImage(file, 'images');
       return {
         message: 'Image was uploaded successfully!',
-        imageUrl, // Return the Firebase download URL
+        imageUrl,
       };
     } catch (error) {
       throw new BadRequestException(error.message || 'Image upload failed!');
     }
   }
-  // @Post('image')
-  // @UseInterceptors(FileInterceptor('image'))
-  // async addImage(
-  //   @UploadedFile(
-  //     new ParseFilePipe({
-  //       validators: [
-  //         new MaxFileSizeValidator({ maxSize: 5000000 }), // 5MB max file size
-  //         new FileTypeValidator({ fileType: 'image/*' }), // Allow only image files
-  //       ],
-  //     }),
-  //   )
-  //   file: Express.Multer.File,
-  // ): Promise<any> {
-  //   // Ensure it returns a response
-  //   console.log('Received file:', file); // Log file details
-
-  //   try {
-  //     const updateVoucherImage = await this.firebaseService.uploadImage(file); // Upload file to Firebase
-  //     return {
-  //       message: 'Image uploaded successfully!',
-  //       imageUrl: updateVoucherImage, // Return the download URL
-  //       contentType: file.mimetype,
-  //     };
-  //   } catch (error) {
-  //     console.error('Error uploading file:', error); // Log any errors
-  //     throw new BadRequestException('Error uploading image'); // Return an error response
-  //   }
-  // }
 }

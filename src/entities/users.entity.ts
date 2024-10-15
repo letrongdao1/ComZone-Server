@@ -4,6 +4,7 @@ import { Comic } from './comics.entity';
 import { Role } from './roles.entity';
 import { Cart } from './carts.entity';
 import { Order } from './orders.entity';
+import { Otp } from './otp.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -71,4 +72,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Order, (order) => order.buyer)
   purchased_order: Order[];
+
+  @OneToMany(() => Otp, (otp) => otp.user)
+  otps: Otp[];
 }
