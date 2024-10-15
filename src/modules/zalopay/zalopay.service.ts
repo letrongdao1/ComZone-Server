@@ -17,7 +17,7 @@ export class ZalopayService {
     const embeddata = {
       redirecturl: 'https://www.google.com',
       merchantinfo: 'embeddata123',
-      bankgroup: 'ATM',
+      // bankgroup: 'ATM',
     };
 
     const items = [

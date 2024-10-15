@@ -1,12 +1,15 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { ZalopayService } from './zalopay.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
+@ApiBearerAuth()
 @ApiTags('Zalopay - (QR only)')
 @Controller('zalopay')
 export class ZalopayController {
   constructor(private readonly zalopayService: ZalopayService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   createPaymentLink(@Body() data: any) {
     return this.zalopayService.createPaymentLink(data);

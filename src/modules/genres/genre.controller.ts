@@ -7,17 +7,26 @@ import {
   Delete,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { GenreService } from './genre.service';
 import { CreateGenreDto, UpdateGenreDto } from './dto/genre.dto';
 import { Genre } from 'src/entities/genres.entity';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../authorization/roles.decorator';
+import { Role } from '../authorization/role.enum';
+import { PermissionsGuard } from '../authorization/permission.guard';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
+@ApiBearerAuth()
 @ApiTags('Genres')
 @Controller('genres')
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @Post()
   async create(@Body() createGenreDto: CreateGenreDto): Promise<Genre> {
     return this.genreService.create(createGenreDto);
@@ -33,6 +42,9 @@ export class GenreController {
     return this.genreService.findOne(id);
   }
 
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -41,6 +53,9 @@ export class GenreController {
     return this.genreService.update(id, updateGenreDto);
   }
 
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<void> {
     return this.genreService.remove(id);
