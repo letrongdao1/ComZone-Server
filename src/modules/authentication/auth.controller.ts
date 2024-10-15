@@ -78,6 +78,7 @@ export class AuthController {
     res.redirect(`http://localhost:5173?token=${response.accessToken}`);
   }
 
+  @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
@@ -93,6 +94,7 @@ export class AuthController {
     );
   }
 
+  @ApiBearerAuth()
   @Roles(Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)

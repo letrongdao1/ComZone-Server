@@ -15,6 +15,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { OrderItemsModule } from './modules/order-items/order-items.module';
+import { ZalopayModule } from './modules/zalopay/zalopay.module';
+import { VnpayModule } from './modules/vnpay/vnpay.module';
+import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-address.module';
 
 @Module({
   imports: [
@@ -44,6 +47,9 @@ import { OrderItemsModule } from './modules/order-items/order-items.module';
     CartModule,
     OrdersModule,
     OrderItemsModule,
+    VnpayModule,
+    ZalopayModule,
+    VietNamAddressModule,
   ],
   controllers: [AppController],
   providers: [

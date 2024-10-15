@@ -1,16 +1,9 @@
 // cart.controller.ts
-import {
-  Controller,
-  Post,
-  Body,
-  Param,
-  Get,
-  Patch,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Delete } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { CreateCartDto, UpdateCartDto } from './dto/cart.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}

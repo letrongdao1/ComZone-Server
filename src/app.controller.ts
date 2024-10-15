@@ -6,6 +6,6 @@ export class AppController {
 
   @Get()
   getHello(): string {
-    return 'Welcome to ComZone Server! Link to APIs: localhost:3000/api';
+    return 'Welcome to ComZone Server! Link to APIs: localhost:3000/docs';
   }
 }
