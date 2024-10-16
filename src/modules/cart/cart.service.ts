@@ -18,11 +18,7 @@ export class CartService {
     private userRepository: Repository<User>,
   ) {}
 
-  async addToCart(
-    userId: string,
-    comicId: string,
-    quantity: number,
-  ): Promise<Cart> {
+  async addToCart(userId: string, comicId: string): Promise<Cart> {
     // Find the user
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -57,11 +53,11 @@ export class CartService {
 
     // Check if the comic is already in the cart
     if (!cart.comics.find((c) => c.id === comicId)) {
-      cart.comics.push(comic); // Add the comic to the cart if not already added
+      cart.comics.push(comic);
     }
 
     // Update quantity for the comic
-    cart.quantities[comicId] = (cart.quantities[comicId] || 0) + quantity; // Increment quantity
+    cart.quantities[comicId] = (cart.quantities[comicId] || 0) + 1;
 
     // Recalculate total price
     cart.totalPrice = this.calculateTotalPrice(cart.comics, cart.quantities);

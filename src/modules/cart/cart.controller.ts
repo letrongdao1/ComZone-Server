@@ -21,13 +21,9 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post(':userId/:comicId')
-  addToCart(
-    @Param('userId') userId: string,
-    @Param('comicId') comicId: string,
-    @Body('quantity') quantity: number,
-  ) {
-    return this.cartService.addToCart(userId, comicId, quantity);
+  @Post(':comicId')
+  addToCart(@Req() req: any, @Param('comicId') comicId: string) {
+    return this.cartService.addToCart(req.user.id, comicId);
   }
 
   @UseGuards(JwtAuthGuard)
