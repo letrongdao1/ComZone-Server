@@ -33,12 +33,9 @@ export class CartController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':cartId/comic/:comicId')
-  removeComicFromCart(
-    @Param('cartId') cartId: string,
-    @Param('comicId') comicId: string,
-  ) {
-    return this.cartService.removeComicFromCart(cartId, comicId);
+  @Delete('comic/:comicId')
+  removeComicFromCart(@Req() req: any, @Param('comicId') comicId: string) {
+    return this.cartService.removeComicFromCart(req.user.id, comicId);
   }
   @UseGuards(JwtAuthGuard)
   @Patch('increase/:comicId')
