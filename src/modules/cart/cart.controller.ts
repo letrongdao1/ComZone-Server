@@ -1,5 +1,5 @@
 // cart.controller.ts
-import { Controller, Post, Body, Param, Get, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Delete, Patch } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -28,5 +28,20 @@ export class CartController {
     @Param('comicId') comicId: string,
   ) {
     return this.cartService.removeComicFromCart(cartId, comicId);
+  }
+  @Patch(':userId/increase/:comicId')
+  async increaseComicQuantity(
+    @Param('userId') userId: string,
+    @Param('comicId') comicId: string,
+  ) {
+    return this.cartService.increaseComicQuantity(userId, comicId);
+  }
+
+  @Patch(':userId/decrease/:comicId')
+  async decreaseComicQuantity(
+    @Param('userId') userId: string,
+    @Param('comicId') comicId: string,
+  ) {
+    return this.cartService.decreaseComicQuantity(userId, comicId);
   }
 }

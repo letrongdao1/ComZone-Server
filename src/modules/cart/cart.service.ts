@@ -78,6 +78,72 @@ export class CartService {
       return total + comic.price * (quantities[comic.id] || 1);
     }, 0);
   }
+  async increaseComicQuantity(
+    userId: string,
+    comicId: string,
+    quantity: number = 1, // Default value set to 1
+  ): Promise<Cart> {
+    // Find the user's cart
+    const cart = await this.cartRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['comics'],
+    });
+
+    if (!cart) {
+      throw new NotFoundException('Cart not found');
+    }
+
+    // Check if the comic is in the cart
+    const comic = cart.comics.find((c) => c.id === comicId);
+    if (!comic) {
+      throw new NotFoundException('Comic not found in cart');
+    }
+
+    // Increase the quantity of the comic by the specified or default quantity
+    cart.quantities[comicId] = (cart.quantities[comicId] || 0) + quantity;
+
+    // Recalculate total price
+    cart.totalPrice = this.calculateTotalPrice(cart.comics, cart.quantities);
+
+    // Save the updated cart
+    return this.cartRepository.save(cart);
+  }
+  async decreaseComicQuantity(
+    userId: string,
+    comicId: string,
+    quantity: number = 1, // Default value set to 1
+  ): Promise<Cart> {
+    // Find the user's cart
+    const cart = await this.cartRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['comics'],
+    });
+
+    if (!cart) {
+      throw new NotFoundException('Cart not found');
+    }
+
+    // Check if the comic is in the cart
+    const comic = cart.comics.find((c) => c.id === comicId);
+    if (!comic) {
+      throw new NotFoundException('Comic not found in cart');
+    }
+
+    // Decrease the quantity of the comic by the specified or default quantity
+    cart.quantities[comicId] = (cart.quantities[comicId] || 0) - quantity;
+
+    // If quantity is less than or equal to 0, remove the comic from the cart
+    if (cart.quantities[comicId] <= 0) {
+      cart.comics = cart.comics.filter((c) => c.id !== comicId);
+      delete cart.quantities[comicId];
+    }
+
+    // Recalculate total price
+    cart.totalPrice = this.calculateTotalPrice(cart.comics, cart.quantities);
+
+    // Save the updated cart
+    return this.cartRepository.save(cart);
+  }
 
   async removeComicFromCart(cartId: string, comicId: string): Promise<Cart> {
     const cart = await this.cartRepository.findOne({

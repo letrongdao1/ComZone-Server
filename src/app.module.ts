@@ -18,6 +18,7 @@ import { OrderItemsModule } from './modules/order-items/order-items.module';
 import { ZalopayModule } from './modules/zalopay/zalopay.module';
 import { VnpayModule } from './modules/vnpay/vnpay.module';
 import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-address.module';
+import { OtpModule } from './modules/otps/otps.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-addres
     VnpayModule,
     ZalopayModule,
     VietNamAddressModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [
