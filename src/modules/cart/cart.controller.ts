@@ -1,13 +1,26 @@
 // cart.controller.ts
-import { Controller, Post, Body, Param, Get, Delete, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Get,
+  Delete,
+  UseGuards,
+  Patch,
+  Req,
+} from '@nestjs/common';
 import { CartService } from './cart.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
+@ApiBearerAuth()
 @ApiTags('Cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post(':userId/:comicId')
   addToCart(
     @Param('userId') userId: string,
@@ -17,11 +30,13 @@ export class CartController {
     return this.cartService.addToCart(userId, comicId, quantity);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':userId')
-  getCart(@Param('userId') userId: string) {
-    return this.cartService.getCartByUserId(userId);
+  getCart(@Req() req: any) {
+    return this.cartService.getCartByUserId(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':cartId/comic/:comicId')
   removeComicFromCart(
     @Param('cartId') cartId: string,
