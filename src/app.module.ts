@@ -21,6 +21,7 @@ import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-addres
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
+import { OtpModule } from './modules/otps/otps.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { UserAddressesModule } from './modules/user-addresses/user-addresses.mod
     WalletsModule,
     TransactionsModule,
     UserAddressesModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [

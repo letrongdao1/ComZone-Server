@@ -7,6 +7,8 @@ import {
   Get,
   Delete,
   UseGuards,
+  Patch,
+  Req,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -30,8 +32,8 @@ export class CartController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':userId')
-  getCart(@Param('userId') userId: string) {
-    return this.cartService.getCartByUserId(userId);
+  getCart(@Req() req: any) {
+    return this.cartService.getCartByUserId(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -41,5 +43,20 @@ export class CartController {
     @Param('comicId') comicId: string,
   ) {
     return this.cartService.removeComicFromCart(cartId, comicId);
+  }
+  @Patch(':userId/increase/:comicId')
+  async increaseComicQuantity(
+    @Param('userId') userId: string,
+    @Param('comicId') comicId: string,
+  ) {
+    return this.cartService.increaseComicQuantity(userId, comicId);
+  }
+
+  @Patch(':userId/decrease/:comicId')
+  async decreaseComicQuantity(
+    @Param('userId') userId: string,
+    @Param('comicId') comicId: string,
+  ) {
+    return this.cartService.decreaseComicQuantity(userId, comicId);
   }
 }

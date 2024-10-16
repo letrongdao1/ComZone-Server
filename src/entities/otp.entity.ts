@@ -16,6 +16,9 @@ export class Otp {
   @Column({ type: 'varchar', length: 6, nullable: false })
   otp: string;
 
+  @Column({ type: 'varchar', default: 'registration' })
+  type: 'registration' | 'resetPassword';
+
   @Column({ type: 'timestamp', nullable: false })
   expiredAt: Date;
 }
