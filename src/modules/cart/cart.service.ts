@@ -18,11 +18,7 @@ export class CartService {
     private userRepository: Repository<User>,
   ) {}
 
-  async addToCart(
-    userId: string,
-    comicId: string,
-    quantity: number,
-  ): Promise<Cart> {
+  async addToCart(userId: string, comicId: string): Promise<Cart> {
     // Find the user
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -30,14 +26,13 @@ export class CartService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    console.log('user:::::::', user);
+
     // Find the user's cart or create a new one
     let cart = await this.cartRepository.findOne({
       where: { user: { id: user.id } },
-      relations: ['comics'],
+      relations: ['comics', 'comics.sellerId'], // Ensure sellerId is included for each comic in the cart
     });
 
-    console.log('cart::::::::::', cart);
     if (!cart) {
       cart = this.cartRepository.create({
         user,
@@ -47,9 +42,10 @@ export class CartService {
       });
     }
 
-    // Find the comic
+    // Find the comic with sellerId
     const comic = await this.comicRepository.findOne({
       where: { id: comicId },
+      relations: ['sellerId'], // Ensure that sellerId is included when fetching the comic
     });
     if (!comic) {
       throw new NotFoundException('Comic not found');
@@ -57,17 +53,23 @@ export class CartService {
 
     // Check if the comic is already in the cart
     if (!cart.comics.find((c) => c.id === comicId)) {
-      cart.comics.push(comic); // Add the comic to the cart if not already added
+      cart.comics.push(comic);
     }
 
     // Update quantity for the comic
-    cart.quantities[comicId] = (cart.quantities[comicId] || 0) + quantity; // Increment quantity
+    cart.quantities[comicId] = (cart.quantities[comicId] || 0) + 1;
 
     // Recalculate total price
     cart.totalPrice = this.calculateTotalPrice(cart.comics, cart.quantities);
 
     // Save the updated cart
-    return this.cartRepository.save(cart);
+    const updatedCart = await this.cartRepository.save(cart);
+
+    // Return the updated cart with all necessary relations included
+    return await this.cartRepository.findOne({
+      where: { id: updatedCart.id },
+      relations: ['comics', 'comics.sellerId'], // Ensure all comics in the cart include sellerId
+    });
   }
 
   private calculateTotalPrice(
@@ -169,7 +171,7 @@ export class CartService {
   async getCartByUserId(userId: string): Promise<Cart> {
     return this.cartRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['comics'],
+      relations: ['comics', 'comics.sellerId'],
     });
   }
 }

@@ -24,7 +24,7 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class ComicController {
   constructor(private readonly comicService: ComicService) {}
 
-  @Roles(Role.SELLER)
+  // @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -32,7 +32,6 @@ export class ComicController {
     return this.comicService.create(createComicDto);
   }
 
-  @Roles(Role.MODERATOR)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()

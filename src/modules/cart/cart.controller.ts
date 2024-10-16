@@ -21,17 +21,13 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post(':userId/:comicId')
-  addToCart(
-    @Param('userId') userId: string,
-    @Param('comicId') comicId: string,
-    @Body('quantity') quantity: number,
-  ) {
-    return this.cartService.addToCart(userId, comicId, quantity);
+  @Post(':comicId')
+  addToCart(@Req() req: any, @Param('comicId') comicId: string) {
+    return this.cartService.addToCart(req.user.id, comicId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':userId')
+  @Get('')
   getCart(@Req() req: any) {
     return this.cartService.getCartByUserId(req.user.id);
   }
@@ -44,19 +40,20 @@ export class CartController {
   ) {
     return this.cartService.removeComicFromCart(cartId, comicId);
   }
-  @Patch(':userId/increase/:comicId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('increase/:comicId')
   async increaseComicQuantity(
-    @Param('userId') userId: string,
+    @Req() req: any,
     @Param('comicId') comicId: string,
   ) {
-    return this.cartService.increaseComicQuantity(userId, comicId);
+    return this.cartService.increaseComicQuantity(req.user.id, comicId);
   }
-
-  @Patch(':userId/decrease/:comicId')
+  @UseGuards(JwtAuthGuard)
+  @Patch('decrease/:comicId')
   async decreaseComicQuantity(
-    @Param('userId') userId: string,
+    @Req() req: any,
     @Param('comicId') comicId: string,
   ) {
-    return this.cartService.decreaseComicQuantity(userId, comicId);
+    return this.cartService.decreaseComicQuantity(req.user.id, comicId);
   }
 }
