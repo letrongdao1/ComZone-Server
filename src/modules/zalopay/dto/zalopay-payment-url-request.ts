@@ -5,5 +5,5 @@ export class ZaloPayRequest {
   amount: number;
 
   @ApiProperty()
-  orderId: string;
+  type?: 'PAY' | 'DEPOSIT' | 'WITHDRAWAL';
 }

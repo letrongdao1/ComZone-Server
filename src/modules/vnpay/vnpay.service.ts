@@ -1,14 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { randomInt, createHmac } from 'crypto';
 import * as dotenv from 'dotenv';
-import dateFormat from '../../tools/date-format/date.format';
+import dateFormat from '../../utils/date-format/date.format';
 import { VNPayRequest } from './dto/vnp-payment-url-request';
+import { TransactionsService } from '../transactions/transactions.service';
 
 var querystring = require('qs');
 dotenv.config();
 
 @Injectable()
 export class VnpayService {
+  constructor(private readonly transactionsService: TransactionsService) {}
+
   sortObject(obj: any) {
     let sorted = {};
     let str = [];
@@ -25,7 +28,11 @@ export class VnpayService {
     return sorted;
   }
 
-  async createPaymentLink(vnpayRequest: VNPayRequest, ipAddress: string) {
+  async createPaymentLink(
+    userId: string,
+    vnpayRequest: VNPayRequest,
+    ipAddress: string,
+  ) {
     if (
       !vnpayRequest.amount ||
       vnpayRequest.amount < 1000 ||
@@ -36,13 +43,22 @@ export class VnpayService {
     )
       throw new BadRequestException('Invalid VNPay request!');
 
+    const newTransaction = await this.transactionsService.createNewTransaction(
+      userId,
+      {
+        amount: vnpayRequest.amount,
+        type: vnpayRequest.type,
+        provider: 'VNPay',
+      },
+    );
+
     var tmnCode = process.env.VNPAY_TERMINAL_ID;
     var secretKey = process.env.VNPAY_SECRET_KEY;
     var vnpUrl = process.env.VNPAY_PAYMENT_URL;
 
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
     // var bankCode = 'VNBANK';
-    var returnUrl = 'http://localhost:3000/vnpay/return';
+    var returnUrl = `http://localhost:3000/vnpay/return/${newTransaction.id}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -54,7 +70,7 @@ export class VnpayService {
       vnp_TxnRef: vnpayRequest.orderId
         ? vnpayRequest.orderId
         : randomInt(1000000, 9999999),
-      vnp_OrderInfo: `${vnpayRequest.orderId}`,
+      vnp_OrderInfo: `${newTransaction.id}`,
       vnp_OrderType: 'ComZone purchase',
       vnp_Amount: vnpayRequest.amount * 100,
       vnp_ReturnUrl: returnUrl,
@@ -75,10 +91,11 @@ export class VnpayService {
     return {
       message: 'A new payment link was created successfully.',
       url: vnpUrl,
+      transaction: newTransaction,
     };
   }
 
-  handlePaymentReturn(req: any) {
+  async handlePaymentReturn(req: any, transactionId: string) {
     let vnp_Params = req.query;
 
     let secureHash = vnp_Params['vnp_SecureHash'];
@@ -96,12 +113,22 @@ export class VnpayService {
     let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     if (secureHash === signed) {
+      await this.transactionsService.updateTransactionStatus(
+        transactionId,
+        vnp_Params['vnp_ResponseCode'] === '00' ? 'SUCCESSFUL' : 'FAILED',
+      );
+
       return {
-        code: vnp_Params['vnp_ResponseCode'],
-        status:
-          vnp_Params['vnp_ResponseCode'] === '00' ? 'Successful' : 'Failed',
+        message:
+          vnp_Params['vnp_ResponseCode'] === '00'
+            ? 'Successful transaction'
+            : 'Failed',
       };
     } else {
+      await this.transactionsService.updateTransactionStatus(
+        transactionId,
+        'FAILED',
+      );
       return { code: 97 };
     }
   }

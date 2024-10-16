@@ -4,6 +4,8 @@ import { BaseService } from 'src/common/service.base';
 import { Order } from 'src/entities/orders.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
+import { CreateOrderDTO } from './dto/createOrderDTO';
+import { generateNumericCode } from 'src/utils/generator/generators';
 
 @Injectable()
 export class OrdersService extends BaseService<Order> {
@@ -13,6 +15,23 @@ export class OrdersService extends BaseService<Order> {
     @Inject(UsersService) private readonly usersService: UsersService,
   ) {
     super(ordersRepository);
+  }
+
+  async createNewOrder(createOrderDto: CreateOrderDTO) {
+    const buyer = await this.usersService.getOne(createOrderDto.buyer);
+    if (!buyer) throw new NotFoundException('Buyer cannot be found!');
+
+    const seller = await this.usersService.getOne(createOrderDto.seller);
+    if (!seller) throw new NotFoundException('Seller cannot be found!');
+
+    const newOrder = this.ordersRepository.create({
+      ...createOrderDto,
+      seller,
+      buyer,
+      code: generateNumericCode(8),
+    });
+
+    return await this.ordersRepository.save(newOrder);
   }
 
   async getAllOrdersOfBuyer(userId: string): Promise<Order[]> {
@@ -38,6 +57,12 @@ export class OrdersService extends BaseService<Order> {
           id: userId,
         },
       },
+    });
+  }
+
+  async getOrderByCode(code: string): Promise<Order> {
+    return await this.ordersRepository.findOne({
+      where: { code },
     });
   }
 }

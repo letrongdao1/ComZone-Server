@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class DepositRequest {
+export class DepositRequestDTO {
   @ApiProperty()
-  requestId: string;
+  transactionCode: string;
 
   @ApiProperty()
   amount: number;

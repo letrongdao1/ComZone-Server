@@ -34,7 +34,7 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
   @Post()
   createNewOrder(@Body() createOrderDto: CreateOrderDTO) {
-    return this.ordersService.create(createOrderDto);
+    return this.ordersService.createNewOrder(createOrderDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -49,6 +49,12 @@ export class OrdersController {
   @Get('seller/:userId')
   getAllOrdersOfSeller(@Param('userId') userId: string) {
     return this.ordersService.getAllOrdersOfSeller(userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/code/:code')
+  getOrderByCode(@Param('code') code: string) {
+    return this.ordersService.getOrderByCode(code);
   }
 
   @UseGuards(JwtAuthGuard)
