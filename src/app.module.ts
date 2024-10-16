@@ -18,6 +18,9 @@ import { OrderItemsModule } from './modules/order-items/order-items.module';
 import { ZalopayModule } from './modules/zalopay/zalopay.module';
 import { VnpayModule } from './modules/vnpay/vnpay.module';
 import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-address.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
+import { TransactionsModule } from './modules/transactions/transactions.module';
+import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
 import { OtpModule } from './modules/otps/otps.module';
 
 @Module({
@@ -51,6 +54,9 @@ import { OtpModule } from './modules/otps/otps.module';
     VnpayModule,
     ZalopayModule,
     VietNamAddressModule,
+    WalletsModule,
+    TransactionsModule,
+    UserAddressesModule,
     OtpModule,
   ],
   controllers: [AppController],

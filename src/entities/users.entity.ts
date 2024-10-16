@@ -1,10 +1,13 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Role } from './roles.entity';
 import { Cart } from './carts.entity';
 import { Order } from './orders.entity';
 import { Otp } from './otp.entity';
+import { Wallet } from './wallets.entity';
+import { Transaction } from './transactions.entity';
+import { Address } from './address.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -64,6 +67,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Comic, (comic) => comic.sellerId)
   comics: Comic[];
+
   @OneToMany(() => Cart, (cart) => cart.user)
   carts: Cart[];
 
@@ -75,4 +79,13 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
+
+  @OneToOne(() => Wallet, (wallet) => wallet.user)
+  wallet: Wallet;
+
+  @OneToMany(() => Transaction, (transaction) => transaction.user)
+  transactions: Transaction[];
+
+  @OneToMany(() => Address, (address) => address.user)
+  addresses: Address[];
 }
