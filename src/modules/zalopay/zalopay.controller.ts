@@ -20,12 +20,15 @@ export class ZalopayController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  createPaymentLink(@Body() zaloPayRequest: ZaloPayRequest) {
-    return this.zalopayService.createPaymentLink(zaloPayRequest);
+  createPaymentLink(@Req() req: any, @Body() zaloPayRequest: ZaloPayRequest) {
+    return this.zalopayService.createPaymentLink(req.user.id, zaloPayRequest);
   }
 
-  @Get('status')
-  getPaymentStatus(@Req() req: any) {
-    return this.zalopayService.getPaymentStatus(req);
+  @Get('status/:transactionId')
+  getPaymentStatus(
+    @Req() req: any,
+    @Param('transactionId') transactionId: string,
+  ) {
+    return this.zalopayService.getPaymentStatus(req, transactionId);
   }
 }

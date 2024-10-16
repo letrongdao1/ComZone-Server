@@ -15,7 +15,7 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { WalletDTO } from './dto/wallet';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { DepositRequest } from './dto/deposit-request';
+import { DepositRequestDTO } from './dto/deposit-request';
 
 @ApiBearerAuth()
 @ApiTags('Wallets')
@@ -39,7 +39,25 @@ export class WalletsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('/deposit')
-  deposit(@Req() req: any, @Body() depositRequest: DepositRequest) {
+  deposit(@Req() req: any, @Body() depositRequest: DepositRequestDTO) {
     return this.walletsService.deposit(req.user.id, depositRequest);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/withdraw')
+  withdraw(@Req() req: any, @Body() data: { amount: number }) {
+    return this.walletsService.withdraw(req.user.id, data.amount);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/non-withdrawable-amount')
+  updateNonWithdrawableAmount(
+    @Req() req: any,
+    @Body() data: { amount: number },
+  ) {
+    return this.walletsService.updateNonWithdrawableAmount(
+      req.user.id,
+      data.amount,
+    );
   }
 }
