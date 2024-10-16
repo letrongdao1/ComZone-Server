@@ -26,14 +26,13 @@ export class CartService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    console.log('user:::::::', user);
+
     // Find the user's cart or create a new one
     let cart = await this.cartRepository.findOne({
       where: { user: { id: user.id } },
-      relations: ['comics'],
+      relations: ['comics', 'comics.sellerId'], // Ensure sellerId is included for each comic in the cart
     });
 
-    console.log('cart::::::::::', cart);
     if (!cart) {
       cart = this.cartRepository.create({
         user,
@@ -43,9 +42,10 @@ export class CartService {
       });
     }
 
-    // Find the comic
+    // Find the comic with sellerId
     const comic = await this.comicRepository.findOne({
       where: { id: comicId },
+      relations: ['sellerId'], // Ensure that sellerId is included when fetching the comic
     });
     if (!comic) {
       throw new NotFoundException('Comic not found');
@@ -63,7 +63,13 @@ export class CartService {
     cart.totalPrice = this.calculateTotalPrice(cart.comics, cart.quantities);
 
     // Save the updated cart
-    return this.cartRepository.save(cart);
+    const updatedCart = await this.cartRepository.save(cart);
+
+    // Return the updated cart with all necessary relations included
+    return await this.cartRepository.findOne({
+      where: { id: updatedCart.id },
+      relations: ['comics', 'comics.sellerId'], // Ensure all comics in the cart include sellerId
+    });
   }
 
   private calculateTotalPrice(
