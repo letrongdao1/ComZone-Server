@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { createHmac, randomInt } from 'crypto';
 import axios from 'axios';
+import dateFormat from 'src/tools/date-format/date.format';
+import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
 
 @Injectable()
 export class ZalopayService {
@@ -13,31 +15,35 @@ export class ZalopayService {
       'https://sandbox.zalopay.com.vn/v001/tpe/getstatusbyapptransid',
   };
 
-  async createPaymentLink(data2: any) {
+  async createPaymentLink(zaloPayRequest: ZaloPayRequest) {
+    if (
+      !zaloPayRequest.amount ||
+      zaloPayRequest.amount < 1000 ||
+      zaloPayRequest.amount > 99999999 ||
+      !zaloPayRequest.orderId ||
+      zaloPayRequest.orderId.length < 3 ||
+      zaloPayRequest.orderId.length > 20
+    )
+      throw new BadRequestException('Invalid ZaloPay request!');
+
     const embeddata = {
-      redirecturl: 'https://www.google.com',
-      merchantinfo: 'embeddata123',
-      // bankgroup: 'ATM',
+      redirecturl: 'http://localhost:3000/zalopay/status',
+      merchantinfo: 'ComZoneZaloPay',
     };
 
-    const items = [
-      {
-        itemid: 'knb',
-        itemname: 'kim nguyen bao',
-        itemprice: 198400,
-        itemquantity: 1,
-      },
-    ];
+    const items = [];
+
+    const createDate = dateFormat(new Date(), 'yymmdd');
 
     const order = {
       appid: this.config.appid,
-      apptransid: `241012_${randomInt(1000000, 9999999999)}`,
+      apptransid: `${createDate}_${zaloPayRequest.orderId}`,
       appuser: 'demo',
       apptime: Date.now(),
       item: JSON.stringify(items),
       embeddata: JSON.stringify(embeddata),
-      amount: 50000,
-      description: 'ZaloPay Integration Demo',
+      amount: zaloPayRequest.amount,
+      description: `ComZone ZaloPay Order ${zaloPayRequest.orderId}`,
       bankcode: '',
       mac: '',
     };
@@ -61,20 +67,22 @@ export class ZalopayService {
       .update(data)
       .digest('hex');
 
-    axios
+    return await axios
       .post(this.config.createOrderEndpoint, null, { params: order })
       .then((res) => {
         console.log(res.data);
       });
   }
 
-  async getPaymentStatus(appTransId: string) {
+  async getPaymentStatus(req: any) {
+    console.log(req.query);
+    const appTransId = req.query.apptransid;
+
     const macStr =
       this.config.appid + '|' + appTransId + '|' + this.config.key1;
     const mac = createHmac('sha256', this.config.key1)
       .update(macStr)
       .digest('hex');
-
     await axios
       .post(
         this.config.getStatusEndpoint,
