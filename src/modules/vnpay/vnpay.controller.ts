@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Ip,
+  Param,
   Post,
   Req,
   UseGuards,
@@ -20,12 +21,16 @@ export class VnpayController {
 
   @UseGuards(JwtAuthGuard)
   @Post('create_payment_link')
-  createPaymentLink(@Body() vnpayRequest: VNPayRequest, @Ip() ip: string) {
-    return this.vnpayService.createPaymentLink(vnpayRequest, ip);
+  createPaymentLink(
+    @Req() req: any,
+    @Body() vnpayRequest: VNPayRequest,
+    @Ip() ip: string,
+  ) {
+    return this.vnpayService.createPaymentLink(req.user.id, vnpayRequest, ip);
   }
 
-  @Get('return')
-  handleReturn(@Req() req: any) {
-    return this.vnpayService.handlePaymentReturn(req);
+  @Get('return/:transactionId')
+  handleReturn(@Req() req: any, @Param('transactionId') transactionId: string) {
+    return this.vnpayService.handlePaymentReturn(req, transactionId);
   }
 }

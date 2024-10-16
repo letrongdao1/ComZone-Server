@@ -16,6 +16,13 @@ export class Order extends BaseEntity {
   buyer: User;
 
   @Column({
+    type: 'varchar',
+    nullable: false,
+    unique: true,
+  })
+  code: string;
+
+  @Column({
     type: 'float',
     precision: 2,
     nullable: false,
