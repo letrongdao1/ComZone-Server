@@ -171,7 +171,7 @@ export class CartService {
   async getCartByUserId(userId: string): Promise<Cart> {
     return this.cartRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['comics'],
+      relations: ['comics', 'comics.sellerId'],
     });
   }
 }
