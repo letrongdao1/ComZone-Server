@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -40,10 +41,22 @@ export class UserAddressesService extends BaseService<Address> {
       where: { user: { id: userId } },
     });
 
+    if (userAddresses.length === 3)
+      throw new ForbiddenException(
+        'This user reached the maximum of 3 addresses!',
+      );
+
+    if (addressDto.isDefault) {
+      await this.userAddressesRepository.update(
+        { user: { id: userId } },
+        { isDefault: false },
+      );
+    }
+
     const newAddress = this.userAddressesRepository.create({
       ...addressDto,
       user,
-      isDefault: userAddresses.length === 0,
+      isDefault: addressDto.isDefault || userAddresses.length === 0,
       usedTime: 0,
     });
 
@@ -90,6 +103,23 @@ export class UserAddressesService extends BaseService<Address> {
     );
   }
 
+  async updateAddress(
+    userId: string,
+    addressId: string,
+    addressDto: UserAddressDTO,
+  ) {
+    if (addressDto.isDefault) {
+      await this.userAddressesRepository.update(
+        { user: { id: userId } },
+        { isDefault: false },
+      );
+    }
+
+    return await this.userAddressesRepository.update(addressId, {
+      ...addressDto,
+    });
+  }
+
   async incrementAddressUsedTime(addressId: string) {
     const address = await this.userAddressesRepository.findOne({
       where: { id: addressId },
@@ -100,5 +130,33 @@ export class UserAddressesService extends BaseService<Address> {
     return await this.userAddressesRepository.update(addressId, {
       usedTime: address.usedTime + 1,
     });
+  }
+
+  async deleteAddress(userId: string, addressId: string) {
+    const address = await this.userAddressesRepository.findOne({
+      where: { id: addressId },
+    });
+
+    if (address.isDefault) {
+      const userAddresses = await this.userAddressesRepository.find({
+        where: { user: { id: userId } },
+        order: { usedTime: 'DESC' },
+      });
+
+      const filteredList = userAddresses.filter(
+        (address) => address.id !== addressId,
+      );
+
+      const newSelectedDefaultAddress = filteredList.reduce((prev, current) => {
+        return prev && prev.usedTime > current.usedTime ? prev : current;
+      });
+
+      await this.userAddressesRepository.update(
+        { id: newSelectedDefaultAddress.id },
+        { isDefault: true },
+      );
+    }
+
+    return await this.userAddressesRepository.delete(addressId);
   }
 }
