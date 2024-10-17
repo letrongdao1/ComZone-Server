@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Address } from 'src/entities/address.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { UserAddressDTO } from './dto/user-address';
 
@@ -137,24 +137,43 @@ export class UserAddressesService extends BaseService<Address> {
       where: { id: addressId },
     });
 
-    if (address.isDefault) {
-      const userAddresses = await this.userAddressesRepository.find({
-        where: { user: { id: userId } },
-        order: { usedTime: 'DESC' },
-      });
+    const userAddresses = await this.userAddressesRepository.find({
+      where: { user: { id: userId } },
+      order: { usedTime: 'DESC' },
+    });
 
-      const filteredList = userAddresses.filter(
-        (address) => address.id !== addressId,
-      );
+    if (userAddresses.length > 1) {
+      if (address.isDefault) {
+        const filteredList = userAddresses.filter(
+          (address) => address.id !== addressId,
+        );
 
-      const newSelectedDefaultAddress = filteredList.reduce((prev, current) => {
-        return prev && prev.usedTime > current.usedTime ? prev : current;
-      });
-
-      await this.userAddressesRepository.update(
-        { id: newSelectedDefaultAddress.id },
-        { isDefault: true },
-      );
+        if (filteredList.length === 2) {
+          var newSelectedDefaultAddress: Address = null;
+          if (filteredList[0].usedTime === filteredList[1].usedTime) {
+            newSelectedDefaultAddress = filteredList.reduce((prev, current) => {
+              return prev &&
+                new Date(prev.createdAt) < new Date(current.createdAt)
+                ? prev
+                : current;
+            });
+          } else {
+            newSelectedDefaultAddress = filteredList.reduce((prev, current) => {
+              return prev && prev.usedTime > current.usedTime ? prev : current;
+            });
+          }
+          if (newSelectedDefaultAddress)
+            await this.userAddressesRepository.update(
+              { id: newSelectedDefaultAddress.id },
+              { isDefault: true },
+            );
+        } else {
+          await this.userAddressesRepository.update(
+            { id: Not(addressId) },
+            { isDefault: true },
+          );
+        }
+      }
     }
 
     return await this.userAddressesRepository.delete(addressId);
