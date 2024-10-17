@@ -23,43 +23,32 @@ export class WalletsService extends BaseService<Wallet> {
     super(walletsRepository);
   }
 
-  async getUserWallet(userId: string) {
+  async getUserWallet(userId: string): Promise<any> {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    const wallet = this.walletsRepository.findOne({
+    const wallet = await this.walletsRepository.findOne({
       where: {
         user: {
           id: userId,
         },
       },
-      select: [
-        'id',
-        'user',
-        'balance',
-        'nonWithdrawableAmount',
-        'status',
-        'createdAt',
-        'updatedAt',
-        'deletedAt',
-      ],
     });
 
     if (!wallet) {
-      return await this.createUserWallet(userId, {
+      const newWallet = this.walletsRepository.create({
+        user,
         balance: 0,
         nonWithdrawableAmount: 0,
         status: 'ACTIVATED',
       });
+      return await this.walletsRepository.save(newWallet);
     }
 
     return wallet;
   }
 
-  async createUserWallet(
-    userId: string,
-    walletDto: WalletDTO,
-  ): Promise<Wallet> {
+  async createUserWallet(userId: string, walletDto: WalletDTO) {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
@@ -77,14 +66,11 @@ export class WalletsService extends BaseService<Wallet> {
       status: walletDto.status,
     });
 
-    return this.walletsRepository.save(wallet);
+    return await this.walletsRepository.save(wallet);
   }
 
   async deposit(userId: string, depositRequest: DepositRequestDTO) {
     const wallet = await this.getUserWallet(userId);
-
-    if (depositRequest.amount <= 0)
-      throw new BadRequestException('Invalid deposit amount!');
 
     const transaction = await this.transactionsService.getTransactionByCode(
       depositRequest.transactionCode,
@@ -93,14 +79,22 @@ export class WalletsService extends BaseService<Wallet> {
     if (!transaction)
       throw new NotFoundException('Transaction cannot be found!');
 
+    if (transaction.type !== 'DEPOSIT')
+      throw new BadRequestException(
+        'Invalid transaction type! (must be DEPOSIT)',
+      );
+
+    if (transaction.amount <= 0)
+      throw new BadRequestException('Invalid deposit amount!');
+
     if (transaction.status.toUpperCase() === 'SUCCESSFUL') {
       return await this.walletsRepository.update(
         { id: wallet.id },
-        { balance: depositRequest.amount },
+        { balance: transaction.amount },
       );
     } else {
       return {
-        message: `Failed to deposit due to unsuccessful transaction ${depositRequest.transactionCode}`,
+        message: `Failed to deposit due to unsuccessful transaction ${depositRequest.transactionCode}!`,
       };
     }
   }

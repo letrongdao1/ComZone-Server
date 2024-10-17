@@ -22,14 +22,8 @@ export class VietNamAddressController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('wards/:province_code/:district_code')
-  getWardsByCodes(
-    @Param('province_code') provinceCode: string,
-    @Param('district_code') districtCode: string,
-  ) {
-    return this.vietNamAddressService.getWardsByCodes(
-      provinceCode,
-      districtCode,
-    );
+  @Get('wards/:district_code')
+  getWardsByCodes(@Param('district_code') districtCode: string) {
+    return this.vietNamAddressService.getWardsByCodes(districtCode);
   }
 }
