@@ -16,24 +16,33 @@ export class VietNamAddressService {
     if (!province)
       throw new NotFoundException('Province code cannot be found!');
 
-    return province.districts;
+    return province.districts.map((district) => {
+      return {
+        district: district.name,
+        code: district.code,
+      };
+    });
   }
 
-  getWardsByCodes(provinceCode: string, districtCode: string) {
-    const province = data.find(
-      (address) => (address.code = parseInt(provinceCode)),
+  getWardsByCodes(districtCode: string) {
+    const provinceWithDistrictCode = data.find((address) =>
+      address.districts.find(
+        (district) => district.code === parseInt(districtCode),
+      ),
     );
 
-    if (!province)
-      throw new NotFoundException('Province code cannot be found!');
-
-    const district = province.districts.find(
-      (dist) => dist.code === parseInt(districtCode),
-    );
-
-    if (!district)
+    if (!provinceWithDistrictCode)
       throw new NotFoundException('District code cannot be found!');
 
-    return district.wards;
+    const district = provinceWithDistrictCode.districts.find(
+      (district) => district.code === parseInt(districtCode),
+    );
+
+    return district.wards.map((ward) => {
+      return {
+        ward: ward.name,
+        code: ward.code,
+      };
+    });
   }
 }
