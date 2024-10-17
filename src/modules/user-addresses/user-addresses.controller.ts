@@ -33,15 +33,6 @@ export class UserAddressesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':addressId')
-  updateAddress(
-    @Param('addressId') addressId: string,
-    @Body() addressDto: UserAddressDTO,
-  ) {
-    return this.userAddressesService.update(addressId, addressDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch('default/:addressId')
   updateDefaultAddress(@Req() req: any, @Param('addressId') addressId: string) {
     return this.userAddressesService.updateDefaultAddress(
@@ -57,8 +48,22 @@ export class UserAddressesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch(':addressId')
+  updateAddress(
+    @Param('addressId') addressId: string,
+    @Body() addressDto: UserAddressDTO,
+    @Req() req: any,
+  ) {
+    return this.userAddressesService.updateAddress(
+      req.user.id,
+      addressId,
+      addressDto,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Delete(':addressId')
-  deleteUserAddress(@Param('addressId') addressId: string) {
-    return this.userAddressesService.softDelete(addressId);
+  deleteUserAddress(@Req() req: any, @Param('addressId') addressId: string) {
+    return this.userAddressesService.deleteAddress(req.user.id, addressId);
   }
 }
