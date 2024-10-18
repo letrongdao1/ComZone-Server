@@ -10,6 +10,7 @@ import { Address } from 'src/entities/address.entity';
 import { Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { UserAddressDTO } from './dto/user-address';
+import data from '../viet-nam-address/address-data.json';
 
 @Injectable()
 export class UserAddressesService extends BaseService<Address> {
@@ -75,6 +76,49 @@ export class UserAddressesService extends BaseService<Address> {
         usedTime: 'DESC',
       },
     });
+  }
+
+  async getAddressCodesOfUser(addressId: string) {
+    const userAddress = await this.userAddressesRepository.findOne({
+      where: { id: addressId },
+    });
+    if (!userAddress)
+      throw new NotFoundException('User address cannot be found!');
+
+    const provinceCode = data.find(
+      (address) => address.name === userAddress.province,
+    ).code;
+
+    const provinceWithDistrictCode = data.find((address) =>
+      address.districts.find(
+        (district) => district.name === userAddress.district,
+      ),
+    );
+
+    const districtCode = provinceWithDistrictCode.districts.find(
+      (district) => district.name === userAddress.district,
+    ).code;
+
+    const provinceWithWardCode = data.find((address) =>
+      address.districts.find((district) =>
+        district.wards.find((ward) => ward.name === userAddress.ward),
+      ),
+    );
+
+    const districtWithWardCode = provinceWithWardCode.districts.find(
+      (district) =>
+        district.wards.find((ward) => ward.name === userAddress.ward),
+    );
+
+    const wardCode = districtWithWardCode.wards.find(
+      (ward) => ward.name === userAddress.ward,
+    ).code;
+
+    return {
+      provinceCode,
+      districtCode,
+      wardCode,
+    };
   }
 
   async updateDefaultAddress(userId: string, addressId: string) {

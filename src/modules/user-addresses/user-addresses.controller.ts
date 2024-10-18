@@ -33,6 +33,12 @@ export class UserAddressesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('address-code/:addressId')
+  getAddressCodesOfUser(@Param('addressId') addressId: string) {
+    return this.userAddressesService.getAddressCodesOfUser(addressId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('default/:addressId')
   updateDefaultAddress(@Req() req: any, @Param('addressId') addressId: string) {
     return this.userAddressesService.updateDefaultAddress(
