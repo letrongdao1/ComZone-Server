@@ -5,9 +5,6 @@ export class CreateOrderDTO {
   seller: string;
 
   @ApiProperty()
-  buyer: string;
-
-  @ApiProperty()
   total_price: number;
 
   @ApiProperty({ nullable: true })

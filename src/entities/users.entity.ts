@@ -74,7 +74,7 @@ export class User extends BaseEntity {
   @OneToMany(() => Order, (order) => order.seller)
   sold_order: Order[];
 
-  @OneToMany(() => Order, (order) => order.buyer)
+  @OneToMany(() => Order, (order) => order.user)
   purchased_order: Order[];
 
   @OneToMany(() => Otp, (otp) => otp.user)

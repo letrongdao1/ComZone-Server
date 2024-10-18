@@ -2,18 +2,24 @@ import { Entity, Column, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/common/entity.base';
 import { User } from './users.entity';
 import { OrderItem } from './order-items.entity';
+import { Address } from './address.entity';
 
 @Entity('orders')
 export class Order extends BaseEntity {
+  @ManyToOne(() => User, (user) => user.purchased_order, {
+    eager: true,
+  })
+  user: User;
+
   @ManyToOne(() => User, (user) => user.sold_order, {
     eager: true,
   })
   seller: User;
 
-  @ManyToOne(() => User, (user) => user.purchased_order, {
+  @ManyToOne(() => Address, (address) => address.orders, {
     eager: true,
   })
-  buyer: User;
+  address: Address;
 
   @Column({
     type: 'varchar',
