@@ -36,10 +36,7 @@ export class VnpayService {
     if (
       !vnpayRequest.amount ||
       vnpayRequest.amount < 1000 ||
-      vnpayRequest.amount > 99999999 ||
-      !vnpayRequest.orderId ||
-      vnpayRequest.orderId.length < 3 ||
-      vnpayRequest.orderId.length > 20
+      vnpayRequest.amount > 99999999
     )
       throw new BadRequestException('Invalid VNPay request!');
 
@@ -67,9 +64,7 @@ export class VnpayService {
       vnp_Locale: 'vn',
       vnp_CurrCode: 'VND',
       //   vnp_BankCode: bankCode,
-      vnp_TxnRef: vnpayRequest.orderId
-        ? vnpayRequest.orderId
-        : randomInt(1000000, 9999999),
+      vnp_TxnRef: newTransaction.code,
       vnp_OrderInfo: `${newTransaction.id}`,
       vnp_OrderType: 'ComZone purchase',
       vnp_Amount: vnpayRequest.amount * 100,
