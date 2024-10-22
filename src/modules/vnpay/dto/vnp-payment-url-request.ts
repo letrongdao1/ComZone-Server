@@ -5,8 +5,5 @@ export class VNPayRequest {
   amount: number;
 
   @ApiProperty()
-  orderId: string;
-
-  @ApiProperty()
   type?: 'PAY' | 'DEPOSIT' | 'WITHDRAWAL';
 }

@@ -90,7 +90,7 @@ export class WalletsService extends BaseService<Wallet> {
     if (transaction.status.toUpperCase() === 'SUCCESSFUL') {
       return await this.walletsRepository.update(
         { id: wallet.id },
-        { balance: transaction.amount },
+        { balance: wallet.balance + transaction.amount },
       );
     } else {
       return {
