@@ -20,4 +20,10 @@ export class TransactionDTO {
     nullable: true,
   })
   provider?: string;
+
+  @ApiProperty({
+    nullable: true,
+    default: false,
+  })
+  isUsed?: boolean;
 }

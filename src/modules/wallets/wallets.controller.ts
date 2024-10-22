@@ -51,6 +51,12 @@ export class WalletsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch('/pay')
+  pay(@Req() req: any, @Body() payRequestDto: WithdrawRequestDTO) {
+    return this.walletsService.pay(req.user.id, payRequestDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('/non-withdrawable-amount')
   updateNonWithdrawableAmount(
     @Req() req: any,

@@ -41,6 +41,7 @@ import { SellerInformationModule } from './modules/seller-information/seller-inf
       }),
       inject: [ConfigService],
     }),
+
     AuthModule,
     UsersModule,
     RolesModule,

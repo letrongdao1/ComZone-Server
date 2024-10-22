@@ -148,6 +148,44 @@ export class WalletsService extends BaseService<Wallet> {
     };
   }
 
+  async pay(userId: string, payRequestDto: WithdrawRequestDTO) {
+    const wallet = await this.getUserWallet(userId);
+
+    if (payRequestDto.amount <= 0)
+      throw new BadRequestException('Invalid amount to pay!');
+
+    if (payRequestDto.amount > wallet.balance - wallet.nonWithdrawableAmount)
+      throw new BadRequestException('Insufficient balance!');
+
+    const transaction = await this.transactionsService.createNewTransaction(
+      userId,
+      {
+        amount: payRequestDto.amount,
+        type: 'PAY',
+        status: 'SUCCESSFUL',
+      },
+    );
+
+    await this.walletsRepository.update(
+      {
+        id: wallet.id,
+      },
+      {
+        balance: wallet.balance - payRequestDto.amount,
+      },
+    );
+
+    await this.transactionsService.updateTransactionIsUsed(transaction.id);
+
+    return {
+      message: 'Successfully paid!',
+      transaction,
+      wallet: await this.walletsRepository.findOne({
+        where: { id: wallet.id },
+      }),
+    };
+  }
+
   async updateNonWithdrawableAmount(userId: string, amount: number) {
     const wallet = await this.getUserWallet(userId);
 
