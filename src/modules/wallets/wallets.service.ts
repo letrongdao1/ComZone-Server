@@ -87,11 +87,18 @@ export class WalletsService extends BaseService<Wallet> {
     if (transaction.amount <= 0)
       throw new BadRequestException('Invalid deposit amount!');
 
-    if (transaction.status.toUpperCase() === 'SUCCESSFUL') {
-      return await this.walletsRepository.update(
+    if (
+      transaction.status.toUpperCase() === 'SUCCESSFUL' &&
+      !transaction.isUsed
+    ) {
+      await this.walletsRepository.update(
         { id: wallet.id },
         { balance: wallet.balance + transaction.amount },
       );
+
+      await this.transactionsService.updateTransactionIsUsed(transaction.id);
+
+      return await this.walletsRepository.findOne({ where: { id: wallet.id } });
     } else {
       return {
         message: `Failed to deposit due to unsuccessful transaction ${depositRequest.transactionCode}!`,
@@ -121,9 +128,14 @@ export class WalletsService extends BaseService<Wallet> {
       },
     );
 
+    await this.transactionsService.updateTransactionIsUsed(transaction.id);
+
     return {
       message: 'Successful withdrawal!',
       transaction,
+      wallet: await this.walletsRepository.findOne({
+        where: { id: wallet.id },
+      }),
     };
   }
 

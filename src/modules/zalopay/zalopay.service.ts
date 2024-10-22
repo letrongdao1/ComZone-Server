@@ -19,7 +19,11 @@ export class ZalopayService {
       'https://sandbox.zalopay.com.vn/v001/tpe/getstatusbyapptransid',
   };
 
-  async createPaymentLink(userId: string, zaloPayRequest: ZaloPayRequest) {
+  async createPaymentLink(
+    userId: string,
+    zaloPayRequest: ZaloPayRequest,
+    context: 'WALLET' | 'CHECKOUT',
+  ) {
     if (
       !zaloPayRequest.amount ||
       zaloPayRequest.amount < 1000 ||
@@ -37,7 +41,10 @@ export class ZalopayService {
     );
 
     const embeddata = {
-      redirecturl: `http://localhost:3000/zalopay/status/${newTransaction.id}`,
+      redirecturl:
+        context === 'WALLET'
+          ? `http://localhost:3000/zalopay/status/${newTransaction.id}`
+          : `http://localhost:3000/zalopay/checkout/status/${newTransaction.id}`,
       merchantinfo: 'ComZoneZaloPay',
     };
 
@@ -90,7 +97,12 @@ export class ZalopayService {
     return await urlRequest.json();
   }
 
-  async getPaymentStatus(req: any, transactionId: string) {
+  async getPaymentStatus(
+    req: any,
+    response: any,
+    transactionId: string,
+    context: 'WALLET' | 'CHECKOUT',
+  ) {
     const appTransId = req.query.apptransid;
 
     const macStr =
@@ -120,17 +132,21 @@ export class ZalopayService {
             transactionId,
             'SUCCESSFUL',
           );
-          return {
-            message: 'Successful transaction',
-          };
+          response.redirect(
+            context === 'WALLET'
+              ? 'http://localhost:5173?payment_status=SUCCESSFUL'
+              : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
+          );
         } else {
           await this.transactionsService.updateTransactionStatus(
             transactionId,
             'FAILED',
           );
-          return {
-            message: 'Failed',
-          };
+          response.redirect(
+            context === 'WALLET'
+              ? 'http://localhost:5173?payment_status=FAILED'
+              : 'http://localhost:5173/checkout?payment_status=FAILED',
+          );
         }
       })
       .catch((err) => console.log(err));
