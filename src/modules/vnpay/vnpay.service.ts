@@ -32,6 +32,7 @@ export class VnpayService {
     userId: string,
     vnpayRequest: VNPayRequest,
     ipAddress: string,
+    context: 'WALLET' | 'CHECKOUT',
   ) {
     if (
       !vnpayRequest.amount ||
@@ -55,7 +56,10 @@ export class VnpayService {
 
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
     // var bankCode = 'VNBANK';
-    var returnUrl = `http://localhost:3000/vnpay/return/${newTransaction.id}`;
+    var returnUrl =
+      context === 'WALLET'
+        ? `http://localhost:3000/vnpay/return/${newTransaction.id}`
+        : `http://localhost:3000/vnpay/checkout/return/${newTransaction.id}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -90,7 +94,12 @@ export class VnpayService {
     };
   }
 
-  async handlePaymentReturn(req: any, transactionId: string) {
+  async handlePaymentReturn(
+    req: any,
+    response: any,
+    transactionId: string,
+    context: 'WALLET' | 'CHECKOUT',
+  ) {
     let vnp_Params = req.query;
 
     let secureHash = vnp_Params['vnp_SecureHash'];
@@ -113,18 +122,30 @@ export class VnpayService {
         vnp_Params['vnp_ResponseCode'] === '00' ? 'SUCCESSFUL' : 'FAILED',
       );
 
-      return {
-        message:
-          vnp_Params['vnp_ResponseCode'] === '00'
-            ? 'Successful transaction'
-            : 'Failed',
-      };
+      if (vnp_Params['vnp_ResponseCode'] === '00') {
+        response.redirect(
+          context === 'WALLET'
+            ? 'http://localhost:5173?payment_status=SUCCESSFUL'
+            : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
+        );
+      } else {
+        response.redirect(
+          context === 'WALLET'
+            ? 'http://localhost:5173?payment_status=FAILED'
+            : 'http://localhost:5173/checkout?payment_status=FAILED',
+        );
+      }
     } else {
       await this.transactionsService.updateTransactionStatus(
         transactionId,
         'FAILED',
       );
-      return { code: 97 };
+
+      response.redirect(
+        context === 'WALLET'
+          ? 'http://localhost:5173?payment_status=FAILED'
+          : 'http://localhost:5173/checkout?payment_status=FAILED',
+      );
     }
   }
 }

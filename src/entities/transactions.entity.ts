@@ -37,6 +37,13 @@ export class Transaction extends BaseEntity {
   status: string;
 
   @Column({
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  isUsed: boolean;
+
+  @Column({
     type: 'varchar',
     nullable: true,
   })
