@@ -10,6 +10,7 @@ import {
 import {
   FileFieldsInterceptor,
   FileInterceptor,
+  FilesInterceptor,
 } from '@nestjs/platform-express';
 import { extname } from 'path';
 import { FirebaseService } from './firebase.service';
@@ -38,44 +39,45 @@ export class FileUploadController {
     }
   }
 
-  // Upload multiple files
-  @Post('upload/multiple')
+  // Upload up to 4 image files
+  @Post('upload/multiple-images')
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'file1', maxCount: 1 },
-      { name: 'file2', maxCount: 1 },
-    ]),
+    FilesInterceptor('images', 4), // Use FilesInterceptor to handle multiple files (up to 4)
   )
-  async uploadFiles(
-    @UploadedFiles()
-    files: {
-      file1?: Express.Multer.File[];
-      file2?: Express.Multer.File[];
-    },
-  ) {
-    if (!files.file1 || !files.file2) {
-      throw new BadRequestException('Both files are required!');
+  async uploadMultipleImages(@UploadedFiles() files: Express.Multer.File[]) {
+    console.log(files);
+    if (!files || files.length === 0) {
+      throw new BadRequestException('At least one image is required!');
     }
 
+    if (files.length > 4) {
+      throw new BadRequestException('You can upload a maximum of 4 images!');
+    }
+
+    const validExtArr = ['.jpg', '.jpeg', '.png'];
+    const imageUrls = [];
+
     try {
-      const uploadFile1Url = await this.firebaseService.uploadImage(
-        files.file1[0],
-        'files',
-      );
-      const uploadFile2Url = await this.firebaseService.uploadImage(
-        files.file2[0],
-        'files',
-      );
+      for (const file of files) {
+        const ext = extname(file.originalname).toLowerCase();
+
+        // Validate file extension
+        if (!validExtArr.includes(ext)) {
+          throw new BadRequestException(
+            `Invalid file type: ${file.originalname}. Only .jpg, .jpeg, .png are allowed.`,
+          );
+        }
+
+        const imageUrl = await this.firebaseService.uploadImage(file, 'images');
+        imageUrls.push(imageUrl); // Collect uploaded image URLs
+      }
 
       return {
-        message: 'Files were uploaded successfully!',
-        files: {
-          file1Url: uploadFile1Url,
-          file2Url: uploadFile2Url,
-        },
+        message: 'Images were uploaded successfully!',
+        imageUrls,
       };
     } catch (error) {
-      throw new BadRequestException(error.message || 'Files upload failed!');
+      throw new BadRequestException(error.message || 'Image upload failed!');
     }
   }
 
@@ -84,7 +86,7 @@ export class FileUploadController {
   @UseInterceptors(
     FileInterceptor('image', {
       fileFilter: (req, file, callback) => {
-        const ext = extname(file.originalname);
+        const ext = extname(file.originalname).toLowerCase();
         const validExtArr = ['.jpg', '.jpeg', '.png'];
         if (!validExtArr.includes(ext)) {
           req.fileValidationError =

@@ -21,6 +21,7 @@ export class UsersService extends BaseService<User> {
 
   async createMemberAccount(user: any): Promise<User> {
     const memberRole = await this.rolesService.getOneById(1);
+    console.log(memberRole);
     const newUser = {
       ...user,
       role: memberRole.id,

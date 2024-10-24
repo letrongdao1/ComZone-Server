@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  //Swagger
+  // Swagger
   const config = new DocumentBuilder()
     .setTitle('ComZone APIs')
     .setDescription("List of APIs for ComZone's developers.")
@@ -15,11 +15,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  //Cors
+  // CORS
   app.enableCors({
-    origin: 'http://localhost:5173', // Allow only your frontend origin
+    origin: 'http://localhost:5173', // Your frontend origin
     credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   });
+
   await app.listen(3000);
 }
 bootstrap();

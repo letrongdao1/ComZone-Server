@@ -39,6 +39,13 @@ export class User extends BaseEntity {
     nullable: true,
   })
   phone: string;
+  @Column({
+    name: 'avatar',
+    type: 'varchar',
+    nullable: true,
+    default: '',
+  })
+  avatar?: string;
 
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
   role: Role;

@@ -31,7 +31,7 @@ export class ComicController {
   create(@Body() createComicDto: CreateComicDto) {
     return this.comicService.create(createComicDto);
   }
-  @Roles(Role.MODERATOR)
+
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
