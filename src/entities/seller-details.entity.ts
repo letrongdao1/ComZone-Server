@@ -2,8 +2,8 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 
-@Entity('seller_information')
-export class SellerInformation extends BaseEntity {
+@Entity('seller_details')
+export class SellerDetails extends BaseEntity {
   @OneToOne(() => User)
   @JoinColumn()
   user: User;

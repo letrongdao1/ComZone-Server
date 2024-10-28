@@ -1,8 +1,11 @@
-import { Entity, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from 'src/common/entity.base';
 import { User } from './users.entity';
-import { OrderItem } from './order-items.entity';
+import { OrderItem } from './order-item.entity';
 import { Address } from './address.entity';
+import { OrderDelivery } from './order-delivery.entity';
+import { Transaction } from './transactions.entity';
+import { Notification } from './notification.entity';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -10,16 +13,6 @@ export class Order extends BaseEntity {
     eager: true,
   })
   user: User;
-
-  @ManyToOne(() => User, (user) => user.sold_order, {
-    eager: true,
-  })
-  seller: User;
-
-  @ManyToOne(() => Address, (address) => address.orders, {
-    eager: true,
-  })
-  address: Address;
 
   @Column({
     type: 'varchar',
@@ -29,32 +22,28 @@ export class Order extends BaseEntity {
   code: string;
 
   @Column({
+    name: 'total_price',
     type: 'float',
     precision: 2,
     nullable: false,
   })
-  total_price: number;
+  totalPrice: number;
 
   @Column({
-    type: 'enum',
-    enum: ['NON_AUCTION', 'AUCTION', 'EXCHANGE'],
-    default: 'NON_AUCTION',
-  })
-  order_type: string;
-
-  @Column({
+    name: 'payment_method',
     type: 'enum',
     enum: ['COD', 'WALLET'],
-    default: 'COD',
+    default: 'WALLET',
   })
-  payment_method: string;
+  paymentMethod: string;
 
   @Column({
+    name: 'is_paid',
     type: 'boolean',
     nullable: false,
     default: false,
   })
-  is_paid: boolean;
+  isPaid: boolean;
 
   @Column({
     type: 'enum',
@@ -63,13 +52,36 @@ export class Order extends BaseEntity {
       'PACKAGING',
       'DELIVERING',
       'DELIVERED',
-      'SUCCESSFUL',
+      'COMPLETED',
       'CANCELED',
     ],
     default: 'PENDING',
   })
   status: string;
 
+  @Column({
+    name: 'cancel_reason',
+    type: 'varchar',
+    nullable: true,
+  })
+  cancelReason: string;
+
+  @Column({
+    name: 'note',
+    type: 'text',
+    nullable: true,
+  })
+  note: string;
+
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
-  order_item: OrderItem[];
+  orderItem: OrderItem[];
+
+  @OneToOne(() => OrderDelivery, (orderDelivery) => orderDelivery.order)
+  orderDelivery: OrderDelivery;
+
+  @OneToOne(() => Transaction, (transaction) => transaction.order)
+  transactions: Transaction[];
+
+  @OneToMany(() => Notification, (notification) => notification.order)
+  notifications: Notification[];
 }

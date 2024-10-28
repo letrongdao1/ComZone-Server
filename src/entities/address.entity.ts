@@ -9,12 +9,14 @@ export class Address extends BaseEntity {
   user: User;
 
   @Column({
+    name: 'full_name',
     type: 'varchar',
     nullable: false,
   })
   fullName: string;
 
   @Column({
+    name: 'phone_number',
     type: 'varchar',
     nullable: false,
   })
@@ -39,12 +41,14 @@ export class Address extends BaseEntity {
   ward: string;
 
   @Column({
+    name: 'detailed_address',
     type: 'varchar',
     nullable: false,
   })
   detailedAddress: string;
 
   @Column({
+    name: 'is_default',
     type: 'boolean',
     default: false,
   })
@@ -56,7 +60,4 @@ export class Address extends BaseEntity {
     default: 0,
   })
   usedTime: number;
-
-  @OneToMany(() => Order, (order) => order.address)
-  orders: Order[];
 }

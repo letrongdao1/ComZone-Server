@@ -8,8 +8,6 @@ import { UsersModule } from './modules/users/users.module';
 import { FileUploadModule } from './modules/file-upload/file-upload.module';
 import { ComicModule } from './modules/comics/comics.module';
 import { GenreModule } from './modules/genres/genre.module';
-import { RolesModule } from './modules/roles/roles.module';
-import { PermissionsModule } from './modules/permissions/permissions.module';
 import { PermissionsGuard } from './modules/authorization/permission.guard';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CartModule } from './modules/cart/cart.module';
@@ -22,7 +20,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
 import { OtpModule } from './modules/otps/otps.module';
-import { SellerInformationModule } from './modules/seller-information/seller-information.module';
+import { SellerDetailsModule } from './modules/seller-details/seller-details.module';
 
 @Module({
   imports: [
@@ -44,8 +42,6 @@ import { SellerInformationModule } from './modules/seller-information/seller-inf
 
     AuthModule,
     UsersModule,
-    RolesModule,
-    PermissionsModule,
     ComicModule,
     GenreModule,
     FileUploadModule,
@@ -60,7 +56,7 @@ import { SellerInformationModule } from './modules/seller-information/seller-inf
     TransactionsModule,
     UserAddressesModule,
     OtpModule,
-    SellerInformationModule,
+    SellerDetailsModule,
   ],
   controllers: [AppController],
   providers: [

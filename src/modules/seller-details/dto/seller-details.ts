@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SellerInformationDTO {
+export class SellerDetailsDTO {
   @ApiProperty()
   verifiedPhone: string;
 

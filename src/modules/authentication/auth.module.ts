@@ -7,7 +7,6 @@ import * as dotenv from 'dotenv';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { RolesModule } from '../roles/roles.module';
 import jwtConfig from './config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import refreshJwtConfig from './config/refresh-jwt.config';
@@ -21,7 +20,6 @@ dotenv.config();
   imports: [
     UsersModule,
     PassportModule,
-    RolesModule,
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(refreshJwtConfig),

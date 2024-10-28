@@ -1,19 +1,17 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { SellerInformationService } from './seller-information.service';
+import { SellerDetailsService } from './seller-details.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { SellerInformationDTO } from './dto/seller-information';
+import { SellerDetailsDTO } from './dto/seller-details';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
-@ApiTags('Seller information')
-@Controller('seller-information')
-export class SellerInformationController {
-  constructor(
-    private readonly sellerInformationService: SellerInformationService,
-  ) {}
+@ApiTags('Seller details')
+@Controller('seller-details')
+export class SellerDetailsController {
+  constructor(private readonly sellerDetailsService: SellerDetailsService) {}
 
   @Roles(Role.MEMBER)
   @UseGuards(PermissionsGuard)
@@ -21,17 +19,17 @@ export class SellerInformationController {
   @Post()
   createSellerInformation(
     @Req() req: any,
-    @Body() sellerInformationDto: SellerInformationDTO,
+    @Body() sellerDetailsDto: SellerDetailsDTO,
   ) {
-    return this.sellerInformationService.createSellerInformation(
+    return this.sellerDetailsService.createSellerDetails(
       req.user.id,
-      sellerInformationDto,
+      sellerDetailsDto,
     );
   }
 
   @UseGuards(JwtAuthGuard)
   @Get()
   getSellerInformationOfUser(@Req() req: any) {
-    return this.sellerInformationService.getSellerInformation(req.user.id);
+    return this.sellerDetailsService.getSellerDetails(req.user.id);
   }
 }

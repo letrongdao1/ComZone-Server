@@ -7,23 +7,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { User } from 'src/entities/users.entity';
 import { Repository } from 'typeorm';
-import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class UsersService extends BaseService<User> {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly rolesService: RolesService,
   ) {
     super(userRepository);
   }
 
   async createMemberAccount(user: any): Promise<User> {
-    const memberRole = await this.rolesService.getOneById(1);
     const newUser = {
       ...user,
-      role: memberRole.id,
+      role: 'MEMBER',
     };
     return await this.userRepository.save(newUser);
   }
@@ -74,14 +71,13 @@ export class UsersService extends BaseService<User> {
     });
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    switch (user.role.id) {
-      case 1: {
-        const sellerRole = await this.rolesService.getOneById(2);
+    switch (user.role) {
+      case 'MEMBER': {
         return await this.userRepository.update(userId, {
-          role: sellerRole,
+          role: 'SELLER',
         });
       }
-      case 2: {
+      case 'SELLER': {
         return {
           message: 'This has already been a seller account!',
         };
