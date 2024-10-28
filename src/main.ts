@@ -17,10 +17,8 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: 'http://localhost:5173', // Your frontend origin
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    origin: 'http://localhost:5173',
+    credentials: true,
   });
 
   await app.listen(3000);

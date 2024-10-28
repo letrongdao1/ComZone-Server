@@ -72,4 +72,20 @@ export class TransactionsService extends BaseService<Transaction> {
       { status: newStatus },
     );
   }
+
+  async updateTransactionIsUsed(transactionId: string) {
+    const transaction = await this.transactionsRepository.findOne({
+      where: { id: transactionId },
+    });
+    await this.transactionsRepository.update(
+      { id: transactionId },
+      { isUsed: !transaction.isUsed },
+    );
+
+    return {
+      message: transaction.isUsed
+        ? 'Updated this transaction to not used yet!'
+        : 'Successfully updated this transaction to be already used!',
+    };
+  }
 }

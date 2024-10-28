@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { WalletDTO } from './dto/wallet';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DepositRequestDTO } from './dto/deposit-request';
+import { WithdrawRequestDTO } from './dto/withdraw-request';
 
 @ApiBearerAuth()
 @ApiTags('Wallets')
@@ -45,8 +46,14 @@ export class WalletsController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('/withdraw')
-  withdraw(@Req() req: any, @Body() data: { amount: number }) {
-    return this.walletsService.withdraw(req.user.id, data.amount);
+  withdraw(@Req() req: any, @Body() withdrawRequestDto: WithdrawRequestDTO) {
+    return this.walletsService.withdraw(req.user.id, withdrawRequestDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/pay')
+  pay(@Req() req: any, @Body() payRequestDto: WithdrawRequestDTO) {
+    return this.walletsService.pay(req.user.id, payRequestDto);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -4,13 +4,18 @@ import * as dotenv from 'dotenv';
 import dateFormat from '../../utils/date-format/date.format';
 import { VNPayRequest } from './dto/vnp-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
+import { Wallet } from 'src/entities/wallets.entity';
+import { WalletsService } from '../wallets/wallets.service';
 
 var querystring = require('qs');
 dotenv.config();
 
 @Injectable()
 export class VnpayService {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly walletsService: WalletsService,
+  ) {}
 
   sortObject(obj: any) {
     let sorted = {};
@@ -32,14 +37,12 @@ export class VnpayService {
     userId: string,
     vnpayRequest: VNPayRequest,
     ipAddress: string,
+    context: 'WALLET' | 'CHECKOUT',
   ) {
     if (
       !vnpayRequest.amount ||
       vnpayRequest.amount < 1000 ||
-      vnpayRequest.amount > 99999999 ||
-      !vnpayRequest.orderId ||
-      vnpayRequest.orderId.length < 3 ||
-      vnpayRequest.orderId.length > 20
+      vnpayRequest.amount > 99999999
     )
       throw new BadRequestException('Invalid VNPay request!');
 
@@ -58,7 +61,10 @@ export class VnpayService {
 
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
     // var bankCode = 'VNBANK';
-    var returnUrl = `http://localhost:3000/vnpay/return/${newTransaction.id}`;
+    var returnUrl =
+      context === 'WALLET'
+        ? `http://localhost:3000/vnpay/return/${newTransaction.id}`
+        : `http://localhost:3000/vnpay/checkout/return/${newTransaction.id}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -67,9 +73,7 @@ export class VnpayService {
       vnp_Locale: 'vn',
       vnp_CurrCode: 'VND',
       //   vnp_BankCode: bankCode,
-      vnp_TxnRef: vnpayRequest.orderId
-        ? vnpayRequest.orderId
-        : randomInt(1000000, 9999999),
+      vnp_TxnRef: newTransaction.code,
       vnp_OrderInfo: `${newTransaction.id}`,
       vnp_OrderType: 'ComZone purchase',
       vnp_Amount: vnpayRequest.amount * 100,
@@ -95,7 +99,12 @@ export class VnpayService {
     };
   }
 
-  async handlePaymentReturn(req: any, transactionId: string) {
+  async handlePaymentReturn(
+    req: any,
+    response: any,
+    transactionId: string,
+    context: 'WALLET' | 'CHECKOUT',
+  ) {
     let vnp_Params = req.query;
 
     let secureHash = vnp_Params['vnp_SecureHash'];
@@ -118,18 +127,41 @@ export class VnpayService {
         vnp_Params['vnp_ResponseCode'] === '00' ? 'SUCCESSFUL' : 'FAILED',
       );
 
-      return {
-        message:
-          vnp_Params['vnp_ResponseCode'] === '00'
-            ? 'Successful transaction'
-            : 'Failed',
-      };
+      if (vnp_Params['vnp_ResponseCode'] === '00') {
+        const transaction =
+          await this.transactionsService.getOne(transactionId);
+
+        const wallet: Wallet = await this.walletsService.getUserWallet(
+          transaction.user.id,
+        );
+
+        await this.walletsService.deposit(wallet.user.id, {
+          transactionCode: transaction.code,
+        });
+
+        response.redirect(
+          context === 'WALLET'
+            ? 'http://localhost:5173?payment_status=SUCCESSFUL'
+            : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
+        );
+      } else {
+        response.redirect(
+          context === 'WALLET'
+            ? 'http://localhost:5173?payment_status=FAILED'
+            : 'http://localhost:5173/checkout?payment_status=FAILED',
+        );
+      }
     } else {
       await this.transactionsService.updateTransactionStatus(
         transactionId,
         'FAILED',
       );
-      return { code: 97 };
+
+      response.redirect(
+        context === 'WALLET'
+          ? 'http://localhost:5173?payment_status=FAILED'
+          : 'http://localhost:5173/checkout?payment_status=FAILED',
+      );
     }
   }
 }

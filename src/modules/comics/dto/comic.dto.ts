@@ -22,9 +22,6 @@ export class CreateComicDto {
   coverImage: string[];
 
   @ApiProperty()
-  publishedDate: Date;
-
-  @ApiProperty()
   price: number;
 
   @ApiProperty()
@@ -34,16 +31,10 @@ export class CreateComicDto {
   quantity: number;
 
   @ApiProperty()
+  side_images: string[];
+
+  @ApiProperty()
   previewChapter: string[];
-
-  @ApiProperty()
-  isAuction: boolean;
-
-  @ApiProperty()
-  isExchange: boolean;
-
-  @ApiProperty()
-  comicCommission: number;
 }
 
 export class UpdateComicDto {
@@ -66,9 +57,6 @@ export class UpdateComicDto {
   coverImage?: string[];
 
   @ApiProperty()
-  publishedDate?: Date;
-
-  @ApiProperty()
   price?: number;
 
   @ApiProperty()
@@ -78,17 +66,10 @@ export class UpdateComicDto {
   quantity?: number;
 
   @ApiProperty()
+  side_images: string[];
+
+  @ApiProperty()
   previewChapter?: string[];
-
-  @ApiProperty()
-  isAuction?: boolean;
-
-  @ApiProperty()
-  @ApiProperty()
-  isExchange?: boolean;
-
-  @ApiProperty()
-  comicCommission?: number;
 }
 
 export enum ComicStatus {

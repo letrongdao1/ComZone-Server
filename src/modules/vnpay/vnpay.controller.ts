@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { VnpayService } from './vnpay.service';
@@ -20,17 +21,60 @@ export class VnpayController {
   constructor(private readonly vnpayService: VnpayService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post('create_payment_link')
+  @Post()
   createPaymentLink(
     @Req() req: any,
     @Body() vnpayRequest: VNPayRequest,
     @Ip() ip: string,
   ) {
-    return this.vnpayService.createPaymentLink(req.user.id, vnpayRequest, ip);
+    return this.vnpayService.createPaymentLink(
+      req.user.id,
+      vnpayRequest,
+      ip,
+      'WALLET',
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('checkout')
+  createPaymentLinkInCheckout(
+    @Req() req: any,
+    @Body() vnpayRequest: VNPayRequest,
+    @Ip() ip: string,
+  ) {
+    return this.vnpayService.createPaymentLink(
+      req.user.id,
+      vnpayRequest,
+      ip,
+      'CHECKOUT',
+    );
   }
 
   @Get('return/:transactionId')
-  handleReturn(@Req() req: any, @Param('transactionId') transactionId: string) {
-    return this.vnpayService.handlePaymentReturn(req, transactionId);
+  handleReturn(
+    @Req() req: any,
+    @Res() res: any,
+    @Param('transactionId') transactionId: string,
+  ) {
+    return this.vnpayService.handlePaymentReturn(
+      req,
+      res,
+      transactionId,
+      'WALLET',
+    );
+  }
+
+  @Get('checkout/return/:transactionId')
+  handleReturnInCheckout(
+    @Req() req: any,
+    @Res() res: any,
+    @Param('transactionId') transactionId: string,
+  ) {
+    return this.vnpayService.handlePaymentReturn(
+      req,
+      res,
+      transactionId,
+      'CHECKOUT',
+    );
   }
 }

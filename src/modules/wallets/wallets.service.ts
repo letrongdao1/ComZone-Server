@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { WalletDTO } from './dto/wallet';
 import { DepositRequestDTO } from './dto/deposit-request';
 import { TransactionsService } from '../transactions/transactions.service';
+import { WithdrawRequestDTO } from './dto/withdraw-request';
 
 @Injectable()
 export class WalletsService extends BaseService<Wallet> {
@@ -87,11 +88,18 @@ export class WalletsService extends BaseService<Wallet> {
     if (transaction.amount <= 0)
       throw new BadRequestException('Invalid deposit amount!');
 
-    if (transaction.status.toUpperCase() === 'SUCCESSFUL') {
-      return await this.walletsRepository.update(
+    if (
+      transaction.status.toUpperCase() === 'SUCCESSFUL' &&
+      !transaction.isUsed
+    ) {
+      await this.walletsRepository.update(
         { id: wallet.id },
-        { balance: transaction.amount },
+        { balance: wallet.balance + transaction.amount },
       );
+
+      await this.transactionsService.updateTransactionIsUsed(transaction.id);
+
+      return await this.walletsRepository.findOne({ where: { id: wallet.id } });
     } else {
       return {
         message: `Failed to deposit due to unsuccessful transaction ${depositRequest.transactionCode}!`,
@@ -99,17 +107,25 @@ export class WalletsService extends BaseService<Wallet> {
     }
   }
 
-  async withdraw(userId: string, amount: number) {
+  async withdraw(userId: string, withdrawRequestDto: WithdrawRequestDTO) {
     const wallet = await this.getUserWallet(userId);
 
-    if (amount <= 0) throw new BadRequestException('Invalid withdraw amount!');
+    if (withdrawRequestDto.amount <= 0)
+      throw new BadRequestException('Invalid withdraw amount!');
 
-    if (amount > wallet.balance - wallet.nonWithdrawableAmount)
+    if (
+      withdrawRequestDto.amount >
+      wallet.balance - wallet.nonWithdrawableAmount
+    )
       throw new BadRequestException('Insufficient balance!');
 
     const transaction = await this.transactionsService.createNewTransaction(
       userId,
-      { amount, type: 'WITHDRAWAL', status: 'SUCCESSFUL' },
+      {
+        amount: withdrawRequestDto.amount,
+        type: 'WITHDRAWAL',
+        status: 'SUCCESSFUL',
+      },
     );
 
     await this.walletsRepository.update(
@@ -117,13 +133,56 @@ export class WalletsService extends BaseService<Wallet> {
         id: wallet.id,
       },
       {
-        balance: wallet.balance - amount,
+        balance: wallet.balance - withdrawRequestDto.amount,
       },
     );
+
+    await this.transactionsService.updateTransactionIsUsed(transaction.id);
 
     return {
       message: 'Successful withdrawal!',
       transaction,
+      wallet: await this.walletsRepository.findOne({
+        where: { id: wallet.id },
+      }),
+    };
+  }
+
+  async pay(userId: string, payRequestDto: WithdrawRequestDTO) {
+    const wallet = await this.getUserWallet(userId);
+
+    if (payRequestDto.amount <= 0)
+      throw new BadRequestException('Invalid amount to pay!');
+
+    if (payRequestDto.amount > wallet.balance - wallet.nonWithdrawableAmount)
+      throw new BadRequestException('Insufficient balance!');
+
+    const transaction = await this.transactionsService.createNewTransaction(
+      userId,
+      {
+        amount: payRequestDto.amount,
+        type: 'PAY',
+        status: 'SUCCESSFUL',
+      },
+    );
+
+    await this.walletsRepository.update(
+      {
+        id: wallet.id,
+      },
+      {
+        balance: wallet.balance - payRequestDto.amount,
+      },
+    );
+
+    await this.transactionsService.updateTransactionIsUsed(transaction.id);
+
+    return {
+      message: 'Successfully paid!',
+      transaction,
+      wallet: await this.walletsRepository.findOne({
+        where: { id: wallet.id },
+      }),
     };
   }
 

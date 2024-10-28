@@ -55,14 +55,6 @@ export class Comic extends BaseEntity {
   @Column('simple-array')
   previewChapter: string[];
 
-  @Column()
-  isAuction: boolean; // Change to boolean for simplicity
-
-  @Column()
-  isExchange: boolean;
-
-  @Column('float')
-  comicCommission: number;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.comics)
   order_item: OrderItem[];

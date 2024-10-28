@@ -4,11 +4,15 @@ import axios from 'axios';
 import dateFormat from 'src/utils/date-format/date.format';
 import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
-import { URLSearchParams } from 'url';
+import { WalletsService } from '../wallets/wallets.service';
+import { Wallet } from 'src/entities/wallets.entity';
 
 @Injectable()
 export class ZalopayService {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly walletsService: WalletsService,
+  ) {}
 
   private readonly config = {
     appid: '554',
@@ -19,7 +23,11 @@ export class ZalopayService {
       'https://sandbox.zalopay.com.vn/v001/tpe/getstatusbyapptransid',
   };
 
-  async createPaymentLink(userId: string, zaloPayRequest: ZaloPayRequest) {
+  async createPaymentLink(
+    userId: string,
+    zaloPayRequest: ZaloPayRequest,
+    context: 'WALLET' | 'CHECKOUT',
+  ) {
     if (
       !zaloPayRequest.amount ||
       zaloPayRequest.amount < 1000 ||
@@ -37,7 +45,10 @@ export class ZalopayService {
     );
 
     const embeddata = {
-      redirecturl: `http://localhost:3000/zalopay/status/${newTransaction.id}`,
+      redirecturl:
+        context === 'WALLET'
+          ? `http://localhost:3000/zalopay/status/${newTransaction.id}`
+          : `http://localhost:3000/zalopay/checkout/status/${newTransaction.id}`,
       merchantinfo: 'ComZoneZaloPay',
     };
 
@@ -90,7 +101,12 @@ export class ZalopayService {
     return await urlRequest.json();
   }
 
-  async getPaymentStatus(req: any, transactionId: string) {
+  async getPaymentStatus(
+    req: any,
+    response: any,
+    transactionId: string,
+    context: 'WALLET' | 'CHECKOUT',
+  ) {
     const appTransId = req.query.apptransid;
 
     const macStr =
@@ -120,17 +136,33 @@ export class ZalopayService {
             transactionId,
             'SUCCESSFUL',
           );
-          return {
-            message: 'Successful transaction',
-          };
+
+          const transaction =
+            await this.transactionsService.getOne(transactionId);
+
+          const wallet: Wallet = await this.walletsService.getUserWallet(
+            transaction.user.id,
+          );
+
+          await this.walletsService.deposit(wallet.user.id, {
+            transactionCode: transaction.code,
+          });
+
+          response.redirect(
+            context === 'WALLET'
+              ? 'http://localhost:5173?payment_status=SUCCESSFUL'
+              : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
+          );
         } else {
           await this.transactionsService.updateTransactionStatus(
             transactionId,
             'FAILED',
           );
-          return {
-            message: 'Failed',
-          };
+          response.redirect(
+            context === 'WALLET'
+              ? 'http://localhost:5173?payment_status=FAILED'
+              : 'http://localhost:5173/checkout?payment_status=FAILED',
+          );
         }
       })
       .catch((err) => console.log(err));

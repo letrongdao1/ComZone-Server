@@ -92,7 +92,7 @@ export class ComicController {
     return this.comicService.findOneWithGenres(id);
   }
 
-  @Roles(Role.SELLER, Role.MODERATOR)
+  @Roles(Role.MEMBER, Role.SELLER, Role.MODERATOR)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Put(':id')
