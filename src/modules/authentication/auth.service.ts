@@ -67,9 +67,23 @@ export class AuthService {
   }
 
   async validateGoogleUser(googleUser: RegisterUserDTO) {
-    const user = await this.usersService.getUserByEmail(googleUser.email);
-    if (user) return user;
-    return await this.usersService.createMemberAccount(googleUser);
+    // Validate that googleUser contains necessary properties
+    if (!googleUser || !googleUser.email) {
+      throw new Error('Invalid Google user data');
+    }
+    console.log(':::::::::::', googleUser);
+
+    let user = await this.usersService.getUserByEmail(googleUser.email);
+
+    if (!user) {
+      // Ensure no null or undefined values are passed to createMemberAccount
+      if (!googleUser.name || !googleUser.email) {
+        throw new Error('Missing required user data for account creation');
+      }
+      user = await this.usersService.createMemberAccount(googleUser);
+    }
+
+    return user;
   }
 
   async login(userId: string) {

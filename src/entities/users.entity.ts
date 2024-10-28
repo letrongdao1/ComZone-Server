@@ -55,6 +55,13 @@ export class User extends BaseEntity {
     nullable: true,
   })
   phone: string;
+  @Column({
+    name: 'avatar',
+    type: 'varchar',
+    nullable: true,
+    default: '',
+  })
+  avatar?: string;
 
   @Column({
     type: 'decimal',

@@ -9,4 +9,7 @@ export class RegisterUserDTO {
 
   @ApiProperty()
   name: string;
+
+  @ApiProperty()
+  avatar: string;
 }
