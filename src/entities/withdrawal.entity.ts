@@ -2,11 +2,12 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Transaction } from './transactions.entity';
+import { SourceOfFund } from './source-of-fund.entity';
 
 @Entity('wallet-deposit')
 export class Withdrawal extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.withdrawals, { eager: true })
-  user: User;
+  @ManyToOne(() => SourceOfFund, (sof) => sof.withdrawals, { eager: true })
+  sourceOfFund: SourceOfFund;
 
   @Column({
     type: 'float',
@@ -23,5 +24,5 @@ export class Withdrawal extends BaseEntity {
   status: string;
 
   @OneToOne(() => Transaction, (transaction) => transaction.withdrawal)
-  transactions: Transaction[];
+  transaction: Transaction;
 }

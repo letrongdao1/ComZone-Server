@@ -48,5 +48,5 @@ export class ExchangeSubscription extends BaseEntity {
     () => Transaction,
     (transaction) => transaction.exchangeSubscription,
   )
-  transactions: Transaction[];
+  transaction: Transaction;
 }

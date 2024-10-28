@@ -45,5 +45,5 @@ export class SellerSubscription extends BaseEntity {
   isAutoRenewed: boolean;
 
   @OneToOne(() => Transaction, (transaction) => transaction.sellerSubscription)
-  transactions: Transaction[];
+  transaction: Transaction;
 }

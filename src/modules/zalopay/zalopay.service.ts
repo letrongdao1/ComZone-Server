@@ -4,6 +4,7 @@ import axios from 'axios';
 import dateFormat from 'src/utils/date-format/date.format';
 import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
+import { ProviderEnum } from '../transactions/dto/provider.enum';
 
 @Injectable()
 export class ZalopayService {
@@ -23,27 +24,15 @@ export class ZalopayService {
     zaloPayRequest: ZaloPayRequest,
     context: 'WALLET' | 'CHECKOUT',
   ) {
-    if (
-      !zaloPayRequest.amount ||
-      zaloPayRequest.amount < 1000 ||
-      zaloPayRequest.amount > 99999999
-    )
-      throw new BadRequestException('Invalid ZaloPay request!');
-
-    const newTransaction = await this.transactionsService.createNewTransaction(
-      userId,
-      {
-        amount: zaloPayRequest.amount,
-        type: zaloPayRequest.type,
-        provider: 'Zalopay',
-      },
+    const transaction = await this.transactionsService.getOne(
+      zaloPayRequest.transaction,
     );
 
     const embeddata = {
       redirecturl:
         context === 'WALLET'
-          ? `http://localhost:3000/zalopay/status/${newTransaction.id}`
-          : `http://localhost:3000/zalopay/checkout/status/${newTransaction.id}`,
+          ? `http://localhost:3000/zalopay/status/${transaction.id}`
+          : `http://localhost:3000/zalopay/checkout/status/${transaction.id}`,
       merchantinfo: 'ComZoneZaloPay',
     };
 
@@ -53,13 +42,13 @@ export class ZalopayService {
 
     const order = {
       appid: this.config.appid,
-      apptransid: `${createDate}_${newTransaction.code}`,
+      apptransid: `${createDate}_${transaction.code}`,
       appuser: 'demo',
       apptime: Date.now(),
       item: JSON.stringify(items),
       embeddata: JSON.stringify(embeddata),
-      amount: zaloPayRequest.amount,
-      description: `ComZone ZaloPay Order ${newTransaction.code}`,
+      amount: transaction.amount,
+      description: `ComZone ZaloPay Order ${transaction.code}`,
       bankcode: '',
       mac: '',
     };
@@ -126,14 +115,18 @@ export class ZalopayService {
       .then(async (res) => {
         console.log('LOG: ', res.data);
 
+        await this.transactionsService.updateTransactionProvider(
+          transactionId,
+          ProviderEnum.ZALOPAY,
+        );
+
         if (res.data.returncode === 1) {
           await this.transactionsService.updateTransactionStatus(
             transactionId,
             'SUCCESSFUL',
           );
 
-          const transaction =
-            await this.transactionsService.getOne(transactionId);
+          await this.transactionsService.updatePostTransaction(transactionId);
 
           response.redirect(
             context === 'WALLET'
@@ -145,6 +138,9 @@ export class ZalopayService {
             transactionId,
             'FAILED',
           );
+
+          await this.transactionsService.updatePostTransaction(transactionId);
+          
           response.redirect(
             context === 'WALLET'
               ? 'http://localhost:5173?payment_status=FAILED'

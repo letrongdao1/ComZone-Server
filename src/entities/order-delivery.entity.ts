@@ -14,6 +14,12 @@ export class OrderDelivery extends BaseEntity {
     type: 'varchar',
     nullable: false,
   })
+  phone: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: false,
+  })
   province: string;
 
   @Column({

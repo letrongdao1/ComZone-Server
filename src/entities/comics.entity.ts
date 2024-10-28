@@ -17,7 +17,7 @@ import { ChatRoom } from './chat-room.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.comics)
+  @ManyToOne(() => User, (user) => user.comics, { eager: true })
   sellerId: User;
 
   @ManyToMany(() => Genre, (genre) => genre.comics)
@@ -40,6 +40,26 @@ export class Comic extends BaseEntity {
   @Column('simple-array')
   coverImage: string[];
 
+  @Column({
+    type: 'enum',
+    enum: ['REGULAR', 'SPECIAL', 'LIMITED'],
+    default: 'REGULAR',
+  })
+  edition: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['USED', 'SEALED'],
+    default: 'USED',
+  })
+  condition: string;
+
+  @Column({
+    type: 'int',
+    nullable: true,
+  })
+  page: number;
+
   @Column('datetime')
   publishedDate: Date;
 
@@ -56,7 +76,7 @@ export class Comic extends BaseEntity {
       'SOLD',
       'REMOVED',
     ],
-    default: 'AVAILABLE',
+    default: 'UNAVAILABLE',
   })
   status: string;
 

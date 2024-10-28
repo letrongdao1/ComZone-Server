@@ -1,8 +1,8 @@
 export enum OrderStatusEnum {
-  pending = 'PENDING',
-  packaging = 'PACKAGING',
-  delivering = 'DELIVERING',
-  delivered = 'DELIVERED',
-  successful = 'SUCCESSFUL',
-  canceled = 'CANCELED',
+  PENDING = 'PENDING',
+  PACKAGING = 'PACKAGING',
+  DELIVERING = 'DELIVERING',
+  DELIVERED = 'DELIVERED',
+  COMPLETED = 'COMPLETED',
+  CANCELED = 'CANCELED',
 }

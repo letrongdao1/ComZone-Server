@@ -11,7 +11,6 @@ import { Exchange } from './exchange.entity';
 import { ExchangeCompensation } from './exchange-compensation.entity';
 import { SourceOfFund } from './source-of-fund.entity';
 import { WalletDeposit } from './wallet-deposit.entity';
-import { Withdrawal } from './withdrawal.entity';
 import { Deposit } from './deposit.entity';
 import { UserReport } from './user-report.entity';
 import { ComicsReport } from './comics-report.entity';
@@ -59,9 +58,8 @@ export class User extends BaseEntity {
     name: 'avatar',
     type: 'varchar',
     nullable: true,
-    default: '',
   })
-  avatar?: string;
+  avatar: string;
 
   @Column({
     type: 'decimal',
@@ -143,9 +141,6 @@ export class User extends BaseEntity {
 
   @OneToMany(() => WalletDeposit, (walletDeposit) => walletDeposit.user)
   walletDeposits: WalletDeposit[];
-
-  @OneToMany(() => Withdrawal, (withdrawal) => withdrawal.user)
-  withdrawals: Withdrawal[];
 
   @OneToMany(() => Deposit, (deposit) => deposit.user)
   deposits: Deposit[];

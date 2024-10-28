@@ -80,7 +80,7 @@ export class Order extends BaseEntity {
   orderDelivery: OrderDelivery;
 
   @OneToOne(() => Transaction, (transaction) => transaction.order)
-  transactions: Transaction[];
+  transaction: Transaction;
 
   @OneToMany(() => Notification, (notification) => notification.order)
   notifications: Notification[];

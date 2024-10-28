@@ -10,5 +10,6 @@ import { ComicModule } from '../comics/comics.module';
   imports: [TypeOrmModule.forFeature([OrderItem]), OrdersModule, ComicModule],
   controllers: [OrderItemsController],
   providers: [OrderItemsService],
+  exports: [OrderItemsService],
 })
 export class OrderItemsModule {}

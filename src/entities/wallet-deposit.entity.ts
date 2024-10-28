@@ -23,5 +23,5 @@ export class WalletDeposit extends BaseEntity {
   status: string;
 
   @OneToOne(() => Transaction, (transaction) => transaction.walletDeposit)
-  transactions: Transaction[];
+  transaction: Transaction;
 }

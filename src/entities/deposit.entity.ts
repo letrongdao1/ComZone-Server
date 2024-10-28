@@ -31,5 +31,5 @@ export class Deposit extends BaseEntity {
   status: string;
 
   @OneToOne(() => Transaction, (transaction) => transaction.deposit)
-  transactions: Transaction[];
+  transaction: Transaction;
 }

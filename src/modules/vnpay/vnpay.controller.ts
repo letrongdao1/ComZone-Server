@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { VnpayService } from './vnpay.service';
-import { VNPayRequest } from './dto/vnp-payment-url-request';
+import { VNPayRequestDTO } from './dto/vnp-payment-url-request';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
@@ -24,7 +24,7 @@ export class VnpayController {
   @Post()
   createPaymentLink(
     @Req() req: any,
-    @Body() vnpayRequest: VNPayRequest,
+    @Body() vnpayRequest: VNPayRequestDTO,
     @Ip() ip: string,
   ) {
     return this.vnpayService.createPaymentLink(
@@ -39,7 +39,7 @@ export class VnpayController {
   @Post('checkout')
   createPaymentLinkInCheckout(
     @Req() req: any,
-    @Body() vnpayRequest: VNPayRequest,
+    @Body() vnpayRequest: VNPayRequestDTO,
     @Ip() ip: string,
   ) {
     return this.vnpayService.createPaymentLink(

@@ -49,11 +49,15 @@ export class AuthService {
     const user = await this.usersService.getUserByEmail(loginUserDto.email);
     if (!user) {
       throw new NotFoundException('Email cannot be found!');
-    } else if (!bcrypt.compareSync(loginUserDto.password, user?.password)) {
-      throw new UnauthorizedException('Incorrect password!');
-    } else {
-      return user;
     }
+
+    if (!bcrypt.compareSync(loginUserDto.password, user?.password)) {
+      throw new UnauthorizedException('Incorrect password!');
+    }
+
+    await this.usersService.updateLastActive(user.id);
+
+    return user;
   }
 
   async validateJwtUser(userId: string): Promise<any> {
@@ -61,6 +65,9 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User cannot be found!');
     }
+
+    await this.usersService.updateLastActive(user.id);
+
     return {
       id: user.id,
     };
@@ -82,6 +89,8 @@ export class AuthService {
       }
       user = await this.usersService.createMemberAccount(googleUser);
     }
+
+    await this.usersService.updateLastActive(user.id);
 
     return user;
   }

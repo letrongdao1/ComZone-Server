@@ -10,13 +10,17 @@ export class Notification extends BaseEntity {
   @ManyToOne(() => User, (user) => user.notifications, { eager: true })
   user: User;
 
-  @ManyToOne(() => Order, (order) => order.notifications)
+  @ManyToOne(() => Order, (order) => order.notifications, { nullable: true })
   order: Order;
 
-  @ManyToOne(() => Auction, (auction) => auction.notifications)
+  @ManyToOne(() => Auction, (auction) => auction.notifications, {
+    nullable: true,
+  })
   auction: Auction;
 
-  @ManyToOne(() => Exchange, (exchange) => exchange.notifications)
+  @ManyToOne(() => Exchange, (exchange) => exchange.notifications, {
+    nullable: true,
+  })
   exchange: Exchange;
 
   @Column({

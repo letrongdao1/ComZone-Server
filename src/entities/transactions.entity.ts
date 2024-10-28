@@ -15,42 +15,49 @@ export class Transaction extends BaseEntity {
   @ManyToOne(() => User, (user) => user.transactions, { eager: true })
   user: User;
 
-  @OneToOne(() => Order, (order) => order.transactions, { nullable: true })
+  @OneToOne(() => Order, (order) => order.transaction, {
+    nullable: true,
+    eager: true,
+  })
   @JoinColumn({ name: 'order' })
   order: Order;
 
-  @OneToOne(
-    () => WalletDeposit,
-    (walletDeposit) => walletDeposit.transactions,
-    { nullable: true },
-  )
+  @OneToOne(() => WalletDeposit, (walletDeposit) => walletDeposit.transaction, {
+    nullable: true,
+    eager: true,
+  })
   @JoinColumn({ name: 'wallet-deposit' })
   walletDeposit: WalletDeposit;
 
-  @OneToOne(() => Withdrawal, (withdrawal) => withdrawal.transactions, {
+  @OneToOne(() => Withdrawal, (withdrawal) => withdrawal.transaction, {
     nullable: true,
+    eager: true,
   })
   @JoinColumn({ name: 'withdrawal' })
   withdrawal: Withdrawal;
 
-  @OneToOne(() => Deposit, (deposit) => deposit.transactions, {
+  @OneToOne(() => Deposit, (deposit) => deposit.transaction, {
     nullable: true,
+    eager: true,
   })
   @JoinColumn({ name: 'deposit' })
   deposit: Deposit;
 
   @OneToOne(
     () => SellerSubscription,
-    (sellerSubscription) => sellerSubscription.transactions,
-    { nullable: true },
+    (sellerSubscription) => sellerSubscription.transaction,
+    {
+      nullable: true,
+      eager: true,
+    },
   )
   @JoinColumn({ name: 'seller-subscription' })
   sellerSubscription: SellerSubscription;
 
   @OneToOne(
     () => ExchangeSubscription,
-    (exchangeSubscription) => exchangeSubscription.transactions,
-    { nullable: true },
+    (exchangeSubscription) => exchangeSubscription.transaction,
+    { nullable: true, eager: true },
   )
   @JoinColumn({ name: 'exchange-subscription' })
   exchangeSubscription: ExchangeSubscription;
@@ -58,7 +65,7 @@ export class Transaction extends BaseEntity {
   @OneToOne(
     () => ExchangeCompensation,
     (exchangeCompensation) => exchangeCompensation.transactions,
-    { nullable: true },
+    { nullable: true, eager: true },
   )
   @JoinColumn({ name: 'exchange-compensation' })
   exchangeCompensation: ExchangeCompensation;
@@ -69,6 +76,12 @@ export class Transaction extends BaseEntity {
     unique: true,
   })
   code: string;
+
+  @Column({
+    type: 'float',
+    nullable: false,
+  })
+  amount: number;
 
   @Column({
     type: 'enum',

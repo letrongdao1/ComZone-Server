@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateOrderItemDTO {
+export class WithdrawalDTO {
   @ApiProperty()
-  order: string;
+  sourceOfFund: string;
 
   @ApiProperty()
-  comics: string;
+  amount: number;
 }
