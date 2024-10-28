@@ -27,7 +27,6 @@ export class SellerSubscription extends BaseEntity {
   @Column({
     name: 'activated_time',
     type: 'datetime',
-    default: Date.now(),
   })
   activatedTime: Date;
 

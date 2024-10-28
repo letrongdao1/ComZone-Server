@@ -4,18 +4,13 @@ import * as dotenv from 'dotenv';
 import dateFormat from '../../utils/date-format/date.format';
 import { VNPayRequest } from './dto/vnp-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
-import { Wallet } from 'src/entities/wallets.entity';
-import { WalletsService } from '../wallets/wallets.service';
 
 var querystring = require('qs');
 dotenv.config();
 
 @Injectable()
 export class VnpayService {
-  constructor(
-    private readonly transactionsService: TransactionsService,
-    private readonly walletsService: WalletsService,
-  ) {}
+  constructor(private readonly transactionsService: TransactionsService) {}
 
   sortObject(obj: any) {
     let sorted = {};
@@ -130,14 +125,6 @@ export class VnpayService {
       if (vnp_Params['vnp_ResponseCode'] === '00') {
         const transaction =
           await this.transactionsService.getOne(transactionId);
-
-        const wallet: Wallet = await this.walletsService.getUserWallet(
-          transaction.user.id,
-        );
-
-        await this.walletsService.deposit(wallet.user.id, {
-          transactionCode: transaction.code,
-        });
 
         response.redirect(
           context === 'WALLET'

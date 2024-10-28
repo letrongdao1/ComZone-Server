@@ -4,15 +4,10 @@ import axios from 'axios';
 import dateFormat from 'src/utils/date-format/date.format';
 import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
-import { WalletsService } from '../wallets/wallets.service';
-import { Wallet } from 'src/entities/wallets.entity';
 
 @Injectable()
 export class ZalopayService {
-  constructor(
-    private readonly transactionsService: TransactionsService,
-    private readonly walletsService: WalletsService,
-  ) {}
+  constructor(private readonly transactionsService: TransactionsService) {}
 
   private readonly config = {
     appid: '554',
@@ -139,14 +134,6 @@ export class ZalopayService {
 
           const transaction =
             await this.transactionsService.getOne(transactionId);
-
-          const wallet: Wallet = await this.walletsService.getUserWallet(
-            transaction.user.id,
-          );
-
-          await this.walletsService.deposit(wallet.user.id, {
-            transactionCode: transaction.code,
-          });
 
           response.redirect(
             context === 'WALLET'

@@ -48,7 +48,14 @@ export class Comic extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: ['UNAVAILABLE', 'AVAILABLE', 'SOLD', 'DELETED'],
+    enum: [
+      'UNAVAILABLE',
+      'AVAILABLE',
+      'AUCTION',
+      'EXCHANGE',
+      'SOLD',
+      'REMOVED',
+    ],
     default: 'AVAILABLE',
   })
   status: string;
@@ -58,7 +65,6 @@ export class Comic extends BaseEntity {
 
   @Column('simple-array')
   previewChapter: string[];
-
 
   @OneToMany(() => Auction, (auction) => auction.comics)
   auction: Auction[];

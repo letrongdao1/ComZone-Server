@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
-import { OrderItem } from 'src/entities/order-items.entity';
+import { OrderItem } from 'src/entities/order-item.entity';
 import { Repository } from 'typeorm';
 import { OrdersService } from '../orders/orders.service';
 import { CreateOrderItemDTO } from './dto/createOrderItemDTO';

@@ -27,12 +27,8 @@ export class OrdersService extends BaseService<Order> {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('Buyer cannot be found!');
 
-    const seller = await this.usersService.getOne(createOrderDto.seller);
-    if (!seller) throw new NotFoundException('Seller cannot be found!');
-
     const newOrder = this.ordersRepository.create({
       ...createOrderDto,
-      seller,
       user,
       code: generateNumericCode(8),
     });
@@ -58,11 +54,7 @@ export class OrdersService extends BaseService<Order> {
     if (!user) throw new NotFoundException('User cannot be found!');
 
     return await this.ordersRepository.find({
-      where: {
-        seller: {
-          id: userId,
-        },
-      },
+      where: {},
     });
   }
 

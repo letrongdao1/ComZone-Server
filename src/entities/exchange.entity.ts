@@ -1,17 +1,11 @@
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Comic } from './comics.entity';
 import { ExchangeCompensation } from './exchange-compensation.entity';
 import { Deposit } from './deposit.entity';
 import { ChatRoom } from './chat-room.entity';
 import { Notification } from './notification.entity';
+import { BaseEntity } from 'src/common/entity.base';
 
 @Entity('exchange')
 export class Exchange extends BaseEntity {

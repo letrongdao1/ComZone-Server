@@ -1,9 +1,9 @@
 import { Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
-import { NonPrimaryBaseEntity } from 'src/common/non-primary-entity.base';
+import { BaseEntity } from 'src/common/entity.base';
 
 @Entity('follow')
-export class Follow extends NonPrimaryBaseEntity {
+export class Follow extends BaseEntity {
   @ManyToOne(() => User, (user) => user.followed, { eager: true })
   user: User;
 

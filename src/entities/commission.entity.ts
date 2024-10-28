@@ -1,9 +1,9 @@
-import { NonPrimaryBaseEntity } from 'src/common/non-primary-entity.base';
 import { Column, Entity, OneToOne } from 'typeorm';
 import { Transaction } from './transactions.entity';
+import { BaseEntity } from 'src/common/entity.base';
 
 @Entity('commission')
-export class Commission extends NonPrimaryBaseEntity {
+export class Commission extends BaseEntity {
   @OneToOne(() => Transaction, (transaction) => transaction.commission, {
     eager: true,
   })

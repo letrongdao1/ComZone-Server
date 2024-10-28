@@ -10,13 +10,11 @@ import { ComicModule } from './modules/comics/comics.module';
 import { GenreModule } from './modules/genres/genre.module';
 import { PermissionsGuard } from './modules/authorization/permission.guard';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { OrderItemsModule } from './modules/order-items/order-items.module';
 import { ZalopayModule } from './modules/zalopay/zalopay.module';
 import { VnpayModule } from './modules/vnpay/vnpay.module';
 import { VietNamAddressModule } from './modules/viet-nam-address/viet-nam-address.module';
-import { WalletsModule } from './modules/wallets/wallets.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
 import { OtpModule } from './modules/otps/otps.module';
@@ -46,13 +44,11 @@ import { SellerDetailsModule } from './modules/seller-details/seller-details.mod
     GenreModule,
     FileUploadModule,
     NotificationsModule,
-    CartModule,
     OrdersModule,
     OrderItemsModule,
     VnpayModule,
     ZalopayModule,
     VietNamAddressModule,
-    WalletsModule,
     TransactionsModule,
     UserAddressesModule,
     OtpModule,
