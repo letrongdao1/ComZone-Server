@@ -38,11 +38,9 @@ export class UsersController {
     return this.usersService.getOne(userId);
   }
 
-  @Roles(Role.MODERATOR)
-  @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Patch('role/:id')
-  updateRoleToSeller(@Param('id') userId: string) {
-    return this.usersService.updateRoleToSeller(userId);
+  @Patch('/role/seller')
+  updateRoleToSeller(@Req() req: any) {
+    return this.usersService.updateRoleToSeller(req.user.id);
   }
 }

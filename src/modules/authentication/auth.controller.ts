@@ -93,7 +93,7 @@ export class AuthController {
       registerUserDTO.email,
       registerUserDTO.password,
       registerUserDTO.name,
-      3,
+      'MODERATOR',
     );
   }
 
@@ -107,7 +107,7 @@ export class AuthController {
       registerUserDTO.email,
       registerUserDTO.password,
       registerUserDTO.name,
-      4,
+      'ADMIN',
     );
   }
 }

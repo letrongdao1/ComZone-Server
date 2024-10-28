@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class VNPayRequest {
-  @ApiProperty()
-  amount: number;
-
-  @ApiProperty()
-  type?: 'PAY' | 'DEPOSIT' | 'WITHDRAWAL';
+export class VNPayRequestDTO {
+  @ApiProperty({ nullable: false })
+  transaction: string;
 }

@@ -19,7 +19,7 @@ export class CreateComicDto {
   description: string;
 
   @ApiProperty()
-  coverImage: string[];
+  images: string[];
 
   @ApiProperty()
   price: number;
@@ -29,9 +29,6 @@ export class CreateComicDto {
 
   @ApiProperty()
   quantity: number;
-
-  @ApiProperty()
-  side_images: string[];
 
   @ApiProperty()
   previewChapter: string[];
@@ -54,7 +51,7 @@ export class UpdateComicDto {
   description?: string;
 
   @ApiProperty()
-  coverImage?: string[];
+  images?: string[];
 
   @ApiProperty()
   price?: number;
@@ -66,9 +63,6 @@ export class UpdateComicDto {
   quantity?: number;
 
   @ApiProperty()
-  side_images: string[];
-
-  @ApiProperty()
   previewChapter?: string[];
 }
 
@@ -77,6 +71,9 @@ export enum ComicStatus {
   UNAVAILABLE = 'UNAVAILABLE',
   PENDING = 'PENDING',
   SOLD = 'SOLD',
+  AUCTION = 'AUCTION',
+  EXCHANGE = 'EXCHANGE',
+  DELETED = 'DELETED',
 }
 
 export class UpdateComicStatusDto {

@@ -1,13 +1,21 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
-import { Role } from './roles.entity';
-import { Cart } from './carts.entity';
 import { Order } from './orders.entity';
 import { Otp } from './otp.entity';
-import { Wallet } from './wallets.entity';
 import { Transaction } from './transactions.entity';
 import { Address } from './address.entity';
+import { Follow } from './follow.entity';
+import { Bid } from './bid.entity';
+import { Exchange } from './exchange.entity';
+import { ExchangeCompensation } from './exchange-compensation.entity';
+import { SourceOfFund } from './source-of-fund.entity';
+import { WalletDeposit } from './wallet-deposit.entity';
+import { Deposit } from './deposit.entity';
+import { UserReport } from './user-report.entity';
+import { ComicsReport } from './comics-report.entity';
+import { ChatRoom } from './chat-room.entity';
+import { Notification } from './notification.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -27,6 +35,13 @@ export class User extends BaseEntity {
   password: string;
 
   @Column({
+    type: 'enum',
+    enum: ['MEMBER', 'SELLER', 'MODERATOR', 'ADMIN'],
+    default: 'MEMBER',
+  })
+  role: string;
+
+  @Column({
     name: 'name',
     type: 'varchar',
     nullable: false,
@@ -43,12 +58,21 @@ export class User extends BaseEntity {
     name: 'avatar',
     type: 'varchar',
     nullable: true,
-    default: '',
   })
-  avatar?: string;
+  avatar: string;
 
-  @ManyToOne(() => Role, (role) => role.users, { eager: true })
-  role: Role;
+  @Column({
+    type: 'decimal',
+    default: 0,
+  })
+  balance: number;
+
+  @Column({
+    name: 'non_withdrawable_amount',
+    type: 'decimal',
+    default: 0,
+  })
+  nonWithdrawableAmount: number;
 
   @Column({
     name: 'status',
@@ -66,20 +90,30 @@ export class User extends BaseEntity {
   is_verified: boolean;
 
   @Column({
+    name: 'last_active',
+    type: 'datetime',
+    nullable: true,
+  })
+  last_active: Date;
+
+  @Column({
     name: 'refresh_token',
     type: 'varchar',
     nullable: true,
   })
   refresh_token: string;
 
+  @OneToMany(() => Follow, (follow) => follow.user)
+  followed: Follow[];
+
+  @OneToMany(() => Follow, (follow) => follow.follower)
+  following: Follow[];
+
   @OneToMany(() => Comic, (comic) => comic.sellerId)
   comics: Comic[];
 
-  @OneToMany(() => Cart, (cart) => cart.user)
-  carts: Cart[];
-
-  @OneToMany(() => Order, (order) => order.seller)
-  sold_order: Order[];
+  @OneToMany(() => Bid, (bid) => bid.user)
+  bids: Bid[];
 
   @OneToMany(() => Order, (order) => order.user)
   purchased_order: Order[];
@@ -87,12 +121,48 @@ export class User extends BaseEntity {
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
 
-  @OneToOne(() => Wallet, (wallet) => wallet.user)
-  wallet: Wallet;
+  @OneToMany(() => Exchange, (exchange) => exchange.requestUser)
+  exchangeRequests: Exchange[];
+
+  @OneToMany(() => Exchange, (exchange) => exchange.offerUser)
+  exchangeOffers: Exchange[];
+
+  @OneToMany(
+    () => ExchangeCompensation,
+    (exchangeCompensation) => exchangeCompensation.user,
+  )
+  exchangeCompensations: ExchangeCompensation[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
 
+  @OneToMany(() => SourceOfFund, (sof) => sof.user)
+  sourcesOfFund: SourceOfFund[];
+
+  @OneToMany(() => WalletDeposit, (walletDeposit) => walletDeposit.user)
+  walletDeposits: WalletDeposit[];
+
+  @OneToMany(() => Deposit, (deposit) => deposit.user)
+  deposits: Deposit[];
+
   @OneToMany(() => Address, (address) => address.user)
   addresses: Address[];
+
+  @OneToMany(() => UserReport, (userReport) => userReport.user)
+  userReports: UserReport[];
+
+  @OneToMany(() => UserReport, (userReport) => userReport.reportedUser)
+  reportedUserReports: UserReport[];
+
+  @OneToMany(() => ComicsReport, (userReport) => userReport.user)
+  comicsReports: ComicsReport[];
+
+  @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.firstUser)
+  firstChatRooms: ChatRoom[];
+
+  @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.secondUser)
+  secondChatRooms: ChatRoom[];
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 }

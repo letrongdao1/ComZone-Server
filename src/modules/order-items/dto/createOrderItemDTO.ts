@@ -6,13 +6,4 @@ export class CreateOrderItemDTO {
 
   @ApiProperty()
   comics: string;
-
-  @ApiProperty()
-  quantity: number;
-
-  @ApiProperty()
-  price: number;
-
-  @ApiProperty()
-  total_price: number;
 }

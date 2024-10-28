@@ -7,24 +7,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { User } from 'src/entities/users.entity';
 import { Repository } from 'typeorm';
-import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class UsersService extends BaseService<User> {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly rolesService: RolesService,
   ) {
     super(userRepository);
   }
 
   async createMemberAccount(user: any): Promise<User> {
-    const memberRole = await this.rolesService.getOneById(1);
-    console.log(memberRole);
     const newUser = {
       ...user,
-      role: memberRole.id,
+      role: 'MEMBER',
     };
     return await this.userRepository.save(newUser);
   }
@@ -37,8 +33,11 @@ export class UsersService extends BaseService<User> {
         'email',
         'name',
         'phone',
-        'is_verified',
+        'avatar',
         'role',
+        'is_verified',
+        'balance',
+        'nonWithdrawableAmount',
         'createdAt',
         'updatedAt',
         'refresh_token',
@@ -75,15 +74,23 @@ export class UsersService extends BaseService<User> {
     });
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    switch (user.role.id) {
-      case 1: {
-        const sellerRole = await this.rolesService.getOneById(2);
-        return await this.userRepository.update(userId, {
-          role: sellerRole,
+    if (!user.is_verified)
+      throw new ForbiddenException(
+        'Phone number must be verified to get a seller account!',
+        'Unverified phone number!',
+      );
+
+    switch (user.role) {
+      case 'MEMBER': {
+        await this.userRepository.update(userId, {
+          role: 'SELLER',
         });
+
+        return await this.userRepository.findOne({ where: { id: userId } });
       }
-      case 2: {
+      case 'SELLER': {
         return {
+          error: 'Unnecessary request!',
           message: 'This has already been a seller account!',
         };
       }
@@ -91,5 +98,18 @@ export class UsersService extends BaseService<User> {
         throw new ForbiddenException("This account's role cannot be updated!");
       }
     }
+  }
+
+  async updateLastActive(userId: string) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) throw new NotFoundException('User cannot be found!');
+
+    await this.userRepository.update(userId, {
+      last_active: new Date().toLocaleString(),
+    });
   }
 }

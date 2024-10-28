@@ -12,12 +12,17 @@ import { UsersService } from '../users/users.service';
 import { CreateOrderDTO } from './dto/createOrderDTO';
 import { generateNumericCode } from 'src/utils/generator/generators';
 import { OrderStatusEnum } from './dto/order-status.enum';
+import { OrderItem } from 'src/entities/order-item.entity';
 
 @Injectable()
 export class OrdersService extends BaseService<Order> {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+
+    @InjectRepository(OrderItem)
+    private readonly orderItemsRepository: Repository<OrderItem>,
+
     @Inject(UsersService) private readonly usersService: UsersService,
   ) {
     super(ordersRepository);
@@ -25,14 +30,10 @@ export class OrdersService extends BaseService<Order> {
 
   async createNewOrder(userId: string, createOrderDto: CreateOrderDTO) {
     const user = await this.usersService.getOne(userId);
-    if (!user) throw new NotFoundException('Buyer cannot be found!');
-
-    const seller = await this.usersService.getOne(createOrderDto.seller);
-    if (!seller) throw new NotFoundException('Seller cannot be found!');
+    if (!user) throw new NotFoundException('User cannot be found!');
 
     const newOrder = this.ordersRepository.create({
       ...createOrderDto,
-      seller,
       user,
       code: generateNumericCode(8),
     });
@@ -53,17 +54,37 @@ export class OrdersService extends BaseService<Order> {
     });
   }
 
-  async getAllOrdersOfSeller(userId: string): Promise<Order[]> {
-    const user = await this.usersService.getOne(userId);
-    if (!user) throw new NotFoundException('User cannot be found!');
+  async getAllOrdersByListOfIDs(orderIds: string[]) {
+    return await Promise.all(
+      orderIds.map(async (id) => {
+        return await this.getOne(id);
+      }),
+    );
+  }
 
-    return await this.ordersRepository.find({
-      where: {
-        seller: {
-          id: userId,
-        },
-      },
+  async getAllOrdersOfSeller(sellerId: string): Promise<any[]> {
+    const seller = await this.usersService.getOne(sellerId);
+    if (!seller) throw new NotFoundException('Seller cannot be found!');
+
+    const items: { order_id: string }[] = await this.orderItemsRepository
+      .createQueryBuilder('order_item')
+      .leftJoinAndSelect('order_item.comics', 'comics')
+      .leftJoinAndSelect('order_item.order', 'order')
+      .leftJoinAndSelect('comics.sellerId', 'seller')
+      .where('seller.id = :sellerId', { sellerId })
+      .select('order.id')
+      .distinct(true)
+      .execute();
+
+    const orderList = items.map((item) => {
+      return item.order_id;
     });
+
+    return await Promise.all(
+      orderList.map(async (id) => {
+        return await this.getOne(id);
+      }),
+    );
   }
 
   async getOrderByCode(code: string): Promise<Order> {
@@ -84,6 +105,14 @@ export class OrdersService extends BaseService<Order> {
         `This order status has already been ${order.status}`,
       );
 
-    return await this.ordersRepository.update({ id: orderId }, { status });
+    return await this.ordersRepository.update(orderId, { status });
+  }
+
+  async updateOrderIsPaid(orderId: string, status: boolean) {
+    return await this.ordersRepository
+      .update(orderId, {
+        isPaid: status,
+      })
+      .then(() => this.getOne(orderId));
   }
 }

@@ -1,21 +1,21 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { randomInt, createHmac } from 'crypto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { createHmac } from 'crypto';
 import * as dotenv from 'dotenv';
 import dateFormat from '../../utils/date-format/date.format';
-import { VNPayRequest } from './dto/vnp-payment-url-request';
+import { VNPayRequestDTO } from './dto/vnp-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
-import { Wallet } from 'src/entities/wallets.entity';
-import { WalletsService } from '../wallets/wallets.service';
+import { ProviderEnum } from '../transactions/dto/provider.enum';
 
 var querystring = require('qs');
 dotenv.config();
 
 @Injectable()
 export class VnpayService {
-  constructor(
-    private readonly transactionsService: TransactionsService,
-    private readonly walletsService: WalletsService,
-  ) {}
+  constructor(private readonly transactionsService: TransactionsService) {}
 
   sortObject(obj: any) {
     let sorted = {};
@@ -35,36 +35,26 @@ export class VnpayService {
 
   async createPaymentLink(
     userId: string,
-    vnpayRequest: VNPayRequest,
+    vnpayRequest: VNPayRequestDTO,
     ipAddress: string,
     context: 'WALLET' | 'CHECKOUT',
   ) {
-    if (
-      !vnpayRequest.amount ||
-      vnpayRequest.amount < 1000 ||
-      vnpayRequest.amount > 99999999
-    )
-      throw new BadRequestException('Invalid VNPay request!');
-
-    const newTransaction = await this.transactionsService.createNewTransaction(
-      userId,
-      {
-        amount: vnpayRequest.amount,
-        type: vnpayRequest.type,
-        provider: 'VNPay',
-      },
-    );
-
     var tmnCode = process.env.VNPAY_TERMINAL_ID;
     var secretKey = process.env.VNPAY_SECRET_KEY;
     var vnpUrl = process.env.VNPAY_PAYMENT_URL;
 
+    const transaction = await this.transactionsService.getOne(
+      vnpayRequest.transaction,
+    );
+
+    if (!transaction)
+      throw new NotFoundException('Transaction cannot be found!');
+
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
-    // var bankCode = 'VNBANK';
     var returnUrl =
       context === 'WALLET'
-        ? `http://localhost:3000/vnpay/return/${newTransaction.id}`
-        : `http://localhost:3000/vnpay/checkout/return/${newTransaction.id}`;
+        ? `http://localhost:3000/vnpay/return/${transaction.id}`
+        : `http://localhost:3000/vnpay/checkout/return/${transaction.id}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -72,11 +62,10 @@ export class VnpayService {
       vnp_TmnCode: tmnCode,
       vnp_Locale: 'vn',
       vnp_CurrCode: 'VND',
-      //   vnp_BankCode: bankCode,
-      vnp_TxnRef: newTransaction.code,
-      vnp_OrderInfo: `${newTransaction.id}`,
+      vnp_TxnRef: transaction.code,
+      vnp_OrderInfo: `${transaction.id}`,
       vnp_OrderType: 'ComZone purchase',
-      vnp_Amount: vnpayRequest.amount * 100,
+      vnp_Amount: transaction.amount * 100,
       vnp_ReturnUrl: returnUrl,
       vnp_IpAddr: ipAddress,
       vnp_CreateDate: createDate,
@@ -95,7 +84,7 @@ export class VnpayService {
     return {
       message: 'A new payment link was created successfully.',
       url: vnpUrl,
-      transaction: newTransaction,
+      transaction,
     };
   }
 
@@ -122,23 +111,19 @@ export class VnpayService {
     let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     if (secureHash === signed) {
+      await this.transactionsService.updateTransactionProvider(
+        transactionId,
+        ProviderEnum.VNPAY,
+      );
+
       await this.transactionsService.updateTransactionStatus(
         transactionId,
         vnp_Params['vnp_ResponseCode'] === '00' ? 'SUCCESSFUL' : 'FAILED',
       );
 
+      await this.transactionsService.updatePostTransaction(transactionId);
+
       if (vnp_Params['vnp_ResponseCode'] === '00') {
-        const transaction =
-          await this.transactionsService.getOne(transactionId);
-
-        const wallet: Wallet = await this.walletsService.getUserWallet(
-          transaction.user.id,
-        );
-
-        await this.walletsService.deposit(wallet.user.id, {
-          transactionCode: transaction.code,
-        });
-
         response.redirect(
           context === 'WALLET'
             ? 'http://localhost:5173?payment_status=SUCCESSFUL'
@@ -152,11 +137,6 @@ export class VnpayService {
         );
       }
     } else {
-      await this.transactionsService.updateTransactionStatus(
-        transactionId,
-        'FAILED',
-      );
-
       response.redirect(
         context === 'WALLET'
           ? 'http://localhost:5173?payment_status=FAILED'
