@@ -15,11 +15,4 @@ export class SellerDetailsDTO {
 
   @ApiProperty()
   detailedAddress: string;
-
-  @ApiProperty({
-    nullable: true,
-    enum: ['PENDING', 'APPROVED'],
-    default: 'PENDING',
-  })
-  registerStatus: string;
 }

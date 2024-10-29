@@ -15,6 +15,22 @@ export class SellerDetails extends BaseEntity {
   verifiedPhone: string;
 
   @Column({
+    name: 'sold_count',
+    type: 'bigint',
+    nullable: false,
+    default: 0,
+  })
+  soldCount: number;
+
+  @Column({
+    name: 'follower_count',
+    type: 'bigint',
+    nullable: false,
+    default: 0,
+  })
+  followerCount: number;
+
+  @Column({
     type: 'varchar',
     nullable: false,
   })
@@ -37,10 +53,4 @@ export class SellerDetails extends BaseEntity {
     nullable: false,
   })
   detailedAddress: string;
-
-  @Column({
-    type: 'enum',
-    enum: ['PENDING', 'APPROVED'],
-  })
-  registerStatus: string;
 }
