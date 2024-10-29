@@ -83,7 +83,7 @@ export class Comic extends BaseEntity {
   @Column()
   quantity: number;
 
-  @Column('simple-array')
+  @Column('simple-json')
   previewChapter: string[];
 
   @OneToMany(() => Auction, (auction) => auction.comics)
