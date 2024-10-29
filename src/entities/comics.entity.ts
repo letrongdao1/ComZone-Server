@@ -63,6 +63,13 @@ export class Comic extends BaseEntity {
   @Column('datetime')
   publishedDate: Date;
 
+  @Column({
+    name: 'on_sale_since',
+    type: 'datetime',
+    nullable: true,
+  })
+  onSaleSince: Date;
+
   @Column('float')
   price: number;
 
