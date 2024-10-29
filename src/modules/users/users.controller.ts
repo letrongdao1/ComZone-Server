@@ -1,10 +1,22 @@
-import { Controller, Get, Param, Patch, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
+import {
+  OrderPayTransactionDTO,
+  WalletDepositTransactionDTO,
+} from './dto/wallet-transaction.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -42,5 +54,21 @@ export class UsersController {
   @Patch('/role/seller')
   updateRoleToSeller(@Req() req: any) {
     return this.usersService.updateRoleToSeller(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/wallet/deposit')
+  depositUserWallet(
+    @Body() walletDepositTransactionDto: WalletDepositTransactionDTO,
+  ) {
+    return this.usersService.depositWallet(
+      walletDepositTransactionDto.walletDeposit,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/wallet/pay')
+  userWalletOrderPay(@Body() orderPayTransactionDto: OrderPayTransactionDTO) {
+    return this.usersService.userWalletOrderPay(orderPayTransactionDto.order);
   }
 }

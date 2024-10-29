@@ -1,7 +1,8 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Transaction } from './transactions.entity';
+import { ExchangeSubscriptionPlan } from './exchange-subs-plan.entity';
 
 @Entity('exchange-subscription')
 export class ExchangeSubscription extends BaseEntity {
@@ -9,20 +10,11 @@ export class ExchangeSubscription extends BaseEntity {
   @JoinColumn()
   user: User;
 
-  @Column({
-    type: 'enum',
-    enum: [1, 2, 3],
-    nullable: false,
-    default: 1,
-  })
-  level: number;
-
-  @Column({
-    type: 'float',
-    precision: 2,
-    nullable: false,
-  })
-  price: number;
+  @ManyToOne(
+    () => ExchangeSubscriptionPlan,
+    (exchangeSubPlan) => exchangeSubPlan.exchangeSubscriptions,
+  )
+  plan: ExchangeSubscriptionPlan;
 
   @Column({
     name: 'activated_time',
@@ -31,11 +23,11 @@ export class ExchangeSubscription extends BaseEntity {
   activatedTime: Date;
 
   @Column({
-    name: 'valid_until',
-    type: 'datetime',
-    nullable: false,
+    name: 'remaining_resource',
+    type: 'int',
+    nullable: true,
   })
-  validUntil: Date;
+  remainingResource: number;
 
   @Column({
     name: 'is_auto_renewed',

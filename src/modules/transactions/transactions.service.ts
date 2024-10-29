@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -109,10 +110,10 @@ export class TransactionsService extends BaseService<Transaction> {
         message: `This transaction status has already been '${newStatus}'`,
       };
 
-    return await this.transactionsRepository.update(
-      { id: transactionId },
-      { status: newStatus },
-    );
+    return await this.transactionsRepository.update(transactionId, {
+      status: newStatus,
+      isUsed: true,
+    });
   }
 
   async updateTransactionProvider(
@@ -148,23 +149,75 @@ export class TransactionsService extends BaseService<Transaction> {
     if (!transaction)
       throw new NotFoundException('Transaction cannot be found!');
 
-    console.log({ transaction });
+    if (transaction.isUsed)
+      throw new ForbiddenException(
+        'Transaction has been solved and cannot be adjust anymore!',
+      );
 
+    //Order
     if (transaction.order) {
-      console.log('NICE');
-      return await this.ordersService
-        .updateOrderIsPaid(transaction.order.id, true)
-        .then(() => this.ordersService.getOne(transaction.order.id));
+      if (transaction.order.isPaid)
+        throw new ForbiddenException('This order has already been paid!');
+
+      const user = await this.usersService.userWalletOrderPay(
+        transaction.order.id,
+      );
+
+      const order = await this.ordersService.getOne(transaction.order.id);
+      if (order.isPaid)
+        await this.transactionsRepository.update(transaction.id, {
+          status: 'SUCCESSFUL',
+          isUsed: true,
+        });
+
+      const seller = await this.ordersService.getSellerIdOfAnOrder(
+        transaction.order.id,
+      );
+
+      await this.usersService.updateBalanceWithNonWithdrawableAmount(
+        seller.id,
+        transaction.order.totalPrice,
+      );
+
+      await this.ordersService.updateComicsStatusOfAnOrder(
+        transaction.order.id,
+        'SOLD',
+      );
+
+      const trans = await this.getOne(transactionId);
+
+      return {
+        transaction: {
+          id: trans.id,
+          code: trans.code,
+          status: trans.status,
+        },
+        user: user.balance,
+        seller: {
+          balance: seller.balance,
+          nonWithdrawableAmount: seller.nonWithdrawableAmount,
+        },
+      };
     }
 
+    //Wallet deposit
     if (transaction.walletDeposit) {
-      return await this.walletDepositService
-        .updateWalletDepositStatus(transaction.walletDeposit.id, transaction.id)
-        .then(() =>
-          this.walletDepositService.getOne(transaction.walletDeposit.id),
-        );
+      const trans = await this.walletDepositService.updateWalletDepositStatus(
+        transaction.walletDeposit.id,
+        transaction.id,
+      );
+
+      const user = await this.usersService.depositWallet(
+        transaction.walletDeposit.id,
+      );
+
+      return {
+        transaction: trans,
+        user,
+      };
     }
 
+    //Wallet withdrawal
     if (transaction.withdrawal) {
       return await this.withdrawalService
         .updateWithdrawalStatus(transaction.withdrawal.id, transaction.id)

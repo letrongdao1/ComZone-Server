@@ -1,11 +1,14 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
+import { Order } from 'src/entities/orders.entity';
 import { User } from 'src/entities/users.entity';
+import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -13,6 +16,10 @@ export class UsersService extends BaseService<User> {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(WalletDeposit)
+    private readonly walletDepositsRepository: Repository<WalletDeposit>,
+    @InjectRepository(Order)
+    private readonly ordersRepository: Repository<Order>,
   ) {
     super(userRepository);
   }
@@ -111,5 +118,55 @@ export class UsersService extends BaseService<User> {
     await this.userRepository.update(userId, {
       last_active: new Date().toLocaleString(),
     });
+  }
+
+  async depositWallet(walletDepositId: string) {
+    const walletDeposit = await this.walletDepositsRepository.findOne({
+      where: { id: walletDepositId },
+    });
+
+    const user = await this.getOne(walletDeposit.user.id);
+
+    if (walletDeposit.amount <= 0 || walletDeposit.amount > 999999999)
+      throw new BadRequestException('Invalid amount!');
+
+    if (walletDeposit.status !== 'SUCCESSFUL')
+      throw new ForbiddenException(
+        'Wallet deposit transaction is not completed yet!',
+      );
+
+    return await this.userRepository
+      .update(user.id, { balance: user.balance + walletDeposit.amount })
+      .then(() => this.getOne(user.id));
+  }
+
+  async userWalletOrderPay(orderId: string) {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+    });
+
+    const user = await this.getOne(order.user.id);
+
+    if (user.balance - user.nonWithdrawableAmount < order.totalPrice)
+      throw new ForbiddenException('Insufficient balance!');
+
+    await this.userRepository.update(user.id, {
+      balance: user.balance - order.totalPrice,
+    });
+
+    await this.ordersRepository.update(orderId, { isPaid: true });
+
+    return await this.getOne(user.id);
+  }
+
+  async updateBalanceWithNonWithdrawableAmount(userId: string, amount: number) {
+    const user = await this.getOne(userId);
+
+    return await this.userRepository
+      .update(userId, {
+        balance: amount + user.balance,
+        nonWithdrawableAmount: user.nonWithdrawableAmount + amount,
+      })
+      .then(() => this.getOne(userId));
   }
 }

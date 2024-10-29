@@ -63,7 +63,7 @@ export class Comic extends BaseEntity {
   @Column('datetime')
   publishedDate: Date;
 
-  @Column('decimal')
+  @Column('float')
   price: number;
 
   @Column({
@@ -89,7 +89,9 @@ export class Comic extends BaseEntity {
   @OneToMany(() => Auction, (auction) => auction.comics)
   auction: Auction[];
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.comics)
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.comics, {
+    cascade: true,
+  })
   order_item: OrderItem[];
 
   @OneToMany(() => Exchange, (exchange) => exchange.requestComics)
