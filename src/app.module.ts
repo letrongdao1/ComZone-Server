@@ -23,6 +23,9 @@ import { OrderDeliveriesModule } from './modules/order-deliveries/order-deliveri
 import { WalletDepositModule } from './modules/wallet-deposit/wallet-deposit.module';
 import { WithdrawalModule } from './modules/withdrawal/withdrawal.module';
 import { SourcesOfFundModule } from './modules/sources-of-fund/sources-of-fund.module';
+import { SellerSubscriptionsModule } from './modules/seller-subscriptions/seller-subscriptions.module';
+import { SellerSubsPlansModule } from './modules/seller-subs-plans/seller-subs-plans.module';
+import { PlansModule } from './modules/exchange-subs/plans/plans.module';
 
 @Module({
   imports: [
@@ -61,6 +64,9 @@ import { SourcesOfFundModule } from './modules/sources-of-fund/sources-of-fund.m
     WalletDepositModule,
     WithdrawalModule,
     SourcesOfFundModule,
+    SellerSubscriptionsModule,
+    SellerSubsPlansModule,
+    PlansModule,
   ],
   controllers: [AppController],
   providers: [

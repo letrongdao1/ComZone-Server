@@ -62,14 +62,14 @@ export class User extends BaseEntity {
   avatar: string;
 
   @Column({
-    type: 'decimal',
+    type: 'float',
     default: 0,
   })
   balance: number;
 
   @Column({
     name: 'non_withdrawable_amount',
-    type: 'decimal',
+    type: 'float',
     default: 0,
   })
   nonWithdrawableAmount: number;

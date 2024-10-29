@@ -58,4 +58,10 @@ export class TransactionsController {
       newStatus.status,
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('post/:transactionId')
+  updatePostTransaction(@Param('transactionId') transactionId: string) {
+    return this.transactionsService.updatePostTransaction(transactionId);
+  }
 }

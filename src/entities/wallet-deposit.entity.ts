@@ -5,7 +5,7 @@ import { Transaction } from './transactions.entity';
 
 @Entity('wallet-deposit')
 export class WalletDeposit extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.walletDeposits)
+  @ManyToOne(() => User, (user) => user.walletDeposits, { eager: true })
   user: User;
 
   @Column({

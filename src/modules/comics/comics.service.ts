@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, Repository } from 'typeorm';
 
@@ -6,6 +6,7 @@ import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
+import { ComicsStatusEnum } from './dto/comic-status.enum';
 
 @Injectable()
 export class ComicService {
@@ -172,4 +173,16 @@ export class ComicService {
   //   comic.status = status;
   //   return await this.comicRepository.save(comic);
   // }
+
+  async updateStatus(comicsId: string, status: ComicsStatusEnum) {
+    const comics = await this.findOne(comicsId);
+
+    if (!comics) throw new NotFoundException('Comics cannot be found!');
+
+    return await this.comicRepository
+      .update(comicsId, {
+        status,
+      })
+      .then(() => this.findOne(comicsId));
+  }
 }

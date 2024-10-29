@@ -13,6 +13,9 @@ import { CreateOrderDTO } from './dto/createOrderDTO';
 import { generateNumericCode } from 'src/utils/generator/generators';
 import { OrderStatusEnum } from './dto/order-status.enum';
 import { OrderItem } from 'src/entities/order-item.entity';
+import { User } from 'src/entities/users.entity';
+import { ComicService } from '../comics/comics.service';
+import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 
 @Injectable()
 export class OrdersService extends BaseService<Order> {
@@ -24,6 +27,7 @@ export class OrdersService extends BaseService<Order> {
     private readonly orderItemsRepository: Repository<OrderItem>,
 
     @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(ComicService) private readonly comicsService: ComicService,
   ) {
     super(ordersRepository);
   }
@@ -39,6 +43,17 @@ export class OrdersService extends BaseService<Order> {
     });
 
     return await this.ordersRepository.save(newOrder);
+  }
+
+  async getSellerIdOfAnOrder(orderId: string): Promise<User> {
+    const orderItemList = await this.orderItemsRepository.find({
+      where: { order: { id: orderId } },
+    });
+
+    if (!orderItemList || orderItemList.length === 0)
+      throw new NotFoundException('Cannot find any order item!');
+
+    return orderItemList[0].comics.sellerId;
   }
 
   async getAllOrdersOfUser(userId: string): Promise<Order[]> {
@@ -114,5 +129,27 @@ export class OrdersService extends BaseService<Order> {
         isPaid: status,
       })
       .then(() => this.getOne(orderId));
+  }
+
+  async updateComicsStatusOfAnOrder(orderId: string, status: string) {
+    const orderItemList = await this.orderItemsRepository.find({
+      where: { order: { id: orderId } },
+    });
+
+    if (!orderItemList || orderItemList.length === 0)
+      throw new NotFoundException('Cannot find any order item!');
+
+    await Promise.all(
+      orderItemList.map(async (item) => {
+        await this.comicsService.updateStatus(
+          item.comics.id,
+          ComicsStatusEnum.SOLD,
+        );
+      }),
+    );
+
+    return {
+      message: 'Comics are all successfully updated to SOLD!',
+    };
   }
 }
