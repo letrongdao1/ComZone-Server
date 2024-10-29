@@ -1,9 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class OrderDeliveryDTO {
-  @ApiProperty({
-    type: 'uuid',
-  })
+  @ApiProperty()
   orderId: string;
 
   @ApiProperty()

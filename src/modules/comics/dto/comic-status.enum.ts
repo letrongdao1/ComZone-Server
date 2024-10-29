@@ -4,5 +4,5 @@ export enum ComicsStatusEnum {
   AUCTION = 'AUCTION',
   EXCHANGE = 'EXCHANGE',
   SOLD = 'SOLD',
-  DELETED = 'DELETED',
+  REMOVED = 'REMOVED',
 }
