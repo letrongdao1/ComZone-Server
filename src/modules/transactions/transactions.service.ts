@@ -112,7 +112,6 @@ export class TransactionsService extends BaseService<Transaction> {
 
     return await this.transactionsRepository.update(transactionId, {
       status: newStatus,
-      isUsed: true,
     });
   }
 
@@ -210,6 +209,8 @@ export class TransactionsService extends BaseService<Transaction> {
       const user = await this.usersService.depositWallet(
         transaction.walletDeposit.id,
       );
+
+      await this.updateTransactionIsUsed(transaction.id);
 
       return {
         transaction: trans,

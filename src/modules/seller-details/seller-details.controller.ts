@@ -13,7 +13,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class SellerDetailsController {
   constructor(private readonly sellerDetailsService: SellerDetailsService) {}
 
-  @Roles(Role.MEMBER)
+  @Roles(Role.MEMBER, Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post()
