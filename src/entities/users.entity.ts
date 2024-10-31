@@ -16,6 +16,7 @@ import { UserReport } from './user-report.entity';
 import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
 import { Notification } from './notification.entity';
+import { SellerFeedback } from './seller-feedback.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -165,4 +166,10 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
+
+  @OneToMany(() => SellerFeedback, (feedback) => feedback.user)
+  userSellerFeedbacks: SellerFeedback[];
+
+  @OneToMany(() => SellerFeedback, (feedback) => feedback.seller)
+  sellerFeedbacks: SellerFeedback[];
 }
