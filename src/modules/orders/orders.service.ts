@@ -66,6 +66,9 @@ export class OrdersService extends BaseService<Order> {
           id: userId,
         },
       },
+      order: {
+        createdAt: 'DESC',
+      },
     });
   }
 
