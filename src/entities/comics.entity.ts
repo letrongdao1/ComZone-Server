@@ -37,8 +37,8 @@ export class Comic extends BaseEntity {
   @Column('text')
   description: string;
 
-  @Column('simple-array')
-  coverImage: string[];
+  @Column()
+  coverImage: string;
 
   @Column({
     type: 'enum',

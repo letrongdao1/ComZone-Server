@@ -18,5 +18,5 @@ export class ChatRoom extends BaseEntity {
   @OneToOne(() => Exchange, (exchange) => exchange.chatRoom)
   exchange: Exchange;
 
-//   @OneToOne(() => )
+  //   @OneToOne(() => )
 }
