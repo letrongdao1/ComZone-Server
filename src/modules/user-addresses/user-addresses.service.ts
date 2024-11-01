@@ -67,21 +67,23 @@ export class UserAddressesService extends BaseService<Address> {
     return await this.userAddressesRepository.save(newAddress);
   }
 
-  async getAllAddressesOfUser(userId: string) {
-    return await this.userAddressesRepository.find({
-      where: {
-        user: {
-          id: userId,
-        },
-      },
-      order: {
-        isDefault: 'DESC',
-        usedTime: 'DESC',
-      },
-    });
+  filterProvinceName(province: any): string {
+    let provinceName = '';
+    if (
+      province.ProvinceID === 201 ||
+      province.ProvinceID === 202 ||
+      province.ProvinceID === 203 ||
+      province.ProvinceID === 220 ||
+      province.ProvinceID === 224
+    )
+      provinceName = province.NameExtension[4];
+    else if (province.ProvinceID === 223)
+      provinceName = province.NameExtension[2];
+    else provinceName = province.NameExtension[1];
+    return provinceName;
   }
 
-  async getAllAddressesOfUserWithName(userId: string) {
+  async getAllAddressesOfUser(userId: string) {
     const addressList = await this.userAddressesRepository.find({
       where: {
         user: {
@@ -176,7 +178,7 @@ export class UserAddressesService extends BaseService<Address> {
     return {
       province: {
         id: province.ProvinceID,
-        name: province.ProvinceName,
+        name: this.filterProvinceName(province),
       },
       district: {
         id: district.DistrictID,
@@ -193,7 +195,7 @@ export class UserAddressesService extends BaseService<Address> {
         ', ' +
         district.DistrictName +
         ', ' +
-        province.ProvinceName,
+        this.filterProvinceName(province),
     };
   }
 
