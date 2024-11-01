@@ -34,7 +34,7 @@ export class TransactionDTO {
   @ApiProperty({
     nullable: true,
   })
-  provider?: string;
+  paymentGateway?: string;
 
   @ApiProperty({
     nullable: true,

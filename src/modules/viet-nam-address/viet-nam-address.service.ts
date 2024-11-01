@@ -32,8 +32,8 @@ export class VietNamAddressService {
           else if (p.ProvinceID === 223) provinceName = p.NameExtension[2];
           else provinceName = p.NameExtension[1];
           return {
-            provinceId: p.ProvinceID,
-            provinceName,
+            id: p.ProvinceID,
+            name: provinceName,
           };
         });
 
@@ -60,8 +60,8 @@ export class VietNamAddressService {
         data.sort((a, b) => a.DistrictID - b.DistrictID);
         const filteredData = data.map((d) => {
           return {
-            districtId: d.DistrictID,
-            districtName: d.DistrictName,
+            id: d.DistrictID,
+            name: d.DistrictName,
           };
         });
         return filteredData;
@@ -87,8 +87,8 @@ export class VietNamAddressService {
         data.sort((a, b) => a.WardID - b.WardID);
         const filteredData = data.map((w) => {
           return {
-            wardId: parseInt(w.WardCode),
-            wardName: w.WardName,
+            id: parseInt(w.WardCode),
+            name: w.WardName,
           };
         });
         return filteredData;

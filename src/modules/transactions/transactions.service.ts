@@ -14,7 +14,7 @@ import { generateNumericCode } from '../../utils/generator/generators';
 import { OrdersService } from '../orders/orders.service';
 import { WalletDepositService } from '../wallet-deposit/wallet-deposit.service';
 import { WithdrawalService } from '../withdrawal/withdrawal.service';
-import { ProviderEnum } from './dto/provider.enum';
+import { PaymentGatewayEnum } from './dto/provider.enum';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -39,7 +39,7 @@ export class TransactionsService extends BaseService<Transaction> {
     const newTransaction = this.transactionsRepository.create({
       user,
       code: generateNumericCode(8),
-      provider: transactionDto.provider,
+      paymentGateway: transactionDto.paymentGateway,
       status: transactionDto.status,
     });
 
@@ -117,11 +117,11 @@ export class TransactionsService extends BaseService<Transaction> {
 
   async updateTransactionProvider(
     transactionId: string,
-    provider: ProviderEnum,
+    paymentGateway: PaymentGatewayEnum,
   ) {
     return await this.transactionsRepository
       .update(transactionId, {
-        provider,
+        paymentGateway,
       })
       .then(() => this.getOne(transactionId));
   }

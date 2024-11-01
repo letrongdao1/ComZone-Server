@@ -2,8 +2,6 @@ import { Entity, Column, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from 'src/common/entity.base';
 import { User } from './users.entity';
 import { OrderItem } from './order-item.entity';
-import { Address } from './address.entity';
-import { OrderDelivery } from './order-delivery.entity';
 import { Transaction } from './transactions.entity';
 import { Notification } from './notification.entity';
 
@@ -36,6 +34,42 @@ export class Order extends BaseEntity {
     default: 'WALLET',
   })
   paymentMethod: string;
+
+  @Column({
+    name: 'from_name',
+    type: 'varchar',
+  })
+  fromName: string;
+
+  @Column({
+    name: 'from_phone',
+    type: 'varchar',
+  })
+  fromPhone: string;
+
+  @Column({
+    name: 'from_address',
+    type: 'varchar',
+  })
+  fromAddress: string;
+
+  @Column({
+    name: 'to_name',
+    type: 'varchar',
+  })
+  toName: string;
+
+  @Column({
+    name: 'to_phone',
+    type: 'varchar',
+  })
+  toPhone: string;
+
+  @Column({
+    name: 'toAddress',
+    type: 'varchar',
+  })
+  toAddress: string;
 
   @Column({
     name: 'is_paid',
@@ -75,9 +109,6 @@ export class Order extends BaseEntity {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   orderItem: OrderItem[];
-
-  @OneToOne(() => OrderDelivery, (orderDelivery) => orderDelivery.order)
-  orderDelivery: OrderDelivery;
 
   @OneToOne(() => Transaction, (transaction) => transaction.order)
   transaction: Transaction;

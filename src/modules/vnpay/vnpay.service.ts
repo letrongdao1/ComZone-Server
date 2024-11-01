@@ -8,7 +8,7 @@ import * as dotenv from 'dotenv';
 import dateFormat from '../../utils/date-format/date.format';
 import { VNPayRequestDTO } from './dto/vnp-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
-import { ProviderEnum } from '../transactions/dto/provider.enum';
+import { PaymentGatewayEnum } from '../transactions/dto/provider.enum';
 
 var querystring = require('qs');
 dotenv.config();
@@ -113,7 +113,7 @@ export class VnpayService {
     if (secureHash === signed) {
       await this.transactionsService.updateTransactionProvider(
         transactionId,
-        ProviderEnum.VNPAY,
+        PaymentGatewayEnum.VNPAY,
       );
 
       await this.transactionsService.updateTransactionStatus(
