@@ -2,7 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderDTO {
   @ApiProperty()
-  @ApiProperty()
   totalPrice: number;
 
   @ApiProperty({ nullable: true })

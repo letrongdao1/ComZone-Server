@@ -4,6 +4,7 @@ import { User } from './users.entity';
 import { OrderItem } from './order-item.entity';
 import { Transaction } from './transactions.entity';
 import { Notification } from './notification.entity';
+import { OrderDeliveryStatusEnum } from 'src/modules/orders/dto/order-delivery-status.enum';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -13,11 +14,12 @@ export class Order extends BaseEntity {
   user: User;
 
   @Column({
+    name: 'delivery_tracking_code',
     type: 'varchar',
-    nullable: false,
+    nullable: true,
     unique: true,
   })
-  code: string;
+  deliveryTrackingCode: string;
 
   @Column({
     name: 'total_price',
@@ -66,15 +68,28 @@ export class Order extends BaseEntity {
   toPhone: string;
 
   @Column({
-    name: 'toAddress',
+    name: 'to_address',
     type: 'varchar',
   })
   toAddress: string;
 
   @Column({
+    name: 'delivery_fee',
+    type: 'float',
+  })
+  deliveryFee: number;
+
+  @Column({
+    name: 'delivery_status',
+    type: 'enum',
+    enum: OrderDeliveryStatusEnum,
+    nullable: true,
+  })
+  deliveryStatus: string;
+
+  @Column({
     name: 'is_paid',
     type: 'boolean',
-    nullable: false,
     default: false,
   })
   isPaid: boolean;
