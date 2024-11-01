@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { OrderDeliveryStatusEnum } from './order-delivery-status.enum';
 
 export class OrderDeliveryDTO {
   @ApiProperty()
@@ -30,8 +31,7 @@ export class OrderDeliveryDTO {
 
   @ApiProperty({
     type: 'enum',
-    enum: ['ONGOING', 'SUCCESSFUL', 'FAILED'],
-    default: 'ONGOING',
+    enum: OrderDeliveryStatusEnum,
   })
   status: string;
 
