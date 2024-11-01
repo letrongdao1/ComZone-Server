@@ -99,10 +99,11 @@ export class Transaction extends BaseEntity {
   isUsed: boolean;
 
   @Column({
+    name: 'payment_gateway',
     type: 'varchar',
     nullable: true,
   })
-  provider: string;
+  paymentGateway: string;
 
   @Column({
     type: 'varchar',

@@ -19,7 +19,6 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
 import { UserAddressesModule } from './modules/user-addresses/user-addresses.module';
 import { OtpModule } from './modules/otps/otps.module';
 import { SellerDetailsModule } from './modules/seller-details/seller-details.module';
-import { OrderDeliveriesModule } from './modules/order-deliveries/order-deliveries.module';
 import { WalletDepositModule } from './modules/wallet-deposit/wallet-deposit.module';
 import { WithdrawalModule } from './modules/withdrawal/withdrawal.module';
 import { SourcesOfFundModule } from './modules/sources-of-fund/sources-of-fund.module';
@@ -60,7 +59,6 @@ import { PlansModule } from './modules/exchange-subs/plans/plans.module';
     UserAddressesModule,
     OtpModule,
     SellerDetailsModule,
-    OrderDeliveriesModule,
     WalletDepositModule,
     WithdrawalModule,
     SourcesOfFundModule,
