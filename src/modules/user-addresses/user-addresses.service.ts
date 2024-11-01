@@ -10,7 +10,10 @@ import { Address } from 'src/entities/address.entity';
 import { Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { UserAddressDTO } from './dto/user-address';
-import data from '../viet-nam-address/address-data.json';
+import axios from 'axios';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class UserAddressesService extends BaseService<Address> {
@@ -78,46 +81,107 @@ export class UserAddressesService extends BaseService<Address> {
     });
   }
 
-  async getAddressCodesOfUser(addressId: string) {
+  async getAllAddressesOfUserWithName(userId: string) {
+    const addressList = await this.userAddressesRepository.find({
+      where: {
+        user: {
+          id: userId,
+        },
+      },
+      order: {
+        isDefault: 'DESC',
+        usedTime: 'DESC',
+      },
+    });
+
+    return await Promise.all(
+      addressList.map(async (address) => {
+        const addressNames = await this.getAddressNamesOfUser(address.id);
+        return {
+          ...address,
+          province: addressNames.provinceName,
+          district: addressNames.districtName,
+          ward: addressNames.wardName,
+          fullAddress: addressNames.fullAddress,
+        };
+      }),
+    );
+  }
+
+  async getAddressNamesOfUser(addressId: string) {
     const userAddress = await this.userAddressesRepository.findOne({
       where: { id: addressId },
     });
     if (!userAddress)
       throw new NotFoundException('User address cannot be found!');
 
-    const provinceCode = data.find(
-      (address) => address.name === userAddress.province,
-    ).code;
+    const headers = {
+      Token: process.env.GHN_TOKEN,
+    };
 
-    const provinceWithDistrictCode = data.find((address) =>
-      address.districts.find(
-        (district) => district.name === userAddress.district,
-      ),
-    );
+    const province = await axios
+      .get(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province',
+        {
+          headers,
+        },
+      )
+      .then((res) => {
+        const data: any[] = res.data.data;
+        return data.find((p) => p.ProvinceID === userAddress.province);
+      })
+      .catch((err) => console.log(err));
 
-    const districtCode = provinceWithDistrictCode.districts.find(
-      (district) => district.name === userAddress.district,
-    ).code;
+    const district = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district',
+        {
+          province_id: userAddress.province,
+        },
+        {
+          headers,
+        },
+      )
+      .then((res) => {
+        const data: any[] = res.data.data;
+        return data.find((p) => p.DistrictID === userAddress.district);
+      })
+      .catch((err) => console.log(err));
 
-    const provinceWithWardCode = data.find((address) =>
-      address.districts.find((district) =>
-        district.wards.find((ward) => ward.name === userAddress.ward),
-      ),
-    );
+    const ward = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward',
+        {
+          district_id: userAddress.district,
+        },
+        {
+          headers,
+        },
+      )
+      .then((res) => {
+        const data: any[] = res.data.data;
+        return data.find((p) => parseInt(p.WardCode) === userAddress.ward);
+      })
+      .catch((err) => console.log(err));
 
-    const districtWithWardCode = provinceWithWardCode.districts.find(
-      (district) =>
-        district.wards.find((ward) => ward.name === userAddress.ward),
-    );
-
-    const wardCode = districtWithWardCode.wards.find(
-      (ward) => ward.name === userAddress.ward,
-    ).code;
+    console.log({
+      province,
+      district,
+      ward,
+    });
 
     return {
-      provinceCode,
-      districtCode,
-      wardCode,
+      provinceName: province.ProvinceName,
+      districtName: district.DistrictName,
+      wardName: ward.WardName,
+      fullAddress:
+        userAddress.detailedAddress +
+        ', ' +
+        ward.WardName +
+        ', ' +
+        district.DistrictName +
+        ', ' +
+        province.ProvinceName,
     };
   }
 
