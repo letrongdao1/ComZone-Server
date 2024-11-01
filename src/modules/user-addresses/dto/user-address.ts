@@ -8,13 +8,13 @@ export class UserAddressDTO {
   phone: string;
 
   @ApiProperty()
-  province: string;
+  province: number;
 
   @ApiProperty()
-  district: string;
+  district: number;
 
   @ApiProperty()
-  ward: string;
+  ward: number;
 
   @ApiProperty()
   detailedAddress: string;

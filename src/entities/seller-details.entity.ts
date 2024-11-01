@@ -31,22 +31,22 @@ export class SellerDetails extends BaseEntity {
   followerCount: number;
 
   @Column({
-    type: 'varchar',
+    type: 'int',
     nullable: false,
   })
-  province: string;
+  province: number;
 
   @Column({
-    type: 'varchar',
+    type: 'int',
     nullable: false,
   })
-  district: string;
+  district: number;
 
   @Column({
-    type: 'varchar',
+    type: 'int',
     nullable: false,
   })
-  ward: string;
+  ward: number;
 
   @Column({
     type: 'varchar',
