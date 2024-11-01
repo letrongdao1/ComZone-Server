@@ -10,7 +10,6 @@ import { Order } from 'src/entities/orders.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateOrderDTO } from './dto/createOrderDTO';
-import { generateNumericCode } from 'src/utils/generator/generators';
 import { OrderStatusEnum } from './dto/order-status.enum';
 import { OrderItem } from 'src/entities/order-item.entity';
 import { User } from 'src/entities/users.entity';
@@ -39,7 +38,6 @@ export class OrdersService extends BaseService<Order> {
     const newOrder = this.ordersRepository.create({
       ...createOrderDto,
       user,
-      code: generateNumericCode(8),
     });
 
     return await this.ordersRepository.save(newOrder);
@@ -105,9 +103,9 @@ export class OrdersService extends BaseService<Order> {
     );
   }
 
-  async getOrderByCode(code: string): Promise<Order> {
+  async getOrderByDeliveryTrackingCode(code: string): Promise<Order> {
     return await this.ordersRepository.findOne({
-      where: { code },
+      where: { deliveryTrackingCode: code },
     });
   }
 
