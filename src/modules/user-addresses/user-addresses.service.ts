@@ -96,13 +96,22 @@ export class UserAddressesService extends BaseService<Address> {
 
     return await Promise.all(
       addressList.map(async (address) => {
-        const addressNames = await this.getAddressNamesOfUser(address.id);
+        const addressDetails = await this.getAddressNamesOfUser(address.id);
         return {
           ...address,
-          province: addressNames.provinceName,
-          district: addressNames.districtName,
-          ward: addressNames.wardName,
-          fullAddress: addressNames.fullAddress,
+          province: {
+            id: addressDetails.province.id,
+            name: addressDetails.province.name,
+          },
+          district: {
+            id: addressDetails.district.id,
+            name: addressDetails.district.name,
+          },
+          ward: {
+            id: addressDetails.ward.id,
+            name: addressDetails.ward.name,
+          },
+          fullAddress: addressDetails.fullAddress,
         };
       }),
     );
@@ -164,16 +173,19 @@ export class UserAddressesService extends BaseService<Address> {
       })
       .catch((err) => console.log(err));
 
-    console.log({
-      province,
-      district,
-      ward,
-    });
-
     return {
-      provinceName: province.ProvinceName,
-      districtName: district.DistrictName,
-      wardName: ward.WardName,
+      province: {
+        id: province.ProvinceID,
+        name: province.ProvinceName,
+      },
+      district: {
+        id: district.DistrictID,
+        name: district.DistrictName,
+      },
+      ward: {
+        id: parseInt(ward.WardCode),
+        name: ward.WardName,
+      },
       fullAddress:
         userAddress.detailedAddress +
         ', ' +
