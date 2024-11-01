@@ -2,10 +2,9 @@ import { Entity, Column, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from 'src/common/entity.base';
 import { User } from './users.entity';
 import { OrderItem } from './order-item.entity';
-import { Address } from './address.entity';
-import { OrderDelivery } from './order-delivery.entity';
 import { Transaction } from './transactions.entity';
 import { Notification } from './notification.entity';
+import { OrderDeliveryStatusEnum } from 'src/modules/orders/dto/order-delivery-status.enum';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -15,11 +14,12 @@ export class Order extends BaseEntity {
   user: User;
 
   @Column({
+    name: 'delivery_tracking_code',
     type: 'varchar',
-    nullable: false,
+    nullable: true,
     unique: true,
   })
-  code: string;
+  deliveryTrackingCode: string;
 
   @Column({
     name: 'total_price',
@@ -38,9 +38,58 @@ export class Order extends BaseEntity {
   paymentMethod: string;
 
   @Column({
+    name: 'from_name',
+    type: 'varchar',
+  })
+  fromName: string;
+
+  @Column({
+    name: 'from_phone',
+    type: 'varchar',
+  })
+  fromPhone: string;
+
+  @Column({
+    name: 'from_address',
+    type: 'varchar',
+  })
+  fromAddress: string;
+
+  @Column({
+    name: 'to_name',
+    type: 'varchar',
+  })
+  toName: string;
+
+  @Column({
+    name: 'to_phone',
+    type: 'varchar',
+  })
+  toPhone: string;
+
+  @Column({
+    name: 'to_address',
+    type: 'varchar',
+  })
+  toAddress: string;
+
+  @Column({
+    name: 'delivery_fee',
+    type: 'float',
+  })
+  deliveryFee: number;
+
+  @Column({
+    name: 'delivery_status',
+    type: 'enum',
+    enum: OrderDeliveryStatusEnum,
+    nullable: true,
+  })
+  deliveryStatus: string;
+
+  @Column({
     name: 'is_paid',
     type: 'boolean',
-    nullable: false,
     default: false,
   })
   isPaid: boolean;
@@ -75,9 +124,6 @@ export class Order extends BaseEntity {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   orderItem: OrderItem[];
-
-  @OneToOne(() => OrderDelivery, (orderDelivery) => orderDelivery.order)
-  orderDelivery: OrderDelivery;
 
   @OneToOne(() => Transaction, (transaction) => transaction.order)
   transaction: Transaction;

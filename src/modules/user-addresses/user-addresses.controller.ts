@@ -33,9 +33,9 @@ export class UserAddressesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('address-code/:addressId')
-  getAddressCodesOfUser(@Param('addressId') addressId: string) {
-    return this.userAddressesService.getAddressCodesOfUser(addressId);
+  @Get('address-name/:addressId')
+  getAddressNamesOfUser(@Param('addressId') addressId: string) {
+    return this.userAddressesService.getAddressNamesOfUser(addressId);
   }
 
   @UseGuards(JwtAuthGuard)

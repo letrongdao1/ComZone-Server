@@ -54,9 +54,9 @@ export class OrdersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/code/:code')
+  @Get('/delivery-tracking-code/:code')
   getOrderByCode(@Param('code') code: string) {
-    return this.ordersService.getOrderByCode(code);
+    return this.ordersService.getOrderByDeliveryTrackingCode(code);
   }
 
   @UseGuards(JwtAuthGuard)

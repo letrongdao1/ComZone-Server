@@ -16,9 +16,9 @@ export class VietNamAddressController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('districts/:province_code')
-  getAllProvincesAndDistricts(@Param('province_code') province_code: string) {
-    return this.vietNamAddressService.getDistrictsByProvinceCode(province_code);
+  @Get('districts/:province_id')
+  getAllProvincesAndDistricts(@Param('province_id') province_id: string) {
+    return this.vietNamAddressService.getDistrictsByProvinceCode(province_id);
   }
 
   @UseGuards(JwtAuthGuard)

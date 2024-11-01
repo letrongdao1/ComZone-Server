@@ -4,7 +4,7 @@ import axios from 'axios';
 import dateFormat from 'src/utils/date-format/date.format';
 import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
 import { TransactionsService } from '../transactions/transactions.service';
-import { ProviderEnum } from '../transactions/dto/provider.enum';
+import { PaymentGatewayEnum } from '../transactions/dto/provider.enum';
 
 @Injectable()
 export class ZalopayService {
@@ -117,7 +117,7 @@ export class ZalopayService {
 
         await this.transactionsService.updateTransactionProvider(
           transactionId,
-          ProviderEnum.ZALOPAY,
+          PaymentGatewayEnum.ZALOPAY,
         );
 
         if (res.data.returncode === 1) {
@@ -140,7 +140,7 @@ export class ZalopayService {
           );
 
           await this.transactionsService.updatePostTransaction(transactionId);
-          
+
           response.redirect(
             context === 'WALLET'
               ? 'http://localhost:5173?payment_status=FAILED'

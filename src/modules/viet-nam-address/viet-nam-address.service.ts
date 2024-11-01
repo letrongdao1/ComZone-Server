@@ -1,48 +1,98 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import data from './address-data.json';
+import * as dotenv from 'dotenv';
+import axios from 'axios';
+
+dotenv.config();
+
 @Injectable()
 export class VietNamAddressService {
-  getProvinces() {
-    return data.map((address) => {
-      return {
-        province: address.name,
-        code: address.code,
-      };
-    });
+  async getProvinces() {
+    return await axios
+      .get(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province',
+        {
+          headers: {
+            Token: process.env.GHN_TOKEN,
+          },
+        },
+      )
+      .then((res) => {
+        const data: any[] = res.data.data;
+        data.sort((a, b) => a.ProvinceID - b.ProvinceID);
+        const filteredData = data.map((p) => {
+          let provinceName = '';
+          if (
+            p.ProvinceID === 201 ||
+            p.ProvinceID === 202 ||
+            p.ProvinceID === 203 ||
+            p.ProvinceID === 220 ||
+            p.ProvinceID === 224
+          )
+            provinceName = p.NameExtension[4];
+          else if (p.ProvinceID === 223) provinceName = p.NameExtension[2];
+          else provinceName = p.NameExtension[1];
+          return {
+            id: p.ProvinceID,
+            name: provinceName,
+          };
+        });
+
+        return filteredData;
+      })
+      .catch((err) => console.log(err));
   }
 
-  getDistrictsByProvinceCode(code: string) {
-    const province = data.find((address) => address.code === parseInt(code));
-    if (!province)
-      throw new NotFoundException('Province code cannot be found!');
-
-    return province.districts.map((district) => {
-      return {
-        district: district.name,
-        code: district.code,
-      };
-    });
+  async getDistrictsByProvinceCode(province_id: string) {
+    return await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/district',
+        {
+          province_id: parseInt(province_id),
+        },
+        {
+          headers: {
+            Token: process.env.GHN_TOKEN,
+          },
+        },
+      )
+      .then((res) => {
+        const data: any[] = res.data.data;
+        data.sort((a, b) => a.DistrictID - b.DistrictID);
+        const filteredData = data.map((d) => {
+          return {
+            id: d.DistrictID,
+            name: d.DistrictName,
+          };
+        });
+        return filteredData;
+      })
+      .catch((err) => console.log(err));
   }
 
-  getWardsByCodes(districtCode: string) {
-    const provinceWithDistrictCode = data.find((address) =>
-      address.districts.find(
-        (district) => district.code === parseInt(districtCode),
-      ),
-    );
-
-    if (!provinceWithDistrictCode)
-      throw new NotFoundException('District code cannot be found!');
-
-    const district = provinceWithDistrictCode.districts.find(
-      (district) => district.code === parseInt(districtCode),
-    );
-
-    return district.wards.map((ward) => {
-      return {
-        ward: ward.name,
-        code: ward.code,
-      };
-    });
+  async getWardsByCodes(district_id: string) {
+    return await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/ward',
+        {
+          district_id: parseInt(district_id),
+        },
+        {
+          headers: {
+            Token: process.env.GHN_TOKEN,
+          },
+        },
+      )
+      .then((res) => {
+        const data: any[] = res.data.data;
+        data.sort((a, b) => a.WardID - b.WardID);
+        const filteredData = data.map((w) => {
+          return {
+            id: parseInt(w.WardCode),
+            name: w.WardName,
+          };
+        });
+        return filteredData;
+      })
+      .catch((err) => console.log(err));
   }
 }

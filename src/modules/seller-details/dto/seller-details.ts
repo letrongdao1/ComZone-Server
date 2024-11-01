@@ -5,13 +5,13 @@ export class SellerDetailsDTO {
   verifiedPhone: string;
 
   @ApiProperty()
-  province: string;
+  province: number;
 
   @ApiProperty()
-  district: string;
+  district: number;
 
   @ApiProperty()
-  ward: string;
+  ward: number;
 
   @ApiProperty()
   detailedAddress: string;
