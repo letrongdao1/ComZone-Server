@@ -40,6 +40,21 @@ export class OrdersService extends BaseService<Order> {
     super(ordersRepository);
   }
 
+  async getAll(): Promise<Order[]> {
+    const orderList = await this.ordersRepository.find();
+    await Promise.all(
+      orderList.map(async (order) => {
+        await this.autoUpdateOrderDeliveryStatus(order.id);
+      }),
+    );
+    return await this.ordersRepository.find({
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+      },
+    });
+  }
+
   async createNewOrder(userId: string, createOrderDto: CreateOrderDTO) {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
@@ -384,7 +399,7 @@ export class OrdersService extends BaseService<Order> {
         'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create',
         {
           payment_type_id: order.paymentMethod === 'WALLET' ? 1 : 2,
-          required_note: 'KHONGCHOXEMHANG',
+          required_note: 'CHOXEMHANGKHONGTHU',
           from_name: order.fromName,
           from_phone: order.fromPhone,
           from_address: order.fromAddress,
