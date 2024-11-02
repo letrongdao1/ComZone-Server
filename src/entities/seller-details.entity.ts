@@ -43,10 +43,10 @@ export class SellerDetails extends BaseEntity {
   district: number;
 
   @Column({
-    type: 'int',
+    type: 'varchar',
     nullable: false,
   })
-  ward: number;
+  ward: string;
 
   @Column({
     type: 'varchar',

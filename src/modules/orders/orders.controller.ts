@@ -16,6 +16,7 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateOrderDTO } from './dto/createOrderDTO';
 import { OrderStatusEnum } from './dto/order-status.enum';
+import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -65,12 +66,24 @@ export class OrdersController {
     return this.ordersService.getOne(orderId);
   }
 
+  @Post('delivery-details')
+  getDeliveryDetails(@Body() getDeliveryFeeDto: GetDeliveryFeeDTO) {
+    return this.ordersService.getDeliveryDetails(getDeliveryFeeDto);
+  }
+
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Patch('status/:orderId')
-  updateOrderStatus(
-    @Param('orderId') orderId: string,
-    @Body() data: { status: OrderStatusEnum },
-  ) {
-    return this.ordersService.updateOrderStatus(orderId, data.status);
+  @Post('status/start-packaging/:orderId')
+  sellerStartsPackaging(@Param('orderId') orderId: string) {
+    return this.ordersService.sellerStartsPackaging(orderId);
+  }
+
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Post('status/finish-packaging/:orderId')
+  sellerFinishesPackaging(@Param('orderId') orderId: string) {
+    return this.ordersService.sellerFinishesPackaging(orderId);
   }
 }
