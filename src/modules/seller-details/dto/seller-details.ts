@@ -11,7 +11,7 @@ export class SellerDetailsDTO {
   district: number;
 
   @ApiProperty()
-  ward: number;
+  ward: string;
 
   @ApiProperty()
   detailedAddress: string;
