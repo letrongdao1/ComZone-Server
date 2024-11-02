@@ -185,7 +185,7 @@ export class UserAddressesService extends BaseService<Address> {
         name: district.DistrictName,
       },
       ward: {
-        id: parseInt(ward.WardCode),
+        id: ward.WardCode,
         name: ward.WardName,
       },
       fullAddress:
