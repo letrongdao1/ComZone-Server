@@ -35,10 +35,10 @@ export class Address extends BaseEntity {
   district: number;
 
   @Column({
-    type: 'int',
+    type: 'varchar',
     nullable: false,
   })
-  ward: number;
+  ward: string;
 
   @Column({
     name: 'detailed_address',

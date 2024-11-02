@@ -33,9 +33,8 @@ export class Order extends BaseEntity {
     name: 'payment_method',
     type: 'enum',
     enum: ['COD', 'WALLET'],
-    default: 'WALLET',
   })
-  paymentMethod: string;
+  paymentMethod: 'COD' | 'WALLET';
 
   @Column({
     name: 'from_name',
@@ -56,6 +55,36 @@ export class Order extends BaseEntity {
   fromAddress: string;
 
   @Column({
+    name: 'from_province_name',
+    type: 'varchar',
+  })
+  fromProvinceName: string;
+
+  @Column({
+    name: 'from_district_id',
+    type: 'int',
+  })
+  fromDistrictId: number;
+
+  @Column({
+    name: 'from_district_name',
+    type: 'varchar',
+  })
+  fromDistrictName: string;
+
+  @Column({
+    name: 'from_ward_id',
+    type: 'varchar',
+  })
+  fromWardId: string;
+
+  @Column({
+    name: 'from_ward_name',
+    type: 'varchar',
+  })
+  fromWardName: string;
+
+  @Column({
     name: 'to_name',
     type: 'varchar',
   })
@@ -72,6 +101,18 @@ export class Order extends BaseEntity {
     type: 'varchar',
   })
   toAddress: string;
+
+  @Column({
+    name: 'to_district_id',
+    type: 'int',
+  })
+  toDistrictId: number;
+
+  @Column({
+    name: 'to_ward_id',
+    type: 'varchar',
+  })
+  toWardId: string;
 
   @Column({
     name: 'delivery_fee',

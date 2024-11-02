@@ -171,7 +171,7 @@ export class UserAddressesService extends BaseService<Address> {
       )
       .then((res) => {
         const data: any[] = res.data.data;
-        return data.find((p) => parseInt(p.WardCode) === userAddress.ward);
+        return data.find((p) => p.WardCode === userAddress.ward);
       })
       .catch((err) => console.log(err));
 
@@ -185,7 +185,7 @@ export class UserAddressesService extends BaseService<Address> {
         name: district.DistrictName,
       },
       ward: {
-        id: parseInt(ward.WardCode),
+        id: ward.WardCode,
         name: ward.WardName,
       },
       fullAddress:

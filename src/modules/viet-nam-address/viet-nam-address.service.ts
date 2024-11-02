@@ -84,10 +84,10 @@ export class VietNamAddressService {
       )
       .then((res) => {
         const data: any[] = res.data.data;
-        data.sort((a, b) => a.WardID - b.WardID);
+        data.sort((a, b) => a.WardCode.localeCompare(b.WardCode));
         const filteredData = data.map((w) => {
           return {
-            id: parseInt(w.WardCode),
+            id: w.WardCode,
             name: w.WardName,
           };
         });

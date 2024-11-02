@@ -4,12 +4,48 @@ export class CreateOrderDTO {
   @ApiProperty()
   totalPrice: number;
 
-  @ApiProperty({ nullable: true })
-  paymentMethod?: string;
+  @ApiProperty()
+  paymentMethod: 'WALLET' | 'COD';
 
-  @ApiProperty({ nullable: true })
-  isPaid?: boolean;
+  @ApiProperty()
+  fromName: string;
 
-  @ApiProperty({ nullable: true })
-  status?: string;
+  @ApiProperty()
+  fromPhone: string;
+
+  @ApiProperty()
+  fromAddress: string;
+
+  @ApiProperty()
+  fromProvinceName: string;
+
+  @ApiProperty()
+  fromDistrictId: number;
+
+  @ApiProperty()
+  fromDistrictName: string;
+
+  @ApiProperty()
+  fromWardId: string;
+
+  @ApiProperty()
+  fromWardName: string;
+
+  @ApiProperty()
+  toName: string;
+
+  @ApiProperty()
+  toPhone: string;
+
+  @ApiProperty()
+  toAddress: string;
+
+  @ApiProperty()
+  toDistrictId: number;
+
+  @ApiProperty()
+  toWardId: string;
+
+  @ApiProperty()
+  deliveryFee: number;
 }
