@@ -65,28 +65,42 @@ export class ComicService {
   async update(id: string, updateComicDto: UpdateComicDto): Promise<Comic> {
     const { genreIds, sellerId, ...comicData } = updateComicDto;
 
-    let seller;
-    if (sellerId) {
-      seller = await this.userRepository.findOne({
-        where: { id: sellerId },
-      });
-      if (!seller) {
-        throw new Error('Seller not found');
-      }
-    }
-
-    const genres = genreIds
-      ? await this.genreRepository.find({
-          where: genreIds.map((id) => ({ id })),
-        })
-      : undefined;
-
-    await this.comicRepository.update(id, {
-      ...comicData,
-      sellerId: seller,
-      genres,
+    // Fetch the existing comic entity
+    const comic = await this.comicRepository.findOne({
+      where: { id },
+      relations: ['genres'], // Ensure to load the existing genres
     });
 
+    if (!comic) {
+      throw new Error('Comic not found');
+    }
+
+    // Retrieve the seller if sellerId is provided
+    // if (sellerId) {
+    //   const seller = await this.userRepository.findOne({
+    //     where: { id: sellerId },
+    //   });
+    //   if (!seller) {
+    //     throw new Error('Seller not found');
+    //   }
+    //   comic.sellerId = seller; // Assign the seller entity
+    // }
+
+    // Retrieve genres based on provided genreIds
+    if (genreIds) {
+      const genres = await this.genreRepository.find({
+        where: genreIds.map((id) => ({ id })),
+      });
+      comic.genres = genres; // Assign the retrieved genres
+    }
+
+    // Update other comic properties
+    Object.assign(comic, comicData);
+
+    // Save the updated comic entity
+    await this.comicRepository.save(comic);
+
+    // Return the updated comic
     return this.findOne(id);
   }
 

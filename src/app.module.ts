@@ -25,6 +25,7 @@ import { SourcesOfFundModule } from './modules/sources-of-fund/sources-of-fund.m
 import { SellerSubscriptionsModule } from './modules/seller-subscriptions/seller-subscriptions.module';
 import { SellerSubsPlansModule } from './modules/seller-subs-plans/seller-subs-plans.module';
 import { PlansModule } from './modules/exchange-subs/plans/plans.module';
+import { EventsModule } from './modules/socket/event.module';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { PlansModule } from './modules/exchange-subs/plans/plans.module';
       }),
       inject: [ConfigService],
     }),
-
+    EventsModule,
     AuthModule,
     UsersModule,
     ComicModule,
