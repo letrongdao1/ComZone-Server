@@ -82,12 +82,6 @@ export class UsersService extends BaseService<User> {
     });
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    if (!user.is_verified)
-      throw new ForbiddenException(
-        'Phone number must be verified to get a seller account!',
-        'Unverified phone number!',
-      );
-
     switch (user.role) {
       case 'MEMBER': {
         await this.userRepository.update(userId, {

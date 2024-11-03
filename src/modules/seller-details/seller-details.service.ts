@@ -1,17 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { SellerDetails } from 'src/entities/seller-details.entity';
 import { Repository } from 'typeorm';
 import { SellerDetailsDTO } from './dto/seller-details';
 import { UsersService } from '../users/users.service';
+import { VietNamAddressService } from '../viet-nam-address/viet-nam-address.service';
 
 @Injectable()
 export class SellerDetailsService extends BaseService<SellerDetails> {
   constructor(
     @InjectRepository(SellerDetails)
     private readonly sellerDetailsRepository: Repository<SellerDetails>,
-    private readonly usersService: UsersService,
+    @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(VietNamAddressService)
+    private readonly vnAddressService: VietNamAddressService,
   ) {
     super(sellerDetailsRepository);
   }
@@ -25,6 +28,8 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
 
     await this.usersService.updateUserIsVerified(userId);
 
+    await this.usersService.updateRoleToSeller(userId);
+
     const newSellerInfo = this.sellerDetailsRepository.create({
       ...sellerDetailsDto,
       user,
@@ -36,8 +41,52 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
   }
 
   async getSellerDetails(userId: string) {
-    return await this.sellerDetailsRepository.findOne({
+    const sellerDetails = await this.sellerDetailsRepository.findOne({
       where: { user: { id: userId } },
     });
+
+    if (!sellerDetails)
+      throw new NotFoundException('Cannot find seller details from this user!');
+
+    let foundProvince: { id: number; name: string };
+    const provinces = await this.vnAddressService.getProvinces();
+    if (provinces) {
+      foundProvince = provinces.find(
+        (province) => province.id === sellerDetails.province,
+      );
+    }
+
+    let foundDistrict: { id: number; name: string };
+    const districts = await this.vnAddressService.getDistrictsByProvinceCode(
+      sellerDetails.province.toString(),
+    );
+    if (districts) {
+      foundDistrict = districts.find(
+        (district) => district.id === sellerDetails.district,
+      );
+    }
+
+    let foundWard: { id: string; name: string };
+    const wards = await this.vnAddressService.getWardsByCodes(
+      sellerDetails.district.toString(),
+    );
+    if (wards) {
+      foundWard = wards.find((ward) => ward.id === sellerDetails.ward);
+    }
+
+    return {
+      ...sellerDetails,
+      province: foundProvince,
+      district: foundDistrict,
+      ward: foundWard,
+      fullAddress:
+        sellerDetails.detailedAddress +
+        ', ' +
+        foundWard.name +
+        ', ' +
+        foundDistrict.name +
+        ', ' +
+        foundProvince.name,
+    };
   }
 }
