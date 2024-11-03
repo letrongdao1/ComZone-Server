@@ -23,12 +23,16 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
+    await this.usersService.updateUserIsVerified(userId);
+
     const newSellerInfo = this.sellerDetailsRepository.create({
       ...sellerDetailsDto,
       user,
     });
 
-    return await this.sellerDetailsRepository.save(newSellerInfo);
+    return await this.sellerDetailsRepository
+      .save(newSellerInfo)
+      .then(() => this.getSellerDetails(userId));
   }
 
   async getSellerDetails(userId: string) {
