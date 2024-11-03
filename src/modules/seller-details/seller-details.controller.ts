@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { SellerDetailsService } from './seller-details.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { SellerDetailsDTO } from './dto/seller-details';
@@ -29,7 +37,12 @@ export class SellerDetailsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  getSellerInformationOfUser(@Req() req: any) {
+  getCurrentSellerDetails(@Req() req: any) {
     return this.sellerDetailsService.getSellerDetails(req.user.id);
+  }
+
+  @Get('user/:user_id')
+  getSellerDetailsByUser(@Param('user_id') userId: string) {
+    return this.sellerDetailsService.getSellerDetails(userId);
   }
 }
