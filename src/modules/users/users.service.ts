@@ -10,6 +10,7 @@ import { Order } from 'src/entities/orders.entity';
 import { User } from 'src/entities/users.entity';
 import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { Repository } from 'typeorm';
+import { UserProfileDTO } from './dto/user-profile.dto';
 
 @Injectable()
 export class UsersService extends BaseService<User> {
@@ -168,5 +169,19 @@ export class UsersService extends BaseService<User> {
         nonWithdrawableAmount: user.nonWithdrawableAmount + amount,
       })
       .then(() => this.getOne(userId));
+  }
+
+  async updateUserIsVerified(userId: string) {
+    return await this.userRepository.update(userId, { is_verified: true });
+  }
+
+  async updateUserProfile(userId: string, userProfileDto: UserProfileDTO) {
+    return await this.userRepository
+      .update(userId, userProfileDto)
+      .then(() => this.getOne(userId));
+  }
+
+  async updatePassword(userId: string, password: string) {
+    return await this.userRepository.update(userId, { password });
   }
 }
