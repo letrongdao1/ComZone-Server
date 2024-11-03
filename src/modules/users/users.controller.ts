@@ -52,12 +52,6 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('/role/seller')
-  updateRoleToSeller(@Req() req: any) {
-    return this.usersService.updateRoleToSeller(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch('/wallet/deposit')
   depositUserWallet(
     @Body() walletDepositTransactionDto: WalletDepositTransactionDTO,

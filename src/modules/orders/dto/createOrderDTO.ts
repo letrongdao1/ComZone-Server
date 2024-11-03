@@ -48,4 +48,10 @@ export class CreateOrderDTO {
 
   @ApiProperty()
   deliveryFee: number;
+
+  @ApiProperty()
+  addressId: string;
+
+  @ApiProperty({ nullable: true })
+  note?: string;
 }

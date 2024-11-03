@@ -22,6 +22,7 @@ import * as dotenv from 'dotenv';
 import axios from 'axios';
 import { CancelOrderDTO } from './dto/cancel-order.dto';
 import { OrderDeliveryStatusEnum } from './dto/order-delivery-status.enum';
+import { UserAddressesService } from '../user-addresses/user-addresses.service';
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ export class OrdersService extends BaseService<Order> {
 
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(ComicService) private readonly comicsService: ComicService,
+    @Inject(UserAddressesService)
+    private readonly addressesService: UserAddressesService,
   ) {
     super(ordersRepository);
   }
@@ -64,7 +67,13 @@ export class OrdersService extends BaseService<Order> {
       user,
     });
 
-    return await this.ordersRepository.save(newOrder);
+    await this.addressesService.incrementAddressUsedTime(
+      createOrderDto.addressId,
+    );
+
+    return await this.ordersRepository
+      .save(newOrder)
+      .then(() => this.getOne(newOrder.id));
   }
 
   async autoUpdateOrderDeliveryStatus(orderId: string) {
