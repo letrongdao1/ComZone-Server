@@ -7,21 +7,26 @@ import { Transaction } from './transactions.entity';
 
 @Entity('deposit')
 export class Deposit extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.deposits)
+  @ManyToOne(() => User, (user) => user.deposits, { eager: true })
   user: User;
 
-  @ManyToOne(() => Auction, (auction) => auction.deposits)
+  @ManyToOne(() => Auction, (auction) => auction.deposits, {
+    nullable: true,
+    eager: true,
+  })
   auction: Auction;
 
-  @ManyToOne(() => Exchange, (exchange) => exchange.deposits)
+  @ManyToOne(() => Exchange, (exchange) => exchange.deposits, {
+    nullable: true,
+    eager: true,
+  })
   exchange: Exchange;
 
   @Column({
     type: 'float',
-    precision: 2,
     nullable: false,
   })
-  price: number;
+  amount: number;
 
   @Column({
     type: 'enum',
@@ -29,6 +34,13 @@ export class Deposit extends BaseEntity {
     default: 'HOLDING',
   })
   status: string;
+
+  @Column({
+    name: 'seized_reason',
+    type: 'varchar',
+    nullable: true,
+  })
+  seizedReason: string;
 
   @OneToOne(() => Transaction, (transaction) => transaction.deposit)
   transaction: Transaction;

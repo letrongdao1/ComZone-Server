@@ -98,6 +98,13 @@ export class User extends BaseEntity {
   last_active: Date;
 
   @Column({
+    name: 'device_id',
+    type: 'varchar',
+    nullable: true,
+  })
+  deviceId: string;
+
+  @Column({
     name: 'refresh_token',
     type: 'varchar',
     nullable: true,

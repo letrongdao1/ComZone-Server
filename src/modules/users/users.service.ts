@@ -149,9 +149,19 @@ export class UsersService extends BaseService<User> {
       balance: user.balance - order.totalPrice,
     });
 
-    await this.ordersRepository.update(orderId, { isPaid: true });
+    return await this.ordersRepository
+      .update(orderId, { isPaid: true })
+      .then(() => this.getOne(user.id));
+  }
 
-    return await this.getOne(user.id);
+  async updateBalance(userId: string, amount: number) {
+    const user = await this.getOne(userId);
+
+    return await this.userRepository
+      .update(userId, {
+        balance: amount + user.balance,
+      })
+      .then(() => this.getOne(userId));
   }
 
   async updateBalanceWithNonWithdrawableAmount(userId: string, amount: number) {

@@ -13,12 +13,14 @@ export class SellerSubscription extends BaseEntity {
   @ManyToOne(
     () => SellerSubscriptionPlan,
     (sellSubPlan) => sellSubPlan.sellerSubscriptions,
+    { eager: true },
   )
   plan: SellerSubscriptionPlan;
 
   @Column({
     name: 'activated_time',
     type: 'datetime',
+    nullable: true,
   })
   activatedTime: Date;
 
