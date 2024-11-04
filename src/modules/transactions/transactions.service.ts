@@ -15,6 +15,8 @@ import { OrdersService } from '../orders/orders.service';
 import { WalletDepositService } from '../wallet-deposit/wallet-deposit.service';
 import { WithdrawalService } from '../withdrawal/withdrawal.service';
 import { PaymentGatewayEnum } from './dto/provider.enum';
+import { DepositsService } from '../deposits/deposits.service';
+import { SellerSubscriptionsService } from '../seller-subscriptions/seller-subscriptions.service';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -25,6 +27,8 @@ export class TransactionsService extends BaseService<Transaction> {
     private readonly ordersService: OrdersService,
     private readonly walletDepositService: WalletDepositService,
     private readonly withdrawalService: WithdrawalService,
+    private readonly depositsService: DepositsService,
+    private readonly sellerSubscriptionsService: SellerSubscriptionsService,
   ) {
     super(transactionsRepository);
   }
@@ -48,9 +52,7 @@ export class TransactionsService extends BaseService<Transaction> {
       if (!order) throw new NotFoundException('Order cannot be found!');
       newTransaction.order = order;
       newTransaction.amount = order.totalPrice;
-    }
-
-    if (transactionDto.walletDeposit) {
+    } else if (transactionDto.walletDeposit) {
       const walletDeposit = await this.walletDepositService.getOne(
         transactionDto.walletDeposit,
       );
@@ -58,9 +60,7 @@ export class TransactionsService extends BaseService<Transaction> {
         throw new NotFoundException('Wallet deposit cannot be found!');
       newTransaction.walletDeposit = walletDeposit;
       newTransaction.amount = walletDeposit.amount;
-    }
-
-    if (transactionDto.withdrawal) {
+    } else if (transactionDto.withdrawal) {
       const withdrawal = await this.withdrawalService.getOne(
         transactionDto.withdrawal,
       );
@@ -68,6 +68,11 @@ export class TransactionsService extends BaseService<Transaction> {
         throw new NotFoundException('Withdrawal cannot be found!');
       newTransaction.withdrawal = withdrawal;
       newTransaction.amount = withdrawal.amount;
+    } else if (transactionDto.deposit) {
+      const deposit = await this.depositsService.getOne(transactionDto.deposit);
+      if (!deposit) throw new NotFoundException('Deposit cannot be found!');
+      newTransaction.deposit = deposit;
+      newTransaction.amount = deposit.amount;
     }
 
     return await this.transactionsRepository.save(newTransaction);

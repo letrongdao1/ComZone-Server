@@ -8,7 +8,6 @@ import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { ExchangeSubscription } from './exchange-subscription.entity';
 import { ExchangeCompensation } from './exchange-compensation.entity';
-import { Commission } from './commission.entity';
 
 @Entity('transactions')
 export class Transaction extends BaseEntity {
@@ -106,13 +105,15 @@ export class Transaction extends BaseEntity {
   paymentGateway: string;
 
   @Column({
+    name: 'profit_amount',
+    type: 'float',
+    nullable: true,
+  })
+  profitAmount: number;
+
+  @Column({
     type: 'varchar',
     nullable: true,
   })
   note: string;
-
-  @OneToOne(() => Commission, (commission) => commission.transaction, {
-    nullable: true,
-  })
-  commission: Commission;
 }
