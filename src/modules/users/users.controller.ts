@@ -17,6 +17,7 @@ import {
   OrderPayTransactionDTO,
   WalletDepositTransactionDTO,
 } from './dto/wallet-transaction.dto';
+import { UserProfileDTO } from './dto/user-profile.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -51,12 +52,6 @@ export class UsersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('/role/seller')
-  updateRoleToSeller(@Req() req: any) {
-    return this.usersService.updateRoleToSeller(req.user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch('/wallet/deposit')
   depositUserWallet(
     @Body() walletDepositTransactionDto: WalletDepositTransactionDTO,
@@ -70,5 +65,11 @@ export class UsersController {
   @Patch('/wallet/pay')
   userWalletOrderPay(@Body() orderPayTransactionDto: OrderPayTransactionDTO) {
     return this.usersService.userWalletOrderPay(orderPayTransactionDto.order);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/profile')
+  updateUserProfile(@Req() req: any, @Body() userProfileDTO: UserProfileDTO) {
+    return this.usersService.updateUserProfile(req.user.id, userProfileDTO);
   }
 }

@@ -157,7 +157,6 @@ export class Order extends BaseEntity {
   cancelReason: string;
 
   @Column({
-    name: 'note',
     type: 'text',
     nullable: true,
   })
