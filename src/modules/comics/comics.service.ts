@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { FindManyOptions, Not, Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
@@ -93,14 +93,10 @@ export class ComicService {
       });
       comic.genres = genres; // Assign the retrieved genres
     }
-
-    // Update other comic properties
     Object.assign(comic, comicData);
 
-    // Save the updated comic entity
     await this.comicRepository.save(comic);
 
-    // Return the updated comic
     return this.findOne(id);
   }
 
@@ -122,6 +118,24 @@ export class ComicService {
     });
 
     return comics;
+  }
+  async findAllExceptSeller(
+    sellerId: string | null,
+    status: string,
+  ): Promise<Comic[]> {
+    if (sellerId) {
+      // Exclude comics of the specified seller
+      return this.comicRepository.find({
+        where: { sellerId: Not(sellerId), status },
+        relations: ['genres', 'sellerId'],
+      });
+    } else {
+      // Return all comics with the specified status
+      return this.comicRepository.find({
+        where: { status },
+        relations: ['genres', 'sellerId'],
+      });
+    }
   }
 
   async findOneWithGenres(id: string): Promise<Comic> {

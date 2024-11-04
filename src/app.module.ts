@@ -26,6 +26,7 @@ import { SellerSubscriptionsModule } from './modules/seller-subscriptions/seller
 import { SellerSubsPlansModule } from './modules/seller-subs-plans/seller-subs-plans.module';
 import { PlansModule } from './modules/exchange-subs/plans/plans.module';
 import { EventsModule } from './modules/socket/event.module';
+import { AuctionModule } from './modules/auction/auction.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { EventsModule } from './modules/socket/event.module';
       inject: [ConfigService],
     }),
     EventsModule,
+    AuctionModule,
     AuthModule,
     UsersModule,
     ComicModule,

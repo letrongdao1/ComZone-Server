@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ComicService } from './comics.service';
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
@@ -39,9 +40,20 @@ export class ComicController {
     return this.comicService.findAll();
   }
 
-  @Get('seller/:sellerId')
-  async findBySeller(@Param('sellerId') sellerId: string): Promise<Comic[]> {
-    return this.comicService.findBySeller(sellerId);
+  @UseGuards(JwtAuthGuard)
+  @Get('seller')
+  async findBySeller(@Req() req: any): Promise<Comic[]> {
+    return this.comicService.findBySeller(req.user.id);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('except-seller/:status')
+  async findAllExceptSeller(
+    @Req() req: any,
+    @Param('status') status: string,
+  ): Promise<Comic[]> {
+    const sellerId = req.user ? req.user.id : null;
+    console.log('........', sellerId);
+    return this.comicService.findAllExceptSeller(sellerId, status);
   }
 
   @Get('status/:status')
