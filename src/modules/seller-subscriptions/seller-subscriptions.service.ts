@@ -12,7 +12,6 @@ import { UsersService } from '../users/users.service';
 import { SellerSubsPlansService } from '../seller-subs-plans/seller-subs-plans.service';
 import { Transaction } from 'src/entities/transactions.entity';
 import { SellerSubscriptionDTO } from './dto/seller-subscription.dto';
-import { TransactionsService } from '../transactions/transactions.service';
 import { generateNumericCode } from 'src/utils/generator/generators';
 import { TransactionStatusEnum } from '../transactions/dto/transaction-status.enum';
 
@@ -56,7 +55,7 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
         'Insufficient balance to activate the subscription!',
       );
 
-    const findUserSubs = await this.getSellerSubsOfUser(userId);
+    await this.usersService.updateBalance(userId, sellerSubsPlan.price * -1);
 
     const newSubscription = this.sellerSubscriptionsRepository.create({
       user,
@@ -65,6 +64,8 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       remainingResource: sellerSubsPlan.offeredResource,
     });
 
+    const findUserSubs = await this.getSellerSubsOfUser(userId);
+    
     if (findUserSubs)
       await this.sellerSubscriptionsRepository.update(
         findUserSubs.id,
