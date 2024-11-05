@@ -29,8 +29,8 @@ export class ComicController {
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createComicDto: CreateComicDto) {
-    return this.comicService.create(createComicDto);
+  create(@Body() createComicDto: CreateComicDto, @Req() req: any) {
+    return this.comicService.create(createComicDto, req.user.id);
   }
 
   @UseGuards(PermissionsGuard)

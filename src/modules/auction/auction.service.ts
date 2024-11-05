@@ -48,14 +48,15 @@ export class AuctionService {
 
   // Get all auctions
   async findAllAuctions(): Promise<Auction[]> {
-    return this.auctionRepository.find({ relations: ['comics'] });
+    return this.auctionRepository.find({
+      relations: ['comics', 'comics.genres'], // Add 'comics.genres' to retrieve genres
+    });
   }
-
   // Get a single auction by ID
   async findAuctionById(id: string): Promise<Auction> {
     const auction = await this.auctionRepository.findOne({
       where: { id },
-      relations: ['comics'],
+      relations: ['comics', 'comics.genres'],
     });
     if (!auction) {
       throw new NotFoundException(`Auction with ID ${id} not found`);

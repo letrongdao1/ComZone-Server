@@ -19,11 +19,11 @@ export class ComicService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createComicDto: CreateComicDto): Promise<Comic> {
-    const { genreIds, sellerId, ...comicData } = createComicDto;
+  async create(createComicDto: CreateComicDto, id: string): Promise<Comic> {
+    const { genreIds, ...comicData } = createComicDto;
 
     const seller = await this.userRepository.findOne({
-      where: { id: sellerId },
+      where: { id: id },
     });
     if (!seller) {
       throw new Error('Seller not found');
