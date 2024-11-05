@@ -9,17 +9,26 @@ import { BaseEntity } from 'src/common/entity.base';
 
 @Entity('exchange')
 export class Exchange extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.exchangeRequests, { nullable: false })
+  @ManyToOne(() => User, (user) => user.exchangeRequests, {
+    nullable: false,
+    eager: true,
+  })
   requestUser: User;
+
+  @ManyToOne(() => Comic, (comics) => comics.requestExchanges, {
+    nullable: false,
+    eager: true,
+  })
+  requestComics: Comic;
+
+  @ManyToOne(() => Comic, (comics) => comics.offerExchanges, {
+    nullable: false,
+    eager: true,
+  })
+  offerComics: Comic;
 
   @ManyToOne(() => User, (user) => user.exchangeOffers, { nullable: true })
   offerUser: User;
-
-  @ManyToOne(() => Comic, (comics) => comics.requestExchanges)
-  requestComics: Comic;
-
-  @ManyToOne(() => Comic, (comics) => comics.offerExchanges)
-  offerComics: Comic;
 
   @Column({
     type: 'enum',

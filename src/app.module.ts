@@ -27,6 +27,8 @@ import { SellerSubsPlansModule } from './modules/seller-subs-plans/seller-subs-p
 import { PlansModule } from './modules/exchange-subs/plans/plans.module';
 import { EventsModule } from './modules/socket/event.module';
 import { AuctionModule } from './modules/auction/auction.module';
+import { DepositsModule } from './modules/deposits/deposits.module';
+import { ExchangesModule } from './modules/exchanges/exchanges.module';
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { AuctionModule } from './modules/auction/auction.module';
     SellerSubscriptionsModule,
     SellerSubsPlansModule,
     PlansModule,
+    DepositsModule,
+    ExchangesModule,
   ],
   controllers: [AppController],
   providers: [
