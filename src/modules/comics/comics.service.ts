@@ -54,6 +54,9 @@ export class ComicService {
     const newExchangeComics = this.comicRepository.create({
       sellerId: user,
       ...exchangeComicsDto,
+      previewChapter: exchangeComicsDto.previewChapter
+        ? exchangeComicsDto.previewChapter
+        : [],
       status: type,
     });
 
@@ -77,6 +80,29 @@ export class ComicService {
     return await this.comicRepository.find({
       where: { status },
       relations: ['genres', 'sellerId'],
+    });
+  }
+
+  async findRequestedExchangeComicsByUser(userId: string) {
+    return await this.comicRepository.find({
+      where: {
+        sellerId: {
+          id: userId,
+        },
+        status: ComicsStatusEnum.EXCHANGE,
+      },
+    });
+  }
+
+  async findOfferedExchangeComicsByUser(userId: string, limited: boolean) {
+    return await this.comicRepository.find({
+      where: {
+        sellerId: {
+          id: userId,
+        },
+        status: ComicsStatusEnum.EXCHANGE_OFFER,
+      },
+      take: limited ? 20 : null,
     });
   }
 

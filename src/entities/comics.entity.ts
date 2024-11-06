@@ -21,7 +21,7 @@ export class Comic extends BaseEntity {
   @ManyToOne(() => User, (user) => user.comics, { eager: true })
   sellerId: User;
 
-  @ManyToMany(() => Genre, (genre) => genre.comics)
+  @ManyToMany(() => Genre, (genre) => genre.comics, { eager: true })
   @JoinTable({
     name: 'comic_genre',
     joinColumn: { name: 'comic_id', referencedColumnName: 'id' },
@@ -86,8 +86,18 @@ export class Comic extends BaseEntity {
   })
   quantity: number;
 
-  @Column('simple-json')
+  @Column({ type: 'simple-json', nullable: true })
   previewChapter: string[];
+
+  @ManyToMany(() => Exchange, (exchange) => exchange.requestComics, {
+    cascade: true,
+  })
+  requestExchanges: Exchange[];
+
+  @ManyToMany(() => Exchange, (exchange) => exchange.offerComics, {
+    cascade: true,
+  })
+  offerExchange: Exchange[];
 
   @OneToMany(() => Auction, (auction) => auction.comics)
   auction: Auction[];
@@ -96,12 +106,6 @@ export class Comic extends BaseEntity {
     cascade: true,
   })
   order_item: OrderItem[];
-
-  @OneToMany(() => Exchange, (exchange) => exchange.requestComics)
-  requestExchanges: Exchange[];
-
-  @OneToMany(() => Exchange, (exchange) => exchange.offerComics)
-  offerExchanges: Exchange[];
 
   @OneToMany(() => ComicsReport, (comicsReport) => comicsReport.comics)
   comicsReports: ComicsReport[];

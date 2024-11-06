@@ -1,0 +1,6 @@
+export enum ExchangeStatusEnum {
+  AVAILABLE = 'AVAILABLE',
+  DEALING = 'DEALING',
+  SUCCESSFUL = 'SUCCESSFUL',
+  REMOVED = 'REMOVED',
+}

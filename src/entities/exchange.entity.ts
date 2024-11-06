@@ -1,4 +1,13 @@
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { User } from './users.entity';
 import { Comic } from './comics.entity';
 import { ExchangeCompensation } from './exchange-compensation.entity';
@@ -6,6 +15,7 @@ import { Deposit } from './deposit.entity';
 import { ChatRoom } from './chat-room.entity';
 import { Notification } from './notification.entity';
 import { BaseEntity } from 'src/common/entity.base';
+import { ExchangeStatusEnum } from 'src/modules/exchanges/dto/exchange-status.enum';
 
 @Entity('exchange')
 export class Exchange extends BaseEntity {
@@ -13,27 +23,48 @@ export class Exchange extends BaseEntity {
     nullable: false,
     eager: true,
   })
+  @JoinColumn({ name: 'request_user' })
   requestUser: User;
 
-  @ManyToOne(() => Comic, (comics) => comics.requestExchanges, {
+  @ManyToMany(() => Comic, (comics) => comics.requestExchanges, {
     nullable: false,
     eager: true,
   })
-  requestComics: Comic;
+  @JoinTable({
+    name: 'requested_exchange_comics',
+    joinColumn: { name: 'exchange_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'comics_id', referencedColumnName: 'id' },
+  })
+  requestComics: Comic[];
 
-  @ManyToOne(() => Comic, (comics) => comics.offerExchanges, {
-    nullable: false,
+  @ManyToMany(() => Comic, (comics) => comics.offerExchange, {
+    nullable: true,
     eager: true,
   })
-  offerComics: Comic;
+  @JoinTable({
+    name: 'offered_exchange_comics',
+    joinColumn: { name: 'exchange_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'comics_id', referencedColumnName: 'id' },
+  })
+  offerComics: Comic[];
 
-  @ManyToOne(() => User, (user) => user.exchangeOffers, { nullable: true })
+  @ManyToOne(() => User, (user) => user.exchangeOffers, {
+    nullable: true,
+    eager: true,
+  })
+  @JoinColumn({ name: 'offer_user' })
   offerUser: User;
 
   @Column({
+    name: 'post_content',
+    type: 'text',
+  })
+  postContent: string;
+
+  @Column({
     type: 'enum',
-    enum: ['REQUESTING', 'DEALING', 'SUCCESSFUL', 'FAILED'],
-    default: 'REQUESTING',
+    enum: ExchangeStatusEnum,
+    default: ExchangeStatusEnum.AVAILABLE,
   })
   status: string;
 
