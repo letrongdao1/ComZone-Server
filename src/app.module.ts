@@ -61,6 +61,7 @@ import { ExchangesModule } from './modules/exchanges/exchanges.module';
     ZalopayModule,
     VietNamAddressModule,
     TransactionsModule,
+    ExchangesModule,
     UserAddressesModule,
     OtpModule,
     SellerDetailsModule,
@@ -71,7 +72,6 @@ import { ExchangesModule } from './modules/exchanges/exchanges.module';
     SellerSubsPlansModule,
     PlansModule,
     DepositsModule,
-    ExchangesModule,
   ],
   controllers: [AppController],
   providers: [

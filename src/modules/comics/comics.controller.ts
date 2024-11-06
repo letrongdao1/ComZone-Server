@@ -38,21 +38,6 @@ export class ComicController {
   @Roles(Role.MEMBER, Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Post('exchange')
-  createExchangeComics(
-    @Req() req: any,
-    @Body() exchangeComicsDto: ExchangeComicsDTO,
-  ) {
-    return this.comicService.createExchangeComics(
-      req.user.id,
-      exchangeComicsDto,
-      ComicsStatusEnum.EXCHANGE,
-    );
-  }
-
-  @Roles(Role.MEMBER, Role.SELLER)
-  @UseGuards(PermissionsGuard)
-  @UseGuards(JwtAuthGuard)
   @Post('exchange-offer')
   createExchangeOfferComics(
     @Req() req: any,
@@ -130,6 +115,11 @@ export class ComicController {
       // Handle case where no filters are provided (e.g., return all comics)
       return this.comicService.findAll();
     }
+  }
+
+  @Get('/exchange-offer/:user_id')
+  findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
+    return this.comicService.findOfferedExchangeComicsByUser(userId, false);
   }
 
   @Get(':id')
