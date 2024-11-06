@@ -18,6 +18,8 @@ import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
+import { ExchangeComicsDTO } from './dto/exchange-comics.dto';
+import { ComicsStatusEnum } from './dto/comic-status.enum';
 
 @ApiBearerAuth()
 @ApiTags('Comics')
@@ -25,12 +27,42 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class ComicController {
   constructor(private readonly comicService: ComicService) {}
 
-  @Roles(Role.MEMBER, Role.SELLER)
+  @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createComicDto: CreateComicDto, @Req() req: any) {
     return this.comicService.create(createComicDto, req.user.id);
+  }
+
+  @Roles(Role.MEMBER, Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Post('exchange')
+  createExchangeComics(
+    @Req() req: any,
+    @Body() exchangeComicsDto: ExchangeComicsDTO,
+  ) {
+    return this.comicService.createExchangeComics(
+      req.user.id,
+      exchangeComicsDto,
+      ComicsStatusEnum.EXCHANGE,
+    );
+  }
+
+  @Roles(Role.MEMBER, Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Post('exchange-offer')
+  createExchangeOfferComics(
+    @Req() req: any,
+    @Body() exchangeComicsDto: ExchangeComicsDTO,
+  ) {
+    return this.comicService.createExchangeComics(
+      req.user.id,
+      exchangeComicsDto,
+      ComicsStatusEnum.EXCHANGE_OFFER,
+    );
   }
 
   @UseGuards(PermissionsGuard)

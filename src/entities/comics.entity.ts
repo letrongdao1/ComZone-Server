@@ -14,6 +14,7 @@ import { Auction } from './auction.entity';
 import { Exchange } from './exchange.entity';
 import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
+import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -75,15 +76,8 @@ export class Comic extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: [
-      'UNAVAILABLE',
-      'AVAILABLE',
-      'AUCTION',
-      'EXCHANGE',
-      'SOLD',
-      'REMOVED',
-    ],
-    default: 'UNAVAILABLE',
+    enum: ComicsStatusEnum,
+    default: ComicsStatusEnum.UNAVAILABLE,
   })
   status: string;
 

@@ -3,6 +3,7 @@ export enum ComicsStatusEnum {
   AVAILABLE = 'AVAILABLE',
   AUCTION = 'AUCTION',
   EXCHANGE = 'EXCHANGE',
+  EXCHANGE_OFFER = 'EXCHANGE_OFFER',
   SOLD = 'SOLD',
   REMOVED = 'REMOVED',
 }
