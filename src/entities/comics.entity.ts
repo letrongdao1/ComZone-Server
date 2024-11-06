@@ -81,7 +81,9 @@ export class Comic extends BaseEntity {
   })
   status: string;
 
-  @Column()
+  @Column({
+    default: 1,
+  })
   quantity: number;
 
   @Column('simple-json')

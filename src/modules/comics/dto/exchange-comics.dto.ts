@@ -3,6 +3,7 @@ import {
   IsArray,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsString,
   MaxLength,
   MinLength,
@@ -30,10 +31,10 @@ export class ExchangeComicsDTO {
   author: string;
 
   @ApiProperty({
-    description: 'URL for comic cover images',
+    description: 'URL for comic cover image',
     example: 'https://example.com/image2.jpg',
+    nullable: true,
   })
-  @IsNotEmpty()
   @IsString()
   coverImage: string;
 
@@ -46,7 +47,7 @@ export class ExchangeComicsDTO {
   })
   @IsArray()
   @IsString({ each: true })
-  previewChapter: string[];
+  previewChapter?: string[];
 
   @ApiProperty({
     description: 'Edition type of the comic (e.g., REGULAR, SPECIAL, LIMITED)',
@@ -61,4 +62,17 @@ export class ExchangeComicsDTO {
   })
   @IsEnum(['USED', 'SEALED'])
   condition: string;
+
+  @ApiProperty({
+    description: 'Description about the comic',
+    example: 'This is a great comic about...',
+  })
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    example: 1,
+  })
+  @IsNumber()
+  quantity: number;
 }
