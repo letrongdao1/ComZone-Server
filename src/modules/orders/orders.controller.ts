@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateOrderDTO } from './dto/createOrderDTO';
 import { OrderStatusEnum } from './dto/order-status.enum';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
+import { CancelOrderDTO } from './dto/cancel-order.dto';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -85,5 +86,11 @@ export class OrdersController {
   @Post('status/finish-packaging/:orderId')
   sellerFinishesPackaging(@Param('orderId') orderId: string) {
     return this.ordersService.sellerFinishesPackaging(orderId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('cancel')
+  cancelOrder( @Body() cancelOrderDto: CancelOrderDTO) {
+    return this.ordersService.cancelOrder(cancelOrderDto)
   }
 }

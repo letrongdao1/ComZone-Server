@@ -91,6 +91,20 @@ export class User extends BaseEntity {
   is_verified: boolean;
 
   @Column({
+    name: 'follower_count',
+    type: 'int',
+    default: 0,
+  })
+  followerCount: number;
+
+  @Column({
+    name: 'bio',
+    type: 'varchar',
+    nullable: true,
+  })
+  bio: string;
+
+  @Column({
     name: 'last_active',
     type: 'datetime',
     nullable: true,

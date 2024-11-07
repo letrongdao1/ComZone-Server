@@ -20,12 +20,16 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { ExchangeComicsDTO } from './dto/exchange-comics.dto';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
+import { ComicsExchangeService } from './comics.exchange.service';
 
 @ApiBearerAuth()
 @ApiTags('Comics')
 @Controller('comics')
 export class ComicController {
-  constructor(private readonly comicService: ComicService) {}
+  constructor(
+    private readonly comicService: ComicService,
+    private readonly comicsExchangeService: ComicsExchangeService,
+  ) {}
 
   @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
@@ -119,7 +123,10 @@ export class ComicController {
 
   @Get('/exchange-offer/:user_id')
   findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
-    return this.comicService.findOfferedExchangeComicsByUser(userId, false);
+    return this.comicsExchangeService.findOfferedExchangeComicsByUser(
+      userId,
+      false,
+    );
   }
 
   @Get(':id')
