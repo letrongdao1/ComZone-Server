@@ -83,29 +83,6 @@ export class ComicService {
     });
   }
 
-  async findRequestedExchangeComicsByUser(userId: string) {
-    return await this.comicRepository.find({
-      where: {
-        sellerId: {
-          id: userId,
-        },
-        status: ComicsStatusEnum.EXCHANGE,
-      },
-    });
-  }
-
-  async findOfferedExchangeComicsByUser(userId: string, limited: boolean) {
-    return await this.comicRepository.find({
-      where: {
-        sellerId: {
-          id: userId,
-        },
-        status: ComicsStatusEnum.EXCHANGE_OFFER,
-      },
-      take: limited ? 20 : null,
-    });
-  }
-
   async update(id: string, updateComicDto: UpdateComicDto): Promise<Comic> {
     const { genreIds, sellerId, ...comicData } = updateComicDto;
 

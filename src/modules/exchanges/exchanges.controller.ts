@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -17,12 +18,28 @@ import {
 } from './dto/exchange.dto';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from '../authorization/roles.decorator';
+import { Role } from '../authorization/role.enum';
+import { PermissionsGuard } from '../authorization/permission.guard';
 
 @ApiBearerAuth()
 @ApiTags('Exchanges')
 @Controller('exchanges')
 export class ExchangesController {
   constructor(private readonly exchangesService: ExchangesService) {}
+
+  @Get('available/guest')
+  getAvailableExchangePostsAsGuest(@Param('user_id') userId: string) {
+    return this.exchangesService.getAvailableExchangePosts(userId);
+  }
+
+  @Get('search/default/:user_id')
+  getSearchedExchanges(
+    @Param('user_id') userId: string,
+    @Query('key') key: string,
+  ) {
+    return this.exchangesService.getSearchedExchanges(userId, key);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -36,15 +53,22 @@ export class ExchangesController {
     );
   }
 
-  @Get('available')
-  getAvailableExchangePosts() {
-    return this.exchangesService.getAvailableExchangePosts();
+  @UseGuards(JwtAuthGuard)
+  @Get('available/logged')
+  getAvailableExchangePostsAsLoggedIn(@Req() req: any) {
+    return this.exchangesService.getAvailableExchangePosts(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('user')
   getAllExchangePostsOfUser(@Req() req: any) {
     return this.exchangesService.getAllExchangePostsOfUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('search/owned')
+  getSearchedExchangesByOwned(@Req() req: any, @Query('key') key: string) {
+    return this.exchangesService.getSearchExchangesByOwned(req.user.id, key);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -76,13 +100,24 @@ export class ExchangesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  deleteExchangePost(@Req() req: any, @Param('id') exchangeId: string) {
-    return this.exchangesService.deleteExchangePost(req.user.id, exchangeId);
+  @Delete('soft/:id')
+  softDeleteExchangePost(@Req() req: any, @Param('id') exchangeId: string) {
+    return this.exchangesService.softDeleteExchangePost(
+      req.user.id,
+      exchangeId,
+    );
   }
 
   @Delete('undo/:id')
   undoDelete(@Param('id') exchangeId: string) {
     return this.exchangesService.undoDelete(exchangeId);
+  }
+
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  delete(@Param('id') exchangeId: string) {
+    return this.exchangesService.remove(exchangeId);
   }
 }

@@ -5,11 +5,12 @@ import { ComicController } from './comics.controller';
 import { Comic } from 'src/entities/comics.entity';
 import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
+import { ComicsExchangeService } from './comics.exchange.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Comic, Genre, User])],
   controllers: [ComicController],
-  providers: [ComicService],
-  exports: [ComicService],
+  providers: [ComicService, ComicsExchangeService],
+  exports: [ComicService, ComicsExchangeService],
 })
 export class ComicModule {}

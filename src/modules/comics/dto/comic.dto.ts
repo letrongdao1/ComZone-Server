@@ -206,15 +206,16 @@ export class UpdateComicDto {
     example: 24.99,
     required: false,
   })
-  @ApiProperty({
-    example: 'Date',
-  })
-  publishedDate: Date;
-
   @IsOptional()
   @IsNumber()
   @IsPositive()
   price?: number;
+
+  @ApiProperty({
+    example: 'Date',
+  })
+  @IsOptional()
+  publishedDate?: Date;
 
   @ApiProperty({
     description: 'Status of the comic',

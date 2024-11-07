@@ -261,7 +261,10 @@ export class OrdersService extends BaseService<Order> {
       .then((res) => {
         return res.data.data;
       })
-      .catch((err) => console.log('Error getting available services: ', err));
+      .catch((err) => {
+        console.log('Error getting available services: ', err.response.data);
+        throw new BadRequestException(err.response.data);
+      });
 
     const deliveryFee = await axios
       .post(
@@ -280,7 +283,12 @@ export class OrdersService extends BaseService<Order> {
       .then((res) => {
         return res.data.data.total;
       })
-      .catch((err) => console.log('Error getting delivery fee: ', err));
+      .catch((err) => {
+        throw new BadRequestException(
+          'Error getting delivery fee: ',
+          err.response.data,
+        );
+      });
 
     const estDeliveryTime = await axios
       .post(
@@ -297,9 +305,11 @@ export class OrdersService extends BaseService<Order> {
       .then((res) => {
         return res.data.data.leadtime;
       })
-      .catch((err) =>
-        console.log('Error getting estimated delivery time: ', err),
-      );
+      .catch((err) => {
+        throw new BadRequestException(
+          'Error getting estimated delivery time: ' + err.response.data,
+        );
+      });
 
     return {
       deliveryFee,
@@ -329,7 +339,10 @@ export class OrdersService extends BaseService<Order> {
         .then((res) => {
           return res.data;
         })
-        .catch((err) => console.log('Error canceling order delivery: ', err));
+        .catch((err) => {
+          console.log('Error canceling order delivery: ', err);
+          throw new BadRequestException(err.response.data);
+        });
     }
 
     await this.ordersRepository.update(cancelOrderDto.orderId, {
@@ -401,7 +414,10 @@ export class OrdersService extends BaseService<Order> {
       .then((res) => {
         return res.data.data;
       })
-      .catch((err) => console.log('Error getting available services: ', err));
+      .catch((err) => {
+        console.log('Error getting available services: ', err);
+        throw new BadRequestException(err.response.data);
+      });
 
     await axios
       .post(
@@ -426,13 +442,13 @@ export class OrdersService extends BaseService<Order> {
           to_district_id: order.toDistrictId,
           cod_amount: order.paymentMethod === 'WALLET' ? 0 : order.totalPrice,
           content: 'Truyện tranh',
-          weight: orderItemList.length * 100,
+          weight: orderItemList.length * 200,
           length: 30,
           width: 15,
           height: orderItemList.length * 2,
           quantity: orderItemList.length,
-          // pick_station_id: 1444,
-          // deliver_station_id: null,
+          pick_station_id: null,
+          deliver_station_id: null,
           insurance_value: 0,
           service_id: services[0].service_id,
           service_type_id: services[0].service_type_id,
@@ -464,8 +480,8 @@ export class OrdersService extends BaseService<Order> {
         });
       })
       .catch((err) => {
-        console.log('Error creating order delivery: ', err);
-        throw new BadRequestException();
+        console.log('Error creating order delivery: ', err.response.data);
+        throw new BadRequestException(err.response.data);
       });
 
     return await this.getOne(orderId);
@@ -499,5 +515,29 @@ export class OrdersService extends BaseService<Order> {
     return {
       message: 'Comics are all successfully updated to SOLD!',
     };
+  }
+
+  async cancelOrder(cancelOrderDto: CancelOrderDTO) {
+    const orderItemList = await this.orderItemsRepository.find({
+      where: { order: { id: cancelOrderDto.orderId } },
+    });
+
+    await Promise.all(
+      orderItemList.map(async (item) => {
+        await this.comicsService.updateStatus(
+          item.comics.id,
+          ComicsStatusEnum.UNAVAILABLE,
+        );
+      }),
+    );
+
+    //Hoàn tiền cho người mua nếu đã thanh toán, thông báo đơn bị hủy
+
+    return await this.ordersRepository
+      .update(cancelOrderDto.orderId, {
+        status: OrderStatusEnum.CANCELED,
+        cancelReason: cancelOrderDto.cancelReason || 'Không có lí do',
+      })
+      .then(() => this.getOne(cancelOrderDto.orderId));
   }
 }
