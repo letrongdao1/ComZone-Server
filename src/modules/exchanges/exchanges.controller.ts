@@ -28,17 +28,14 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class ExchangesController {
   constructor(private readonly exchangesService: ExchangesService) {}
 
-  @Get('available/guest')
-  getAvailableExchangePostsAsGuest(@Param('user_id') userId: string) {
-    return this.exchangesService.getAvailableExchangePosts(userId);
+  @Get('available')
+  getAvailableExchangePostsAsGuest() {
+    return this.exchangesService.getAvailableExchangePostsAsGuest();
   }
 
-  @Get('search/default/:user_id')
-  getSearchedExchanges(
-    @Param('user_id') userId: string,
-    @Query('key') key: string,
-  ) {
-    return this.exchangesService.getSearchedExchanges(userId, key);
+  @Get('search')
+  getSearchedExchangesAsGuest(@Query('key') key: string) {
+    return this.exchangesService.getSearchedExchangesAsGuest(key);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -60,15 +57,21 @@ export class ExchangesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('user')
-  getAllExchangePostsOfUser(@Req() req: any) {
-    return this.exchangesService.getAllExchangePostsOfUser(req.user.id);
+  @Get('search/logged')
+  getSearchedExchanges(@Req() req: any, @Query('key') key: string) {
+    return this.exchangesService.getSearchedExchanges(req.user.id, key);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('search/owned')
   getSearchedExchangesByOwned(@Req() req: any, @Query('key') key: string) {
     return this.exchangesService.getSearchExchangesByOwned(req.user.id, key);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
+  getAllExchangePostsOfUser(@Req() req: any) {
+    return this.exchangesService.getAllExchangePostsOfUser(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

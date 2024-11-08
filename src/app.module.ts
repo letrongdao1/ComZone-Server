@@ -29,6 +29,8 @@ import { EventsModule } from './modules/socket/event.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
 import { ExchangesModule } from './modules/exchanges/exchanges.module';
+import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
+import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
 
 @Module({
   imports: [
@@ -72,6 +74,8 @@ import { ExchangesModule } from './modules/exchanges/exchanges.module';
     SellerSubsPlansModule,
     PlansModule,
     DepositsModule,
+    ChatRoomsModule,
+    ChatMessagesModule,
   ],
   controllers: [AppController],
   providers: [
