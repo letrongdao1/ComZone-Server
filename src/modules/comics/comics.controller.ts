@@ -121,6 +121,15 @@ export class ComicController {
     }
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/exchange-offer')
+  findOfferedExchangeComicsByLoggedInUser(@Req() req: any) {
+    return this.comicsExchangeService.findOfferedExchangeComicsByUser(
+      req.user.id,
+      false,
+    );
+  }
+
   @Get('/exchange-offer/:user_id')
   findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
     return this.comicsExchangeService.findOfferedExchangeComicsByUser(

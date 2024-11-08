@@ -1,8 +1,9 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
+import { Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Comic } from './comics.entity';
 import { Exchange } from './exchange.entity';
+import { ChatMessage } from './chat-message.entity';
 
 @Entity('chat-room')
 export class ChatRoom extends BaseEntity {
@@ -12,12 +13,11 @@ export class ChatRoom extends BaseEntity {
   @ManyToOne(() => User, (user) => user.secondChatRooms)
   secondUser: User;
 
-  @Column({
-    name: 'last_message',
-    type: 'text',
+  @OneToOne(() => ChatMessage, (message) => message.lastMessageChatRoom, {
     nullable: true,
   })
-  lastMessage: string;
+  @JoinColumn({ name: 'last_message' })
+  lastMessage: ChatMessage;
 
   @ManyToOne(() => Comic, (comics) => comics.chatRooms)
   comics: Comic;
