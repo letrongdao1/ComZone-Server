@@ -8,6 +8,7 @@ import { MoreThan, Repository } from 'typeorm';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
+import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 
 @Injectable()
 export class AuctionService {
@@ -19,6 +20,7 @@ export class AuctionService {
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
+    // Retrieve the comic
     const comic = await this.comicRepository.findOne({
       where: { id: data.comicsId },
     });
@@ -38,11 +40,15 @@ export class AuctionService {
       );
     }
 
+    // Change the comic's status to AUCTION
+    comic.status = ComicsStatusEnum.AUCTION;
+    await this.comicRepository.save(comic); // Save the updated status
+
+    // Create a new auction and associate it with the comic
     const auction = this.auctionRepository.create({
       ...data,
       comics: comic,
     });
-
     return this.auctionRepository.save(auction);
   }
 

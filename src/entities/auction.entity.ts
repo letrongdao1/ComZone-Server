@@ -19,6 +19,15 @@ export class Auction extends BaseEntity {
   reservePrice: number;
 
   @Column({
+    name: 'current_price',
+    type: 'float',
+    precision: 2,
+    nullable: true,
+    default: 0,
+  })
+  currentPrice: number;
+
+  @Column({
     name: 'max_price',
     type: 'float',
     precision: 2,

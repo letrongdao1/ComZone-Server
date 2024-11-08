@@ -29,6 +29,7 @@ import { EventsModule } from './modules/socket/event.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
 import { ExchangesModule } from './modules/exchanges/exchanges.module';
+import { BidModule } from './modules/bid/bid.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ExchangesModule } from './modules/exchanges/exchanges.module';
     }),
     EventsModule,
     AuctionModule,
+    BidModule,
     AuthModule,
     UsersModule,
     ComicModule,
