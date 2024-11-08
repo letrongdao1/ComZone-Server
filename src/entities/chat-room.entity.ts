@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Entity, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Comic } from './comics.entity';
 import { Exchange } from './exchange.entity';
@@ -12,11 +12,16 @@ export class ChatRoom extends BaseEntity {
   @ManyToOne(() => User, (user) => user.secondChatRooms)
   secondUser: User;
 
+  @Column({
+    name: 'last_message',
+    type: 'text',
+    nullable: true,
+  })
+  lastMessage: string;
+
   @ManyToOne(() => Comic, (comics) => comics.chatRooms)
   comics: Comic;
 
-  @OneToOne(() => Exchange, (exchange) => exchange.chatRoom)
+  @ManyToOne(() => Exchange, (exchange) => exchange.chatRooms)
   exchange: Exchange;
-
-  //   @OneToOne(() => )
 }

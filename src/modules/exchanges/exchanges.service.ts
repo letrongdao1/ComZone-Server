@@ -36,6 +36,61 @@ export class ExchangesService extends BaseService<Exchange> {
     super(exchangesRepository);
   }
 
+  async getAvailableExchangePostsAsGuest() {
+    const exchanges = await this.exchangesRepository.find({
+      where: {
+        status: ExchangeStatusEnum.AVAILABLE,
+      },
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+        requestUser: {
+          followerCount: 'DESC',
+        },
+      },
+    });
+
+    return await Promise.all(
+      exchanges.map(async (exchange: Exchange) => {
+        return {
+          ...exchange,
+          userOfferedComics:
+            await this.comicsExchangeService.findOfferedExchangeComicsByUser(
+              exchange.requestUser.id,
+              true,
+            ),
+        };
+      }),
+    );
+  }
+
+  async getSearchedExchangesAsGuest(key: string) {
+    let chosenList: Comic[];
+    const exchangeList = await this.getAvailableExchangePostsAsGuest();
+    const searchedComicsByTitleAndAuthor =
+      await this.comicsExchangeService.searchExchangeOfferComicsByTitleAndAuthor(
+        key,
+      );
+    if (searchedComicsByTitleAndAuthor.length === 0) {
+      chosenList =
+        await this.comicsExchangeService.searchExchangeOfferComicsByDescription(
+          key,
+        );
+    } else {
+      chosenList = searchedComicsByTitleAndAuthor;
+    }
+
+    const filteredExchangeList = exchangeList.filter((exchange) =>
+      chosenList.some(
+        (comics) => comics.sellerId.id === exchange.requestUser.id,
+      ),
+    );
+    return {
+      count: filteredExchangeList.length,
+      data: filteredExchangeList,
+    };
+  }
+
   async createExchangePost(
     userId: string,
     createExchangePostDto: CreateExchangePostDTO,
@@ -95,27 +150,10 @@ export class ExchangesService extends BaseService<Exchange> {
     );
   }
 
-  async getAllExchangePostsOfUser(userId: string) {
-    return await this.exchangesRepository.find({
-      where: { requestUser: { id: userId } },
-      order: {
-        createdAt: 'DESC',
-        updatedAt: 'DESC',
-      },
-    });
-  }
-
-  async getAllExchangeThatUserOffered(userId: string) {
-    return await this.exchangesRepository.find({
-      where: { offerUser: { id: userId } },
-      order: {
-        updatedAt: 'DESC',
-        createdAt: 'DESC',
-      },
-    });
-  }
-
   async getSearchedExchanges(userId: string, key: string) {
+    if (!key || key.length === 0)
+      return await this.getAvailableExchangePosts(userId);
+
     let chosenList: Comic[];
     const exchangeList = await this.getAvailableExchangePosts(userId);
     const searchedComicsByTitleAndAuthor =
@@ -143,32 +181,57 @@ export class ExchangesService extends BaseService<Exchange> {
   }
 
   async getSearchExchangesByOwned(userId: string, key: string) {
-    const user = await this.usersService.getOne(userId);
+    if (!key || key.length === 0)
+      return await this.getAvailableExchangePosts(userId);
 
-    let chosenList: Comic[];
-    const exchangeList = await this.getAvailableExchangePosts(userId);
-    const searchedComicsByTitleAndAuthor =
-      await this.comicsExchangeService.searchExchangeOfferComicsByTitleAndAuthor(
-        key,
+    const userOfferedComics =
+      await this.comicsExchangeService.findOfferedExchangeComicsByUser(
+        userId,
+        false,
       );
-    if (searchedComicsByTitleAndAuthor.length === 0) {
-      chosenList =
-        await this.comicsExchangeService.searchExchangeOfferComicsByDescription(
-          key,
-        );
-    } else {
-      chosenList = searchedComicsByTitleAndAuthor;
-    }
 
-    const filteredExchangeList = exchangeList.filter((exchange) =>
-      chosenList.some(
-        (comics) => comics.sellerId.id === exchange.requestUser.id,
-      ),
-    );
-    return {
-      count: filteredExchangeList.length,
-      data: filteredExchangeList,
-    };
+    if (!userOfferedComics || userOfferedComics.length === 0)
+      throw new NotFoundException(
+        'User does not have any comics to offer the exchange!',
+      );
+
+    return await this.exchangesRepository
+      .createQueryBuilder('exchange')
+      .leftJoinAndSelect('exchange.requestComics', 'reqComics')
+      .leftJoinAndSelect('reqComics.sellerId', 'seller')
+      .where('LOWER(reqComics.title) LIKE :key', {
+        key: `%${key.toLowerCase()}%`,
+      })
+      .orWhere('LOWER(reqComics.author) LIKE :key', {
+        key: `%${key.toLowerCase()}%`,
+      })
+      .andWhere('reqComics.status = :status', {
+        status: ComicsStatusEnum.EXCHANGE,
+      })
+      .andWhere('seller.id != :userId', {
+        userId,
+      })
+      .getMany();
+  }
+
+  async getAllExchangePostsOfUser(userId: string) {
+    return await this.exchangesRepository.find({
+      where: { requestUser: { id: userId } },
+      order: {
+        createdAt: 'DESC',
+        updatedAt: 'DESC',
+      },
+    });
+  }
+
+  async getAllExchangeThatUserOffered(userId: string) {
+    return await this.exchangesRepository.find({
+      where: { offerUser: { id: userId } },
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+      },
+    });
   }
 
   async acceptDealingAnExchange(

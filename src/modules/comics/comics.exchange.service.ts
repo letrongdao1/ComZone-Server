@@ -42,6 +42,8 @@ export class ComicsExchangeService {
   }
 
   async searchExchangeOfferComicsByTitleAndAuthor(key: string) {
+    if (key.length === 0) return;
+
     return await this.comicRepository
       .createQueryBuilder('comics')
       .leftJoinAndSelect('comics.sellerId', 'seller')
@@ -59,6 +61,8 @@ export class ComicsExchangeService {
   }
 
   async searchExchangeOfferComicsByDescription(key: string) {
+    if (key.length === 0) return;
+
     return await this.comicRepository
       .createQueryBuilder('comics')
       .leftJoinAndSelect('comics.sellerId', 'seller')
@@ -73,6 +77,8 @@ export class ComicsExchangeService {
   }
 
   async searchExchangeRequestComicsByTitleAndAuthor(key: string) {
+    if (key.length === 0) return;
+
     return await this.comicRepository
       .createQueryBuilder('comics')
       .leftJoinAndSelect('comics.sellerId', 'seller')

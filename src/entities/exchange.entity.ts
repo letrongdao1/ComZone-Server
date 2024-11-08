@@ -77,8 +77,8 @@ export class Exchange extends BaseEntity {
   @OneToMany(() => Deposit, (deposit) => deposit.exchange)
   deposits: Deposit[];
 
-  @OneToOne(() => ChatRoom, (chatRoom) => chatRoom.exchange)
-  chatRoom: ChatRoom;
+  @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.exchange)
+  chatRooms: ChatRoom[];
 
   @OneToMany(() => Notification, (notification) => notification.exchange)
   notifications: Notification[];
