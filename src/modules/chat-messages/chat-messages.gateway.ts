@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { ChatMessagesService } from './chat-messages.service';
 import { Server, Socket } from 'socket.io';
-import { CreateMessageDTO } from './create-message.dto';
+import { CreateMessageDTO } from './dto/create-message.dto';
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
 export class ChatMessagesGateway
@@ -32,9 +32,6 @@ export class ChatMessagesGateway
     await this.chatMessagesService.createNewMessage(createMessageDto);
     this.server.emit('new-message', createMessageDto);
   }
-
-  @SubscribeMessage('new-message')
-  async handleNewMessage(@ConnectedSocket() client: Socket) {}
 
   @SubscribeMessage('typing')
   typing(

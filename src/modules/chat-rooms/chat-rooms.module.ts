@@ -6,10 +6,11 @@ import { ChatRoom } from 'src/entities/chat-room.entity';
 import { UsersModule } from '../users/users.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { ComicModule } from '../comics/comics.module';
+import { ChatMessage } from 'src/entities/chat-message.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ChatRoom]),
+    TypeOrmModule.forFeature([ChatRoom, ChatMessage]),
     UsersModule,
     ComicModule,
     ExchangesModule,

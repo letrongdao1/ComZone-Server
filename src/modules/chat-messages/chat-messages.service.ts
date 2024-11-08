@@ -1,10 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ChatMessage } from 'src/entities/chat-message.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { ChatRoomsService } from '../chat-rooms/chat-rooms.service';
-import { CreateMessageDTO } from './create-message.dto';
+import { CreateMessageDTO } from './dto/create-message.dto';
 import { AuthService } from '../authentication/auth.service';
 import { UsersService } from '../users/users.service';
 
@@ -51,12 +51,15 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
       repliedToMessage: createMessageDto.repliedToMessage,
     });
 
-    await this.chatRoomsService.updateLastMessage(
-      createMessageDto.chatRoom,
-      createMessageDto.content,
-    );
-
-    return await this.chatMessagesRepository.save(newMessage);
+    return await this.chatMessagesRepository
+      .save(newMessage)
+      .then(async (res) => {
+        await this.chatRoomsService.updateLastMessage(
+          createMessageDto.chatRoom,
+          res.id,
+        );
+      })
+      .then(() => this.getOne(newMessage.id));
   }
 
   groupMessageByDate = (
@@ -115,5 +118,21 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     });
 
     return this.groupMessageByDate(filteredList);
+  }
+
+  async updateIsReadMessageByChatRoom(userId: string, chatRoomId: string) {
+    const chatRoom = await this.chatRoomsService.getOne(chatRoomId);
+    if (!chatRoom) throw new NotFoundException('Chat room cannot be found!');
+
+    return await this.chatMessagesRepository
+      .update(
+        {
+          user: {
+            id: Not(userId),
+          },
+        },
+        { isRead: true },
+      )
+      .then(() => this.chatRoomsService.getOne(chatRoomId));
   }
 }

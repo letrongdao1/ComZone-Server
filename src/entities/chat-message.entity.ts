@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { ChatRoom } from './chat-room.entity';
 import { User } from './users.entity';
 
@@ -20,7 +20,7 @@ export class ChatMessage extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: ['TEXT', 'IMAGE', 'LINK', 'REPLY'],
+    enum: ['TEXT', 'IMAGE', 'LINK', 'REPLY', 'SYSTEM'],
     default: 'TEXT',
   })
   type: string;
@@ -37,4 +37,7 @@ export class ChatMessage extends BaseEntity {
     default: false,
   })
   isRead: boolean;
+
+  @OneToOne(() => ChatRoom, (chatRoom) => chatRoom.lastMessage)
+  lastMessageChatRoom: ChatRoom;
 }

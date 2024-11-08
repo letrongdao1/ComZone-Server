@@ -58,7 +58,8 @@ export class User extends BaseEntity {
   @Column({
     name: 'avatar',
     type: 'varchar',
-    nullable: true,
+    default:
+      'https://firebasestorage.googleapis.com/v0/b/comzone-69b8f.appspot.com/o/images%2F1731059505299?alt=media&token=4aa40ac1-189c-46bb-a7a6-9c10d067ada2',
   })
   avatar: string;
 
