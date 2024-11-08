@@ -93,6 +93,7 @@ export class User extends BaseEntity {
   @Column({
     name: 'follower_count',
     type: 'int',
+    nullable: true,
     default: 0,
   })
   followerCount: number;

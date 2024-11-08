@@ -15,6 +15,7 @@ import { ConfigType } from '@nestjs/config';
 import { RegisterUserDTO } from './dto/register-user.dto';
 import { LoginUserDTO } from './dto/login-user.dto';
 import { PasswordResetDTO } from './dto/password-reset.dto';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable()
 export class AuthService {
@@ -141,6 +142,10 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async getUserIdByAccessToken(token: string) {
+    return jwtDecode(token).sub || null;
   }
 
   async logout(userId: string) {

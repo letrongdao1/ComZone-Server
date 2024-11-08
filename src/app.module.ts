@@ -30,6 +30,8 @@ import { AuctionModule } from './modules/auction/auction.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
 import { ExchangesModule } from './modules/exchanges/exchanges.module';
 import { BidModule } from './modules/bid/bid.module';
+import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
+import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
 
 @Module({
   imports: [
@@ -74,6 +76,8 @@ import { BidModule } from './modules/bid/bid.module';
     SellerSubsPlansModule,
     PlansModule,
     DepositsModule,
+    ChatRoomsModule,
+    ChatMessagesModule,
   ],
   controllers: [AppController],
   providers: [
