@@ -32,6 +32,7 @@ import { ExchangesModule } from './modules/exchanges/exchanges.module';
 import { BidModule } from './modules/bid/bid.module';
 import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
 import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
+import { SellerFeedbackModule } from './modules/seller-feedback/seller-feedback.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module
     WalletDepositModule,
     WithdrawalModule,
     SourcesOfFundModule,
+    SellerFeedbackModule,
     SellerSubscriptionsModule,
     SellerSubsPlansModule,
     PlansModule,

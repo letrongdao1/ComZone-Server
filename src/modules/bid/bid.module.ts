@@ -10,5 +10,6 @@ import { User } from 'src/entities/users.entity';
   imports: [TypeOrmModule.forFeature([Bid, Auction, User])],
   controllers: [BidController],
   providers: [BidService],
+  exports: [BidService],
 })
 export class BidModule {}

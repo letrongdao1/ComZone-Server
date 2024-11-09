@@ -79,7 +79,6 @@ export class ComicController {
     @Param('status') status: string,
   ): Promise<Comic[]> {
     const sellerId = req.user ? req.user.id : null;
-    console.log('........', sellerId);
     return this.comicService.findAllExceptSeller(sellerId, status);
   }
 

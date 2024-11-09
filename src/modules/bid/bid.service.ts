@@ -51,13 +51,13 @@ export class BidService {
     }
 
     // Create and save the new bid
-    const bid = this.bidRepository.create({ user, auction, price });
-    await this.bidRepository.save(bid);
 
     // Update the auction's current price
     auction.currentPrice = price;
     await this.auctionRepository.save(auction);
 
+    const bid = this.bidRepository.create({ user, auction, price });
+    await this.bidRepository.save(bid);
     return bid;
   }
 
@@ -74,6 +74,20 @@ export class BidService {
       throw new NotFoundException(`Bid with ID ${id} not found`);
     }
     return bid;
+  }
+  async findAllByAuction(auctionId: string): Promise<Bid[]> {
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+    });
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${auctionId} not found`);
+    }
+
+    return this.bidRepository.find({
+      where: { auction: { id: auctionId } },
+      relations: ['user', 'auction'],
+      order: { createdAt: 'DESC' }, // Optional: order bids by creation date
+    });
   }
 
   async update(id: string, updateBidDto: UpdateBidDto): Promise<Bid> {

@@ -29,6 +29,10 @@ export class BidController {
   findOne(@Param('id') id: string) {
     return this.bidService.findOne(id);
   }
+  @Get('auction/:auctionId')
+  async findAllByAuction(@Param('auctionId') auctionId: string) {
+    return this.bidService.findAllByAuction(auctionId);
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBidDto: UpdateBidDto) {
