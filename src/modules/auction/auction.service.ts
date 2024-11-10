@@ -49,6 +49,7 @@ export class AuctionService {
       ...data,
       comics: comic,
     });
+    auction.currentPrice = auction.reservePrice;
     return this.auctionRepository.save(auction);
   }
 

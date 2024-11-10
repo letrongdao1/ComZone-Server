@@ -51,11 +51,18 @@ export class Auction extends BaseEntity {
   startTime: Date;
 
   @Column({
-    type: 'enum',
-    enum: [1, 2, 3, 4, 5, 6, 7],
+    name: 'end_time',
+    type: 'datetime',
     nullable: false,
   })
-  duration: number;
+  endTime: Date;
+
+  // @Column({
+  //   type: 'enum',
+  //   enum: [1, 2, 3, 4, 5, 6, 7],
+  //   nullable: false,
+  // })
+  // duration: number;
 
   @Column({
     type: 'enum',

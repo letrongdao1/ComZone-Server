@@ -29,10 +29,14 @@ export class CreateAuctionDto {
   startTime: Date;
 
   @IsNotEmpty()
-  @IsEnum([1, 2, 3, 4, 5, 6, 7], {
-    message: 'Duration must be between 1 and 7 days',
-  })
-  duration: number;
+  @IsDate()
+  endTime: Date;
+
+  // @IsNotEmpty()
+  // @IsEnum([1, 2, 3, 4, 5, 6, 7], {
+  //   message: 'Duration must be between 1 and 7 days',
+  // })
+  // duration: number;
 
   @IsOptional()
   @IsEnum(['ONGOING', 'SUCCESSFUL', 'FAILED'])
@@ -56,11 +60,15 @@ export class UpdateAuctionDto {
   @IsDate()
   startTime?: Date;
 
+  // @IsOptional()
+  // @IsEnum([1, 2, 3, 4, 5, 6, 7], {
+  //   message: 'Duration must be between 1 and 7 days',
+  // })
+  // duration?: number;
   @IsOptional()
-  @IsEnum([1, 2, 3, 4, 5, 6, 7], {
-    message: 'Duration must be between 1 and 7 days',
-  })
-  duration?: number;
+  @IsNotEmpty()
+  @IsDate()
+  endTime?: Date;
 
   @IsOptional()
   @IsEnum(['ONGOING', 'SUCCESSFUL', 'FAILED'])
