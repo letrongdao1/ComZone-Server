@@ -24,4 +24,7 @@ export class ChatRoom extends BaseEntity {
 
   @ManyToOne(() => Exchange, (exchange) => exchange.chatRooms)
   exchange: Exchange;
+
+  @ManyToOne(() => ChatMessage, (message) => message.chatRoom)
+  chatMessages: ChatMessage[];
 }

@@ -29,8 +29,11 @@ export class ChatMessagesGateway
     @MessageBody() createMessageDto: CreateMessageDTO,
     @ConnectedSocket() client: Socket,
   ) {
-    await this.chatMessagesService.createNewMessage(createMessageDto);
-    this.server.emit('new-message', createMessageDto);
+    const newMessage =
+      await this.chatMessagesService.createNewMessage(createMessageDto);
+
+    console.log('NEW: ', newMessage);
+    this.server.emit('new-message', newMessage);
   }
 
   @SubscribeMessage('typing')

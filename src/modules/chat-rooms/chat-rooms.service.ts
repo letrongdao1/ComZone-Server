@@ -118,7 +118,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       .leftJoinAndSelect('lastMessage.user', 'user')
       .where('firstUser.id = :userId', { userId })
       .orWhere('secondUser.id = :userId', { userId })
-      .orderBy('chat_room.updatedAt', 'DESC')
+      .orderBy('lastMessage.createdAt', 'DESC')
+      .take(8)
       .getMany();
 
     return fetched.map((chatRoom) => {
