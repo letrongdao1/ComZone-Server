@@ -5,10 +5,12 @@ import { User } from './users.entity';
 
 @Entity('chat-message')
 export class ChatMessage extends BaseEntity {
-  @ManyToOne(() => ChatRoom)
+  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.chatMessages, {
+    eager: true,
+  })
   chatRoom: ChatRoom;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.chatMessages, { eager: true })
   user: User;
 
   @Column({

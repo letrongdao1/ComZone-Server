@@ -4,7 +4,7 @@ import { ChatRoomsController } from './chat-rooms.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatRoom } from 'src/entities/chat-room.entity';
 import { UsersModule } from '../users/users.module';
-import { ExchangesModule } from '../exchanges/exchanges.module';
+import { ExchangeRequestsModule } from '../exchanges/exchange-requests.module';
 import { ComicModule } from '../comics/comics.module';
 import { ChatMessage } from 'src/entities/chat-message.entity';
 
@@ -13,7 +13,7 @@ import { ChatMessage } from 'src/entities/chat-message.entity';
     TypeOrmModule.forFeature([ChatRoom, ChatMessage]),
     UsersModule,
     ComicModule,
-    ExchangesModule,
+    ExchangeRequestsModule,
   ],
   controllers: [ChatRoomsController],
   providers: [ChatRoomsService],

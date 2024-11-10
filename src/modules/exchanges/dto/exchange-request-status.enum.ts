@@ -1,4 +1,4 @@
-export enum ExchangeStatusEnum {
+export enum ExchangeRequestStatusEnum {
   AVAILABLE = 'AVAILABLE',
   DEALING = 'DEALING',
   SUCCESSFUL = 'SUCCESSFUL',

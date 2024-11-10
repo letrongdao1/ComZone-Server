@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateChatRoomDTO } from './create-chat-room.dto';
 import { ComicService } from '../comics/comics.service';
-import { ExchangesService } from '../exchanges/exchanges.service';
+import { ExchangeRequestsService } from '../exchanges/exchange-requests.service';
 import { ChatMessage } from 'src/entities/chat-message.entity';
 
 @Injectable()
@@ -23,8 +23,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     private readonly chatMessagesRepository: Repository<ChatMessage>,
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(ComicService) private readonly comicsService: ComicService,
-    @Inject(ExchangesService)
-    private readonly exchangesService: ExchangesService,
+    @Inject(ExchangeRequestsService)
+    private readonly exchangeRequestsService: ExchangeRequestsService,
   ) {
     super(chatRoomsRepository);
   }
@@ -36,9 +36,12 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     if (!firstUser || !secondUser || firstUser.id === secondUser.id)
       throw new NotFoundException('Invalid user!');
 
-    if ((!dto.comics && !dto.exchange) || (dto.comics && dto.exchange))
+    if (
+      (!dto.comics && !dto.exchangeRequest) ||
+      (dto.comics && dto.exchangeRequest)
+    )
       throw new BadRequestException(
-        'There must be exactly only 1 comics or 1 exchange for a chat room!',
+        'There must be exactly only 1 comics or 1 exchange request for a chat room!',
       );
 
     if (dto.comics) {
@@ -46,16 +49,19 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       if (!comics) throw new NotFoundException('Comics cannot be found!');
     }
 
-    if (dto.exchange) {
-      const exchange = await this.exchangesService.getOne(dto.exchange);
-      if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+    if (dto.exchangeRequest) {
+      const exchangeRequest = await this.exchangeRequestsService.getOne(
+        dto.exchangeRequest,
+      );
+      if (!exchangeRequest)
+        throw new NotFoundException('Exchange request cannot be found!');
     }
 
     const foundChatRooms = await this.chatRoomsRepository
       .createQueryBuilder('chat_room')
       .leftJoinAndSelect('chat_room.firstUser', 'first')
       .leftJoinAndSelect('chat_room.secondUser', 'second')
-      .leftJoinAndSelect('chat_room.exchange', 'exchange')
+      .leftJoinAndSelect('chat_room.exchangeRequest', 'exchangeRequest')
       .leftJoinAndSelect('chat_room.comics', 'comics')
       .where('first.id = :userId AND second.id = :secondUserId', {
         userId,
@@ -70,9 +76,9 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     const foundRoom = foundChatRooms.find(
       (chatRoom) =>
         (chatRoom.comics && dto.comics && chatRoom.comics.id === dto.comics) ||
-        (chatRoom.exchange &&
-          dto.exchange &&
-          chatRoom.exchange.id === dto.exchange),
+        (chatRoom.exchangeRequest &&
+          dto.exchangeRequest &&
+          chatRoom.exchangeRequest.id === dto.exchangeRequest),
     );
 
     if (foundRoom) {
@@ -89,7 +95,7 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
               'firstUser',
               'secondUser',
               'comics',
-              'exchange',
+              'exchangeRequest',
               'lastMessage',
             ],
           }),
@@ -100,8 +106,9 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       firstUser,
       secondUser,
       comics: dto.comics && (await this.comicsService.findOne(dto.comics)),
-      exchange:
-        dto.exchange && (await this.exchangesService.getOne(dto.exchange)),
+      exchangeRequest:
+        dto.exchangeRequest &&
+        (await this.exchangeRequestsService.getOne(dto.exchangeRequest)),
     });
 
     return await this.chatRoomsRepository.save(newChatRoom);
@@ -113,12 +120,13 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       .leftJoinAndSelect('chat_room.firstUser', 'firstUser')
       .leftJoinAndSelect('chat_room.secondUser', 'secondUser')
       .leftJoinAndSelect('chat_room.comics', 'comics')
-      .leftJoinAndSelect('chat_room.exchange', 'exchange')
+      .leftJoinAndSelect('chat_room.exchangeRequest', 'exchangeRequest')
       .leftJoinAndSelect('chat_room.lastMessage', 'lastMessage')
       .leftJoinAndSelect('lastMessage.user', 'user')
       .where('firstUser.id = :userId', { userId })
       .orWhere('secondUser.id = :userId', { userId })
-      .orderBy('chat_room.updatedAt', 'DESC')
+      .orderBy('lastMessage.createdAt', 'DESC')
+      .take(8)
       .getMany();
 
     return fetched.map((chatRoom) => {

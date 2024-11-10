@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Bid } from './bid.entity';
 import { Deposit } from './deposit.entity';
-import { Notification } from './notification.entity';
+import { Announcement } from './announcement.entity';
 
 @Entity('auction')
 export class Auction extends BaseEntity {
@@ -77,6 +77,6 @@ export class Auction extends BaseEntity {
   @OneToMany(() => Deposit, (deposit) => deposit.auction)
   deposits: Deposit[];
 
-  @OneToMany(() => Notification, (notification) => notification.auction)
-  notifications: Notification[];
+  @OneToMany(() => Announcement, (announcement) => announcement.auction)
+  announcements: Announcement[];
 }

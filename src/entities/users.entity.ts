@@ -7,16 +7,17 @@ import { Transaction } from './transactions.entity';
 import { Address } from './address.entity';
 import { Follow } from './follow.entity';
 import { Bid } from './bid.entity';
-import { Exchange } from './exchange.entity';
-import { ExchangeCompensation } from './exchange-compensation.entity';
+import { ExchangeRequest } from './exchange-request.entity';
+import { ExchangeOffer } from './exchange-offer.entity';
 import { SourceOfFund } from './source-of-fund.entity';
 import { WalletDeposit } from './wallet-deposit.entity';
 import { Deposit } from './deposit.entity';
 import { UserReport } from './user-report.entity';
 import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
-import { Notification } from './notification.entity';
+import { Announcement } from './announcement.entity';
 import { SellerFeedback } from './seller-feedback.entity';
+import { ChatMessage } from './chat-message.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -145,17 +146,11 @@ export class User extends BaseEntity {
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
 
-  @OneToMany(() => Exchange, (exchange) => exchange.requestUser)
-  exchangeRequests: Exchange[];
+  @OneToMany(() => ExchangeRequest, (request) => request.user)
+  exchangeRequests: ExchangeRequest[];
 
-  @OneToMany(() => Exchange, (exchange) => exchange.offerUser)
-  exchangeOffers: Exchange[];
-
-  @OneToMany(
-    () => ExchangeCompensation,
-    (exchangeCompensation) => exchangeCompensation.user,
-  )
-  exchangeCompensations: ExchangeCompensation[];
+  @OneToMany(() => ExchangeOffer, (offer) => offer.user)
+  exchangeOffers: ExchangeOffer[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
@@ -187,12 +182,15 @@ export class User extends BaseEntity {
   @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.secondUser)
   secondChatRooms: ChatRoom[];
 
-  @OneToMany(() => Notification, (notification) => notification.user)
-  notifications: Notification[];
+  @OneToMany(() => Announcement, (announcement) => announcement.user)
+  announcements: Announcement[];
 
   @OneToMany(() => SellerFeedback, (feedback) => feedback.user)
   userSellerFeedbacks: SellerFeedback[];
 
   @OneToMany(() => SellerFeedback, (feedback) => feedback.seller)
   sellerFeedbacks: SellerFeedback[];
+
+  @OneToMany(() => ChatMessage, (message) => message.user)
+  chatMessages: ChatMessage[];
 }

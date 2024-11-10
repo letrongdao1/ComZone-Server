@@ -9,7 +9,6 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
 import { ComicModule } from './modules/comics/comics.module';
 import { GenreModule } from './modules/genres/genre.module';
 import { PermissionsGuard } from './modules/authorization/permission.guard';
-import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { OrderItemsModule } from './modules/order-items/order-items.module';
 import { ZalopayModule } from './modules/zalopay/zalopay.module';
@@ -28,7 +27,8 @@ import { PlansModule } from './modules/exchange-subs/plans/plans.module';
 import { EventsModule } from './modules/socket/event.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
-import { ExchangesModule } from './modules/exchanges/exchanges.module';
+import { ExchangeRequestsModule } from './modules/exchanges/exchange-requests.module';
+import { ExchangeOffersModule } from './modules/exchange-offers/exchange-offers.module';
 import { BidModule } from './modules/bid/bid.module';
 import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
 import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
@@ -59,14 +59,14 @@ import { SellerFeedbackModule } from './modules/seller-feedback/seller-feedback.
     ComicModule,
     GenreModule,
     FileUploadModule,
-    NotificationsModule,
     OrdersModule,
     OrderItemsModule,
     VnpayModule,
     ZalopayModule,
     VietNamAddressModule,
     TransactionsModule,
-    ExchangesModule,
+    ExchangeRequestsModule,
+    ExchangeOffersModule,
     UserAddressesModule,
     OtpModule,
     SellerDetailsModule,

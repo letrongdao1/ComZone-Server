@@ -121,7 +121,7 @@ export class ComicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/exchange-offer')
+  @Get('/exchange-offer/user')
   findOfferedExchangeComicsByLoggedInUser(@Req() req: any) {
     return this.comicsExchangeService.findOfferedExchangeComicsByUser(
       req.user.id,
