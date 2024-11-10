@@ -7,7 +7,7 @@ import { Withdrawal } from './withdrawal.entity';
 import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { ExchangeSubscription } from './exchange-subscription.entity';
-import { ExchangeCompensation } from './exchange-compensation.entity';
+import { ExchangeOffer } from './exchange-offer.entity';
 
 @Entity('transactions')
 export class Transaction extends BaseEntity {
@@ -61,13 +61,12 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'exchange-subscription' })
   exchangeSubscription: ExchangeSubscription;
 
-  @OneToOne(
-    () => ExchangeCompensation,
-    (exchangeCompensation) => exchangeCompensation.transactions,
-    { nullable: true, eager: true },
-  )
-  @JoinColumn({ name: 'exchange-compensation' })
-  exchangeCompensation: ExchangeCompensation;
+  @OneToOne(() => ExchangeOffer, (offer) => offer.transactions, {
+    nullable: true,
+    eager: true,
+  })
+  @JoinColumn({ name: 'exchange-offer' })
+  exchangeOffer: ExchangeOffer;
 
   @Column({
     type: 'varchar',

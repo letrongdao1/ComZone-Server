@@ -17,7 +17,7 @@ export class ComicsExchangeService {
         sellerId: {
           id: userId,
         },
-        status: ComicsStatusEnum.EXCHANGE,
+        status: ComicsStatusEnum.EXCHANGE_REQUEST,
       },
       order: {
         title: 'ASC',
@@ -89,7 +89,7 @@ export class ComicsExchangeService {
         key: `%${key.toLowerCase()}%`,
       })
       .andWhere('comics.status = :status', {
-        status: ComicsStatusEnum.EXCHANGE,
+        status: ComicsStatusEnum.EXCHANGE_REQUEST,
       })
       .orderBy('comics.sellerId')
       .getMany();

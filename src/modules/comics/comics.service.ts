@@ -46,7 +46,7 @@ export class ComicService {
   async createExchangeComics(
     userId: string,
     exchangeComicsDto: ExchangeComicsDTO,
-    type: ComicsStatusEnum.EXCHANGE | ComicsStatusEnum.EXCHANGE_OFFER,
+    type: ComicsStatusEnum.EXCHANGE_REQUEST | ComicsStatusEnum.EXCHANGE_OFFER,
   ) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User cannot be found!');

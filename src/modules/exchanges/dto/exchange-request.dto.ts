@@ -14,20 +14,6 @@ export class CreateExchangePostDTO {
   postContent: string;
 }
 
-export class UpdateOfferedComicsDTO {
-  @ApiProperty({
-    description: 'ID of the exchange',
-  })
-  exchange: string;
-
-  @ApiProperty({
-    example: [''],
-  })
-  @IsArray()
-  @IsString({ each: true })
-  offeredComics: string[];
-}
-
 export class AcceptDealingExchangeDTO {
   @ApiProperty({
     description: 'ID of the exchange',

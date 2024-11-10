@@ -2,7 +2,7 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Auction } from './auction.entity';
-import { Exchange } from './exchange.entity';
+import { ExchangeRequest } from './exchange-request.entity';
 import { Transaction } from './transactions.entity';
 
 @Entity('deposit')
@@ -16,11 +16,11 @@ export class Deposit extends BaseEntity {
   })
   auction: Auction;
 
-  @ManyToOne(() => Exchange, (exchange) => exchange.deposits, {
+  @ManyToOne(() => ExchangeRequest, (request) => request.deposits, {
     nullable: true,
     eager: true,
   })
-  exchange: Exchange;
+  exchangeRequest: ExchangeRequest;
 
   @Column({
     type: 'float',
