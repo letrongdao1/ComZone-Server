@@ -21,13 +21,13 @@ import { ComicsExchangeService } from '../comics/comics.exchange.service';
 export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
   constructor(
     @InjectRepository(ExchangeRequest)
-    private readonly exchangesRepository: Repository<ExchangeRequest>,
+    private readonly exchangeRequestsRepository: Repository<ExchangeRequest>,
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(ComicService) private readonly comicsService: ComicService,
     @Inject(ComicsExchangeService)
     private readonly comicsExchangeService: ComicsExchangeService,
   ) {
-    super(exchangesRepository);
+    super(exchangeRequestsRepository);
   }
 
   async createExchangePost(
@@ -60,13 +60,13 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
       ),
     );
 
-    const newExchangePost = this.exchangesRepository.create({
+    const newExchangePost = this.exchangeRequestsRepository.create({
       user: user,
       requestComics,
       postContent: createExchangePostDto.postContent,
     });
 
-    return await this.exchangesRepository.save(newExchangePost);
+    return await this.exchangeRequestsRepository.save(newExchangePost);
   }
 
   shuffle(array: ExchangeRequest[]) {
@@ -78,7 +78,7 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
   }
 
   async getAvailableExchangePosts() {
-    const exchanges = await this.exchangesRepository.find({
+    const exchanges = await this.exchangeRequestsRepository.find({
       where: {
         status: ExchangeRequestStatusEnum.AVAILABLE,
       },
@@ -90,29 +90,30 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
   async getSearchedExchanges(key: string) {
     if (!key || key.length === 0) return await this.getAvailableExchangePosts();
 
-    let chosenList: Comic[];
-    const exchangeList = await this.getAvailableExchangePosts();
-    const searchedComicsByTitleAndAuthor =
-      await this.comicsExchangeService.searchExchangeOfferComicsByTitleAndAuthor(
+    const searchedComicsList =
+      await this.comicsExchangeService.searchExchangeRequestComicsByTitleAndAuthor(
         key,
       );
-    if (searchedComicsByTitleAndAuthor.length === 0) {
-      chosenList =
-        await this.comicsExchangeService.searchExchangeOfferComicsByDescription(
-          key,
-        );
-    } else {
-      chosenList = searchedComicsByTitleAndAuthor;
-    }
 
-    return {
-      count: chosenList.length,
-      data: chosenList,
-    };
+    const filteredComicsList = searchedComicsList.filter(
+      (comics) => comics.status === ComicsStatusEnum.EXCHANGE_REQUEST,
+    );
+
+    return await Promise.all(
+      filteredComicsList.map(async (comics: Comic) => {
+        return await this.exchangeRequestsRepository.findOne({
+          where: {
+            requestComics: {
+              id: comics.id,
+            },
+          },
+        });
+      }),
+    );
   }
 
   async getAllExchangePostsOfUser(userId: string) {
-    return await this.exchangesRepository.find({
+    return await this.exchangeRequestsRepository.find({
       where: { user: { id: userId } },
       order: {
         createdAt: 'DESC',
@@ -122,7 +123,7 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
   }
 
   async updateStatus(requestId: string, status: ExchangeRequestStatusEnum) {
-    return await this.exchangesRepository
+    return await this.exchangeRequestsRepository
       .update(requestId, {
         status,
       })
@@ -142,11 +143,11 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
         });
       }),
     );
-    await this.exchangesRepository.update(exchange.id, {
+    await this.exchangeRequestsRepository.update(exchange.id, {
       status: ExchangeRequestStatusEnum.REMOVED,
     });
 
-    return await this.exchangesRepository.softDelete(exchangeId);
+    return await this.exchangeRequestsRepository.softDelete(exchangeId);
   }
 
   async undoDelete(exchangeId: string) {
@@ -161,7 +162,7 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
         });
       }),
     );
-    await this.exchangesRepository.update(exchangeId, {
+    await this.exchangeRequestsRepository.update(exchangeId, {
       status: ExchangeRequestStatusEnum.AVAILABLE,
     });
     return this.getOne(exchangeId);
@@ -177,6 +178,6 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
       }),
     );
 
-    return await this.exchangesRepository.delete(exchangeId);
+    return await this.exchangeRequestsRepository.delete(exchangeId);
   }
 }

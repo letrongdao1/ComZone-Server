@@ -46,11 +46,15 @@ export class ExchangeOffersService extends BaseService<ExchangeOffer> {
   }
 
   async createNewExchangeOffer(userId: string, dto: CreateExchangeOfferDTO) {
+    console.log(dto);
+    console.log(userId);
     const user = await this.usersService.getOne(userId);
 
     const exchangeRequest = await this.exchangeRequestsService.getOne(
       dto.exchangeRequest,
     );
+
+    console.log(exchangeRequest);
 
     if (!exchangeRequest)
       throw new NotFoundException('Exchange request cannot be found!');
@@ -65,10 +69,12 @@ export class ExchangeOffersService extends BaseService<ExchangeOffer> {
       },
     });
 
-    if (foundUserOffer)
+    if (foundUserOffer) {
+      console.log(foundUserOffer);
       throw new ConflictException(
         'This user has already made an offer for this request! Try updating instead!',
       );
+    }
 
     const offerComics = await Promise.all(
       dto.offerComics.map(async (comicsId: string) => {
