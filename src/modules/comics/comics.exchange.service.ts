@@ -41,56 +41,19 @@ export class ComicsExchangeService {
     });
   }
 
-  async searchExchangeOfferComicsByTitleAndAuthor(key: string) {
-    if (key.length === 0) return;
-
-    return await this.comicRepository
-      .createQueryBuilder('comics')
-      .leftJoinAndSelect('comics.sellerId', 'seller')
-      .where('LOWER(comics.title) LIKE :key', {
-        key: `%${key.toLowerCase()}%`,
-      })
-      .orWhere('LOWER(comics.author) LIKE :key', {
-        key: `%${key.toLowerCase()}%`,
-      })
-      .andWhere('comics.status = :status', {
-        status: ComicsStatusEnum.EXCHANGE_OFFER,
-      })
-      .orderBy('comics.sellerId')
-      .getMany();
-  }
-
-  async searchExchangeOfferComicsByDescription(key: string) {
-    if (key.length === 0) return;
-
-    return await this.comicRepository
-      .createQueryBuilder('comics')
-      .leftJoinAndSelect('comics.sellerId', 'seller')
-      .where('LOWER(comics.description) LIKE :key', {
-        key: `%${key.toLowerCase()}%`,
-      })
-      .andWhere('comics.status = :status', {
-        status: ComicsStatusEnum.EXCHANGE_OFFER,
-      })
-      .orderBy('comics.sellerId')
-      .getMany();
-  }
-
   async searchExchangeRequestComicsByTitleAndAuthor(key: string) {
     if (key.length === 0) return;
 
     return await this.comicRepository
       .createQueryBuilder('comics')
       .leftJoinAndSelect('comics.sellerId', 'seller')
-      .where('LOWER(comics.title) LIKE :key', {
-        key: `%${key.toLowerCase()}%`,
-      })
-      .orWhere('LOWER(comics.author) LIKE :key', {
-        key: `%${key.toLowerCase()}%`,
-      })
-      .andWhere('comics.status = :status', {
-        status: ComicsStatusEnum.EXCHANGE_REQUEST,
-      })
+      .where(
+        'LOWER(comics.title) LIKE :key OR LOWER(comics.author) LIKE :key AND comics.status = :status',
+        {
+          key: `%${key.toLowerCase()}%`,
+          status: ComicsStatusEnum.EXCHANGE_REQUEST,
+        },
+      )
       .orderBy('comics.sellerId')
       .getMany();
   }

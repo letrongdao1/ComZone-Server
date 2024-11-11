@@ -17,11 +17,15 @@ import { Comic } from './comics.entity';
 
 @Entity('exchange-offer')
 export class ExchangeOffer extends BaseEntity {
-  @ManyToOne(() => ExchangeRequest, (request) => request.exchangeOffers)
+  @ManyToOne(() => ExchangeRequest, (request) => request.exchangeOffers, {
+    eager: true,
+  })
   @JoinColumn({ name: 'exchange_request' })
   exchangeRequest: ExchangeRequest;
 
-  @ManyToOne(() => User, (user) => user.exchangeOffers)
+  @ManyToOne(() => User, (user) => user.exchangeOffers, {
+    eager: true,
+  })
   @JoinColumn({ name: 'user' })
   user: User;
 

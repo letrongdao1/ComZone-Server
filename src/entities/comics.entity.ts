@@ -33,7 +33,7 @@ export class Comic extends BaseEntity {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ nullable: true })
   author: string;
 
   @Column('text')
@@ -45,7 +45,7 @@ export class Comic extends BaseEntity {
   @Column({
     type: 'enum',
     enum: ['REGULAR', 'SPECIAL', 'LIMITED'],
-    default: 'REGULAR',
+    nullable: true,
   })
   edition: string;
 

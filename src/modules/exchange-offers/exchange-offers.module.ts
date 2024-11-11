@@ -3,7 +3,7 @@ import { ExchangeOffersService } from './exchange-offers.service';
 import { ExchangeOffersController } from './exchange-offers.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ExchangeOffer } from 'src/entities/exchange-offer.entity';
-import { ExchangeRequestsModule } from '../exchanges/exchange-requests.module';
+import { ExchangeRequestsModule } from '../exchange-requests/exchange-requests.module';
 import { UsersModule } from '../users/users.module';
 import { ComicModule } from '../comics/comics.module';
 
@@ -16,5 +16,6 @@ import { ComicModule } from '../comics/comics.module';
   ],
   controllers: [ExchangeOffersController],
   providers: [ExchangeOffersService],
+  exports: [ExchangeOffersService],
 })
 export class ExchangeOffersModule {}
