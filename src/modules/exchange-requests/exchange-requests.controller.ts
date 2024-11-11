@@ -25,16 +25,6 @@ export class ExchangeRequestsController {
     private readonly exchangeRequestsService: ExchangeRequestsService,
   ) {}
 
-  @Get('available')
-  getAvailableExchangePostsAsGuest() {
-    return this.exchangeRequestsService.getAvailableExchangePostsAsGuest();
-  }
-
-  @Get('search')
-  getSearchedExchangesAsGuest(@Query('key') key: string) {
-    return this.exchangeRequestsService.getSearchedExchangesAsGuest(key);
-  }
-
   @UseGuards(JwtAuthGuard)
   @Post()
   createExchangePost(
@@ -47,25 +37,14 @@ export class ExchangeRequestsController {
     );
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('available/logged')
-  getAvailableExchangePostsAsLoggedIn(@Req() req: any) {
-    return this.exchangeRequestsService.getAvailableExchangePosts(req.user.id);
+  @Get('available')
+  getAvailableExchangePostsAsGuest() {
+    return this.exchangeRequestsService.getAvailableExchangePosts();
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('search/logged')
-  getSearchedExchanges(@Req() req: any, @Query('key') key: string) {
-    return this.exchangeRequestsService.getSearchedExchanges(req.user.id, key);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('search/owned')
-  getSearchedExchangesByOwned(@Req() req: any, @Query('key') key: string) {
-    return this.exchangeRequestsService.getSearchExchangesByOwned(
-      req.user.id,
-      key,
-    );
+  @Get('search')
+  getSearchedExchangesAsGuest(@Query('key') key: string) {
+    return this.exchangeRequestsService.getSearchedExchanges(key);
   }
 
   @UseGuards(JwtAuthGuard)

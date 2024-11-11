@@ -11,8 +11,9 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateChatRoomDTO } from './create-chat-room.dto';
 import { ComicService } from '../comics/comics.service';
-import { ExchangeRequestsService } from '../exchanges/exchange-requests.service';
+import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
 import { ChatMessage } from 'src/entities/chat-message.entity';
+import { ExchangeOffersService } from '../exchange-offers/exchange-offers.service';
 
 @Injectable()
 export class ChatRoomsService extends BaseService<ChatRoom> {
@@ -25,8 +26,22 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     @Inject(ComicService) private readonly comicsService: ComicService,
     @Inject(ExchangeRequestsService)
     private readonly exchangeRequestsService: ExchangeRequestsService,
+    @Inject(ExchangeOffersService)
+    private readonly exchangeOffersService: ExchangeOffersService,
   ) {
     super(chatRoomsRepository);
+  }
+
+  async getOne(id: string): Promise<ChatRoom> {
+    return await this.chatRoomsRepository.findOne({
+      where: { id },
+      relations: [
+        'comics',
+        'exchangeRequest',
+        'exchangeRequest.requestComics',
+        'lastMessage',
+      ],
+    });
   }
 
   async createChatRoom(userId: string, dto: CreateChatRoomDTO) {
@@ -54,7 +69,9 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
         dto.exchangeRequest,
       );
       if (!exchangeRequest)
-        throw new NotFoundException('Exchange request cannot be found!');
+        throw new NotFoundException(
+          'Exchange request request cannot be found!',
+        );
     }
 
     const foundChatRooms = await this.chatRoomsRepository
@@ -121,36 +138,48 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       .leftJoinAndSelect('chat_room.secondUser', 'secondUser')
       .leftJoinAndSelect('chat_room.comics', 'comics')
       .leftJoinAndSelect('chat_room.exchangeRequest', 'exchangeRequest')
+      .leftJoinAndSelect('exchangeRequest.requestComics', 'requestComics')
+      .leftJoinAndSelect('exchangeRequest.user', 'requestUser')
       .leftJoinAndSelect('chat_room.lastMessage', 'lastMessage')
-      .leftJoinAndSelect('lastMessage.user', 'user')
+      .leftJoinAndSelect('lastMessage.user', 'lastUser')
       .where('firstUser.id = :userId', { userId })
       .orWhere('secondUser.id = :userId', { userId })
       .orderBy('lastMessage.createdAt', 'DESC')
       .take(8)
       .getMany();
 
-    return fetched.map((chatRoom) => {
-      const first =
-        chatRoom.firstUser.id === userId
-          ? chatRoom.firstUser
-          : chatRoom.secondUser;
-      const second =
-        chatRoom.firstUser.id !== userId
-          ? chatRoom.firstUser
-          : chatRoom.secondUser;
+    return await Promise.all(
+      fetched.map(async (chatRoom) => {
+        const first =
+          chatRoom.firstUser.id === userId
+            ? chatRoom.firstUser
+            : chatRoom.secondUser;
+        const second =
+          chatRoom.firstUser.id !== userId
+            ? chatRoom.firstUser
+            : chatRoom.secondUser;
 
-      return {
-        ...chatRoom,
-        firstUser: first,
-        secondUser: second,
-        lastMessage: chatRoom.lastMessage
-          ? {
-              ...chatRoom.lastMessage,
-              mine: chatRoom.lastMessage.user.id === userId,
-            }
-          : null,
-      };
-    });
+        const exchangeOffer = chatRoom.exchangeRequest
+          ? await this.exchangeOffersService.getByExchangeRequestAndOfferUser(
+              second.id,
+              chatRoom.exchangeRequest.id,
+            )
+          : null;
+
+        return {
+          ...chatRoom,
+          firstUser: first,
+          secondUser: second,
+          lastMessage: chatRoom.lastMessage
+            ? {
+                ...chatRoom.lastMessage,
+                mine: chatRoom.lastMessage.user.id === userId,
+              }
+            : null,
+          exchangeOffer,
+        };
+      }),
+    );
   }
 
   async updateLastMessage(chatRoomId: string, messageId: string) {

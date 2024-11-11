@@ -12,7 +12,7 @@ import { Repository } from 'typeorm';
 import { CreateDepositDTO } from './dto/create-deposit.dto';
 import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
-import { ExchangeRequestsService } from '../exchanges/exchange-requests.service';
+import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {

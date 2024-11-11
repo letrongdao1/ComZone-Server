@@ -32,6 +32,24 @@ export class ExchangeOffersController {
     return this.exchangeOffersService.getByExchangeRequest(id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange-request/:request_id/offer-user/:user_id')
+  getByExchangeRequestAndOfferUser(
+    @Param('user_id') userId: string,
+    @Param('request_id') requestId: string,
+  ) {
+    return this.exchangeOffersService.getByExchangeRequestAndOfferUser(
+      userId,
+      requestId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('comics/user')
+  getExchangeOfferComicsByUser(@Req() req: any) {
+    return this.exchangeOffersService.getExchangeOfferComicsByUser(req.user.id);
+  }
+
   @Get(':id')
   getById(@Param('id') id: string) {
     return this.exchangeOffersService.getOne(id);

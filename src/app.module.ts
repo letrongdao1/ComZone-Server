@@ -27,7 +27,7 @@ import { PlansModule } from './modules/exchange-subs/plans/plans.module';
 import { EventsModule } from './modules/socket/event.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
-import { ExchangeRequestsModule } from './modules/exchanges/exchange-requests.module';
+import { ExchangeRequestsModule } from './modules/exchange-requests/exchange-requests.module';
 import { ExchangeOffersModule } from './modules/exchange-offers/exchange-offers.module';
 import { BidModule } from './modules/bid/bid.module';
 import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';

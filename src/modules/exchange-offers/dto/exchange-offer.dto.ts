@@ -10,7 +10,7 @@ export class CreateExchangeOfferDTO {
   })
   @IsArray()
   @IsString({ each: true })
-  offeredComics: string[];
+  offerComics: string[];
 
   @ApiProperty({ nullable: true, default: 0 })
   compensationAmount: number;
