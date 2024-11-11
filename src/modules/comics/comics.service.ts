@@ -134,12 +134,17 @@ export class ComicService {
       throw new Error('Seller not found');
     }
 
+    // Modify the find query to sort by createdAt in descending order
     const comics = await this.comicRepository.find({
       where: { sellerId: { id: seller.id } },
+      order: {
+        createdAt: 'ASC', // Sorting by createdAt in descending order
+      },
     });
 
     return comics;
   }
+
   async findAllExceptSeller(
     sellerId: string | null,
     status: string,
@@ -205,33 +210,24 @@ export class ComicService {
       .where('comic.author = :author', { author })
       .getMany();
   }
-  // async updateStatus(
-  //   id: string,
-  //   updateComicStatusDto: UpdateComicStatusDto,
-  // ): Promise<Comic> {
-  //   const { status } = updateComicStatusDto;
 
-  //   const comic = await this.comicRepository.findOne({
-  //     where: { id },
-  //   });
+  async updateStatus(
+    comicsId: string,
+    status: ComicsStatusEnum,
+  ): Promise<Comic> {
+    // Check if the comic exists
+    const comic = await this.comicRepository.findOne({
+      where: { id: comicsId },
+    });
 
-  //   if (!comic) {
-  //     throw new Error('Comic not found');
-  //   }
+    if (!comic) {
+      throw new NotFoundException('Comic not found');
+    }
 
-  //   comic.status = status;
-  //   return await this.comicRepository.save(comic);
-  // }
+    // Update the status of the comic
+    comic.status = status;
+    await this.comicRepository.save(comic);
 
-  async updateStatus(comicsId: string, status: ComicsStatusEnum) {
-    const comics = await this.findOne(comicsId);
-
-    if (!comics) throw new NotFoundException('Comics cannot be found!');
-
-    return await this.comicRepository
-      .update(comicsId, {
-        status,
-      })
-      .then(() => this.findOne(comicsId));
+    return comic;
   }
 }

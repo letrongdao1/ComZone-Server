@@ -277,3 +277,8 @@ export class UpdateComicDto {
   @IsPositive()
   page?: number;
 }
+
+export class UpdateComicStatusDto {
+  @IsEnum(ComicsStatusEnum, { message: 'Status must be a valid enum value' })
+  status: ComicsStatusEnum;
+}

@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Repository } from 'typeorm';
+import { MoreThan, Not, Repository } from 'typeorm';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
@@ -69,6 +69,16 @@ export class AuctionService {
       throw new NotFoundException(`Auction with ID ${id} not found`);
     }
     return auction;
+  }
+  async findAuctionsExcludingUser(sellerId: string): Promise<Auction[]> {
+    return this.auctionRepository.find({
+      where: {
+        comics: {
+          sellerId: { id: Not(sellerId) }, // Exclude auctions where the comic's seller ID matches userId
+        },
+      },
+      relations: ['comics', 'comics.genres'], // Include genres and other relations as needed
+    });
   }
   async findUpcomingAuctions(): Promise<Auction[]> {
     const now = new Date();

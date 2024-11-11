@@ -9,9 +9,15 @@ import {
   Query,
   UseGuards,
   Req,
+  Patch,
+  NotFoundException,
 } from '@nestjs/common';
 import { ComicService } from './comics.service';
-import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
+import {
+  CreateComicDto,
+  UpdateComicDto,
+  UpdateComicStatusDto,
+} from './dto/comic.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Comic } from 'src/entities/comics.entity';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
@@ -153,6 +159,15 @@ export class ComicController {
   @Put(':id')
   update(@Param('id') id: string, @Body() updateComicDto: UpdateComicDto) {
     return this.comicService.update(id, updateComicDto);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateComicStatusDto: UpdateComicStatusDto,
+  ) {
+    const { status } = updateComicStatusDto;
+    return await this.comicService.updateStatus(id, status);
   }
 
   @Roles(Role.MODERATOR)

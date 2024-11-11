@@ -6,11 +6,14 @@ import {
   Param,
   Put,
   Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
 @ApiTags('Auction')
 @Controller('auction')
@@ -25,6 +28,14 @@ export class AuctionController {
   async findAll(): Promise<Auction[]> {
     return this.auctionService.findAllAuctions();
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('exclude-user')
+  async getAuctionsExcludingUser(@Req() req: any): Promise<Auction[]> {
+    const sellerId = req.user ? req.user.id : null;
+    console.log('1', sellerId);
+    return this.auctionService.findAuctionsExcludingUser(sellerId);
+  }
+
   @Get('upcoming')
   async getUpcomingAuctions(): Promise<Auction[]> {
     return this.auctionService.findUpcomingAuctions();
