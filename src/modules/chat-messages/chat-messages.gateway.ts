@@ -57,6 +57,17 @@ export class ChatMessagesGateway {
     client.emit('new-message-list', newMessageList);
   }
 
+  @SubscribeMessage('get-unread-list')
+  async getUnreadList(
+    @MessageBody() message: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const unreadList = await this.chatMessagesService.getUnreadList(
+      message.userId,
+    );
+    client.emit('new-unread-list', unreadList);
+  }
+
   @SubscribeMessage('typing')
   typing(
     @MessageBody('isTyping') isTyping: boolean,

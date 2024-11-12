@@ -7,6 +7,7 @@ import { ChatRoomsModule } from '../chat-rooms/chat-rooms.module';
 import { ChatMessagesGateway } from './chat-messages.gateway';
 import { AuthModule } from '../authentication/auth.module';
 import { UsersModule } from '../users/users.module';
+import { ComicModule } from '../comics/comics.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from '../users/users.module';
     ChatRoomsModule,
     UsersModule,
     AuthModule,
+    ComicModule,
   ],
   controllers: [ChatMessagesController],
   providers: [ChatMessagesService, ChatMessagesGateway],

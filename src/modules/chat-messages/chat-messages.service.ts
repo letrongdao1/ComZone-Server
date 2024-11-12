@@ -5,9 +5,11 @@ import { ChatMessage } from 'src/entities/chat-message.entity';
 import { Not, Repository } from 'typeorm';
 import { ChatRoomsService } from '../chat-rooms/chat-rooms.service';
 import { CreateMessageDTO } from './dto/create-message.dto';
-import { AuthService } from '../authentication/auth.service';
 import { UsersService } from '../users/users.service';
 import { Socket } from 'socket.io';
+import { ComicService } from '../comics/comics.service';
+import { Comic } from 'src/entities/comics.entity';
+import { ChatMessageTypeEnum } from './dto/chat-message-type.enum';
 
 @Injectable()
 export class ChatMessagesService extends BaseService<ChatMessage> {
@@ -18,8 +20,8 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     private readonly chatRoomsService: ChatRoomsService,
     @Inject(UsersService)
     private readonly usersService: UsersService,
-    @Inject(AuthService)
-    private readonly authService: AuthService,
+    @Inject(ComicService)
+    private readonly comicsService: ComicService,
   ) {
     super(chatMessagesRepository);
   }
@@ -55,12 +57,28 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
 
     const user = await this.usersService.getOne(createMessageDto.userId);
 
+    let comics: Comic;
+    if (createMessageDto.comics) {
+      comics = await this.comicsService.findOne(createMessageDto.comics);
+      if (!comics) throw new NotFoundException('Comics cannot be found!');
+    }
+
+    let repliedToMessage: ChatMessage;
+    if (createMessageDto.repliedToMessage) {
+      repliedToMessage = await this.getOne(createMessageDto.repliedToMessage);
+      if (!repliedToMessage)
+        throw new NotFoundException('Message cannot be found!');
+    }
+
     const newMessage = this.chatMessagesRepository.create({
       user,
       chatRoom,
-      type: createMessageDto.type,
+      comics: comics || null,
+      type: createMessageDto.comics
+        ? ChatMessageTypeEnum.COMICS
+        : createMessageDto.type,
       content: createMessageDto.content,
-      repliedToMessage: createMessageDto.repliedToMessage,
+      repliedToMessage: repliedToMessage || null,
     });
 
     return await this.chatMessagesRepository
@@ -153,5 +171,17 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
         { isRead: true },
       )
       .then(() => this.chatRoomsService.getOne(chatRoomId));
+  }
+
+  async getUnreadList(userId: string) {
+    const chatRoomList =
+      await this.chatRoomsService.getChatRoomByUserId(userId);
+
+    return chatRoomList.filter(
+      (room) =>
+        room.lastMessage &&
+        room.lastMessage.user.id !== userId &&
+        room.lastMessage.isRead === false,
+    );
   }
 }
