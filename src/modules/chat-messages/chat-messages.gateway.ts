@@ -1,8 +1,6 @@
 import {
   ConnectedSocket,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -12,28 +10,51 @@ import { Server, Socket } from 'socket.io';
 import { CreateMessageDTO } from './dto/create-message.dto';
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
-export class ChatMessagesGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class ChatMessagesGateway {
   constructor(private readonly chatMessagesService: ChatMessagesService) {}
 
   @WebSocketServer()
   server: Server;
 
-  handleConnection(client: Socket) {}
-
-  handleDisconnect(client: Socket) {}
-
-  @SubscribeMessage('send-new-message')
-  async createMessage(
-    @MessageBody() createMessageDto: CreateMessageDTO,
+  @SubscribeMessage('join-room')
+  async joinRoom(
+    @MessageBody() message: any,
     @ConnectedSocket() client: Socket,
   ) {
+    if (message && message.userId) {
+      return this.chatMessagesService.joinRoom(message.userId, client);
+    }
+  }
+
+  @SubscribeMessage('send-new-message')
+  async createMessage(@MessageBody() createMessageDto: CreateMessageDTO) {
     const newMessage =
       await this.chatMessagesService.createNewMessage(createMessageDto);
 
-    console.log('NEW: ', newMessage);
-    this.server.emit('new-message', newMessage);
+    this.server.to(newMessage.chatRoom.id).emit('new-message', newMessage);
+  }
+
+  @SubscribeMessage('update-room-list')
+  async updateUserRoomList(
+    @MessageBody() message: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const newRoomList = await this.chatMessagesService.updateRoomList(
+      message.userId,
+    );
+    client.emit('new-room-list', newRoomList);
+  }
+
+  @SubscribeMessage('update-message-list')
+  async updateMessageList(
+    @MessageBody() message: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const newMessageList = await this.chatMessagesService.getMessagesByChatRoom(
+      message.userId,
+      message.chatRoomId,
+    );
+    client.emit('new-message-list', newMessageList);
   }
 
   @SubscribeMessage('typing')

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ChatRoomsService } from './chat-rooms.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateChatRoomDTO } from './create-chat-room.dto';
@@ -23,5 +31,11 @@ export class ChatRoomsController {
   @Get('user')
   getChatRoomsByUser(@Req() req: any) {
     return this.chatRoomsService.getChatRoomByUserId(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  getById(@Param('id') id: string, @Req() req: any) {
+    return this.chatRoomsService.getById(req.user.id, id);
   }
 }

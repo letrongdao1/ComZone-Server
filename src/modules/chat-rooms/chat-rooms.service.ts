@@ -36,6 +36,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     return await this.chatRoomsRepository.findOne({
       where: { id },
       relations: [
+        'firstUser',
+        'secondUser',
         'comics',
         'exchangeRequest',
         'exchangeRequest.requestComics',
@@ -159,13 +161,6 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
             ? chatRoom.firstUser
             : chatRoom.secondUser;
 
-        const exchangeOffer = chatRoom.exchangeRequest
-          ? await this.exchangeOffersService.getByExchangeRequestAndOfferUser(
-              second.id,
-              chatRoom.exchangeRequest.id,
-            )
-          : null;
-
         return {
           ...chatRoom,
           firstUser: first,
@@ -176,10 +171,33 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
                 mine: chatRoom.lastMessage.user.id === userId,
               }
             : null,
-          exchangeOffer,
         };
       }),
     );
+  }
+
+  async getById(userId: string, chatRoomId: string) {
+    const chatRoom = await this.getOne(chatRoomId);
+    const firstUser =
+      chatRoom.firstUser.id === userId
+        ? chatRoom.firstUser
+        : chatRoom.secondUser;
+    const secondUser =
+      chatRoom.firstUser.id !== userId
+        ? chatRoom.firstUser
+        : chatRoom.secondUser;
+
+    return {
+      ...chatRoom,
+      firstUser,
+      secondUser,
+      lastMessage: chatRoom.lastMessage
+        ? {
+            ...chatRoom.lastMessage,
+            mine: chatRoom.lastMessage.user.id === userId,
+          }
+        : null,
+    };
   }
 
   async updateLastMessage(chatRoomId: string, messageId: string) {

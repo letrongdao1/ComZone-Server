@@ -3,6 +3,7 @@ import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { ChatRoom } from './chat-room.entity';
 import { User } from './users.entity';
 import { ChatMessageTypeEnum } from 'src/modules/chat-messages/dto/chat-message-type.enum';
+import { Comic } from './comics.entity';
 
 @Entity('chat-message')
 export class ChatMessage extends BaseEntity {
@@ -13,6 +14,9 @@ export class ChatMessage extends BaseEntity {
 
   @ManyToOne(() => User, (user) => user.chatMessages, { eager: true })
   user: User;
+
+  @ManyToOne(() => Comic, (comics) => comics.messages)
+  comics: Comic;
 
   @Column({
     type: 'uuid',
