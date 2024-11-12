@@ -89,9 +89,9 @@ export class AuctionService {
     // Lấy giá thầu cao nhất cho phiên đấu giá
     const latestBid = await this.bidReposistory.findOne({
       where: { auction: { id: auction.id } },
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'ASC' },
     });
-
+    console.log('11', latestBid);
     if (latestBid) {
       auction.status = 'PROCESSING';
       auction.winner = latestBid.user;

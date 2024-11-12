@@ -9,6 +9,7 @@ import { Auction } from 'src/entities/auction.entity';
 import { ExchangeOffer } from 'src/entities/exchange-offer.entity';
 import { ExchangeRequest } from 'src/entities/exchange-request.entity';
 import { User } from 'src/entities/users.entity';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { User } from 'src/entities/users.entity';
       ExchangeRequest,
       User,
     ]),
+    // UsersModule,
   ],
   controllers: [AnnouncementController],
   providers: [AnnouncementService],

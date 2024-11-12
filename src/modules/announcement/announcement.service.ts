@@ -43,7 +43,6 @@ export class AnnouncementService {
       ...rest
     } = createAnnouncementDto;
 
-    // Initialize the related entities (optional if the IDs are provided)
     const user = userId
       ? await this.userRepository.findOne({ where: { id: userId } })
       : null;
