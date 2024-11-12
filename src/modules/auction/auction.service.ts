@@ -4,11 +4,12 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Not, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
+import { Bid } from 'src/entities/bid.entity';
 
 @Injectable()
 export class AuctionService {
@@ -17,6 +18,7 @@ export class AuctionService {
     private auctionRepository: Repository<Auction>,
     @InjectRepository(Comic)
     private comicRepository: Repository<Comic>,
+    @InjectRepository(Bid) private bidReposistory: Repository<Bid>,
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
@@ -52,7 +54,55 @@ export class AuctionService {
     auction.currentPrice = auction.reservePrice;
     return this.auctionRepository.save(auction);
   }
+  async checkAndDeclareWinnersForEndedAuctions() {
+    const now = new Date();
 
+    // Find auctions that have ended and are still marked as "ONGOING"
+    const endedAuctions = await this.auctionRepository.find({
+      where: { endTime: LessThanOrEqual(now), status: 'ONGOING' },
+      relations: ['bids'],
+    });
+
+    // Use Promise.all to handle each ended auction concurrently
+    await Promise.all(
+      endedAuctions.map(async (auction) => {
+        await this.declareWinner(auction.id);
+      }),
+    );
+  }
+
+  // Hàm xác định người chiến thắng cho một phiên đấu giá
+  async declareWinner(
+    auctionId: string,
+  ): Promise<{ winner: string; bid: number } | string> {
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+      relations: ['bids'],
+    });
+    if (!auction) throw new NotFoundException('Auction not found');
+    // Kiểm tra nếu phiên đấu giá đã kết thúc
+    const now = new Date();
+    if (auction.endTime > now) {
+      return 'Auction is still ongoing';
+    }
+
+    // Lấy giá thầu cao nhất cho phiên đấu giá
+    const latestBid = await this.bidReposistory.findOne({
+      where: { auction: { id: auction.id } },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (latestBid) {
+      auction.status = 'PROCESSING';
+      auction.winner = latestBid.user;
+      await this.auctionRepository.save(auction);
+      return { winner: latestBid.user.id, bid: latestBid.price };
+    } else {
+      auction.status = 'FAILED';
+      await this.auctionRepository.save(auction);
+      return 'No bids were placed; auction failed';
+    }
+  }
   // Get all auctions
   async findAllAuctions(): Promise<Auction[]> {
     return this.auctionRepository.find({
@@ -74,10 +124,10 @@ export class AuctionService {
     return this.auctionRepository.find({
       where: {
         comics: {
-          sellerId: { id: Not(sellerId) }, // Exclude auctions where the comic's seller ID matches userId
+          sellerId: { id: Not(sellerId) },
         },
       },
-      relations: ['comics', 'comics.genres'], // Include genres and other relations as needed
+      relations: ['comics', 'comics.genres'],
     });
   }
   async findUpcomingAuctions(): Promise<Auction[]> {

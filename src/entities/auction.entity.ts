@@ -1,9 +1,10 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Bid } from './bid.entity';
 import { Deposit } from './deposit.entity';
 import { Announcement } from './announcement.entity';
+import { User } from './users.entity';
 
 @Entity('auction')
 export class Auction extends BaseEntity {
@@ -18,6 +19,9 @@ export class Auction extends BaseEntity {
   })
   reservePrice: number;
 
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'winner_id' }) // Define the foreign key column name
+  winner: User;
   @Column({
     name: 'current_price',
     type: 'float',
@@ -57,16 +61,9 @@ export class Auction extends BaseEntity {
   })
   endTime: Date;
 
-  // @Column({
-  //   type: 'enum',
-  //   enum: [1, 2, 3, 4, 5, 6, 7],
-  //   nullable: false,
-  // })
-  // duration: number;
-
   @Column({
     type: 'enum',
-    enum: ['ONGOING', 'SUCCESSFUL', 'FAILED'],
+    enum: ['UPCOMING', 'PROCESSING', 'ONGOING', 'SUCCESSFUL', 'FAILED'],
     default: 'ONGOING',
   })
   status: string;

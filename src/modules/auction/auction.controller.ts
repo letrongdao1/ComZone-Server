@@ -32,10 +32,12 @@ export class AuctionController {
   @Get('exclude-user')
   async getAuctionsExcludingUser(@Req() req: any): Promise<Auction[]> {
     const sellerId = req.user ? req.user.id : null;
-    console.log('1', sellerId);
     return this.auctionService.findAuctionsExcludingUser(sellerId);
   }
-
+  @Get('declare-winner/:id')
+  async declareWinner(@Param('id') id: string) {
+    return this.auctionService.declareWinner(id);
+  }
   @Get('upcoming')
   async getUpcomingAuctions(): Promise<Auction[]> {
     return this.auctionService.findUpcomingAuctions();
