@@ -34,6 +34,7 @@ import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
 import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
 import { SellerFeedbackModule } from './modules/seller-feedback/seller-feedback.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AnnouncementModule } from './modules/announcement/announcement.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
+    AnnouncementModule,
     EventsModule,
     AuctionModule,
     BidModule,

@@ -6,6 +6,8 @@ import { Deposit } from './deposit.entity';
 import { Announcement } from './announcement.entity';
 import { User } from './users.entity';
 
+import { BeforeInsert } from 'typeorm';
+
 @Entity('auction')
 export class Auction extends BaseEntity {
   @ManyToOne(() => Comic, (comic) => comic.auction)
@@ -13,19 +15,16 @@ export class Auction extends BaseEntity {
 
   @Column({
     name: 'reserve_price',
-    type: 'float',
-    precision: 2,
     nullable: false,
   })
   reservePrice: number;
 
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'winner_id' }) // Define the foreign key column name
+  @JoinColumn({ name: 'winner_id' })
   winner: User;
+
   @Column({
     name: 'current_price',
-    type: 'float',
-    precision: 2,
     nullable: true,
     default: 0,
   })
@@ -33,16 +32,12 @@ export class Auction extends BaseEntity {
 
   @Column({
     name: 'max_price',
-    type: 'float',
-    precision: 2,
     nullable: false,
   })
   maxPrice: number;
 
   @Column({
     name: 'price_step',
-    type: 'float',
-    precision: 2,
     nullable: false,
   })
   priceStep: number;
@@ -76,4 +71,12 @@ export class Auction extends BaseEntity {
 
   @OneToMany(() => Announcement, (announcement) => announcement.auction)
   announcements: Announcement[];
+
+  @BeforeInsert()
+  setDefaultCurrentPrice() {
+    // Set currentPrice to reservePrice before the entity is inserted
+    if (this.currentPrice === 0) {
+      this.currentPrice = this.reservePrice;
+    }
+  }
 }
