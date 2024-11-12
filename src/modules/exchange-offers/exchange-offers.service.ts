@@ -163,6 +163,19 @@ export class ExchangeOffersService extends BaseService<ExchangeOffer> {
         'Only the request user can accept or reject to this offer!',
       );
 
+    if (status === ExchangeOfferStatusEnum.ACCEPTED) {
+      await this.exchangeOffersRepository.update(
+        {
+          exchangeRequest: {
+            id: exchangeOffer.exchangeRequest.id,
+          },
+        },
+        {
+          status: ExchangeOfferStatusEnum.REJECTED,
+        },
+      );
+    }
+
     await this.exchangeRequestsService.updateStatus(
       exchangeOffer.exchangeRequest.id,
       status === ExchangeOfferStatusEnum.ACCEPTED

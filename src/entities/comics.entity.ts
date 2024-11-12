@@ -115,6 +115,8 @@ export class Comic extends BaseEntity {
   @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.comics)
   chatRooms: ChatRoom[];
 
-  @OneToMany(() => ChatMessage, (message) => message.comics)
+  @ManyToMany(() => ChatMessage, (message) => message.comics, {
+    cascade: true,
+  })
   messages: ChatMessage[];
 }
