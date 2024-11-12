@@ -17,5 +17,5 @@ export class CreateMessageDTO {
   repliedToMessage?: string;
 
   @ApiProperty({ nullable: true })
-  comics?: string;
+  comics?: string[];
 }

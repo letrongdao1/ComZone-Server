@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ChatMessage } from 'src/entities/chat-message.entity';
@@ -57,11 +62,19 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
 
     const user = await this.usersService.getOne(createMessageDto.userId);
 
-    let comics: Comic;
-    if (createMessageDto.comics) {
-      comics = await this.comicsService.findOne(createMessageDto.comics);
-      if (!comics) throw new NotFoundException('Comics cannot be found!');
-    }
+    const comicsList = createMessageDto.comics
+      ? await Promise.all(
+          createMessageDto.comics.map(async (comicsId: string) => {
+            const comics = await this.comicsService.findOne(comicsId);
+            if (!comics) throw new NotFoundException('Comics cannot be found!');
+            if (comics.sellerId.id !== user.id)
+              throw new ForbiddenException(
+                'This comics does not belong to this user!',
+              );
+            return comics;
+          }),
+        )
+      : null;
 
     let repliedToMessage: ChatMessage;
     if (createMessageDto.repliedToMessage) {
@@ -73,7 +86,7 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     const newMessage = this.chatMessagesRepository.create({
       user,
       chatRoom,
-      comics: comics || null,
+      comics: comicsList || null,
       type: createMessageDto.comics
         ? ChatMessageTypeEnum.COMICS
         : createMessageDto.type,

@@ -143,6 +143,7 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       .leftJoinAndSelect('exchangeRequest.requestComics', 'requestComics')
       .leftJoinAndSelect('exchangeRequest.user', 'requestUser')
       .leftJoinAndSelect('chat_room.lastMessage', 'lastMessage')
+      .leftJoinAndSelect('lastMessage.comics', 'lastMessageComics')
       .leftJoinAndSelect('lastMessage.user', 'lastUser')
       .where('firstUser.id = :userId', { userId })
       .orWhere('secondUser.id = :userId', { userId })

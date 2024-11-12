@@ -1,5 +1,12 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToOne,
+} from 'typeorm';
 import { ChatRoom } from './chat-room.entity';
 import { User } from './users.entity';
 import { ChatMessageTypeEnum } from 'src/modules/chat-messages/dto/chat-message-type.enum';
@@ -15,8 +22,16 @@ export class ChatMessage extends BaseEntity {
   @ManyToOne(() => User, (user) => user.chatMessages, { eager: true })
   user: User;
 
-  @ManyToOne(() => Comic, (comics) => comics.messages)
-  comics: Comic;
+  @ManyToMany(() => Comic, (comics) => comics.messages, {
+    nullable: true,
+    eager: true,
+  })
+  @JoinTable({
+    name: 'comics_chat_message',
+    joinColumn: { name: 'chat_message_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'comics_id', referencedColumnName: 'id' },
+  })
+  comics: Comic[];
 
   @Column({
     type: 'uuid',
