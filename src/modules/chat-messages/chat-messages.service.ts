@@ -7,6 +7,7 @@ import { ChatRoomsService } from '../chat-rooms/chat-rooms.service';
 import { CreateMessageDTO } from './dto/create-message.dto';
 import { AuthService } from '../authentication/auth.service';
 import { UsersService } from '../users/users.service';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class ChatMessagesService extends BaseService<ChatMessage> {
@@ -34,14 +35,25 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     return this.clientUser[clientId];
   }
 
+  async joinRoom(userId: string, client: Socket) {
+    const chatRoomList =
+      await this.chatRoomsService.getChatRoomByUserId(userId);
+
+    await this.usersService.updateLastActive(userId);
+
+    return await Promise.all(
+      chatRoomList.map(async (chatRoom) => {
+        client.join(chatRoom.id);
+      }),
+    );
+  }
+
   async createNewMessage(createMessageDto: CreateMessageDTO) {
     const chatRoom = await this.chatRoomsService.getOne(
       createMessageDto.chatRoom,
     );
 
-    const user = await this.usersService.getOne(
-      await this.authService.getUserIdByAccessToken(createMessageDto.token),
-    );
+    const user = await this.usersService.getOne(createMessageDto.userId);
 
     const newMessage = this.chatMessagesRepository.create({
       user,
@@ -120,6 +132,10 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     return this.groupMessageByDate(filteredList);
   }
 
+  async updateRoomList(userId: string) {
+    return await this.chatRoomsService.getChatRoomByUserId(userId);
+  }
+
   async updateIsReadMessageByChatRoom(userId: string, chatRoomId: string) {
     const chatRoom = await this.chatRoomsService.getOne(chatRoomId);
     if (!chatRoom) throw new NotFoundException('Chat room cannot be found!');
@@ -129,6 +145,9 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
         {
           user: {
             id: Not(userId),
+          },
+          chatRoom: {
+            id: chatRoomId,
           },
         },
         { isRead: true },

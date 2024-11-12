@@ -16,6 +16,7 @@ import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
 import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
 import { ExchangeOffer } from './exchange-offer.entity';
+import { ChatMessage } from './chat-message.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -113,4 +114,7 @@ export class Comic extends BaseEntity {
 
   @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.comics)
   chatRooms: ChatRoom[];
+
+  @OneToMany(() => ChatMessage, (message) => message.comics)
+  messages: ChatMessage[];
 }
