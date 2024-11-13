@@ -162,6 +162,14 @@ export class Order extends BaseEntity {
   })
   note: string;
 
+  @Column({
+    name: 'is_feedback',
+    type: 'boolean',
+    nullable: true,
+    default: false,
+  })
+  isFeedback: boolean;
+
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   orderItem: OrderItem[];
 
