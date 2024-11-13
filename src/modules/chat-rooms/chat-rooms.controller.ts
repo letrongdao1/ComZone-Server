@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -37,5 +38,11 @@ export class ChatRoomsController {
   @Get(':id')
   getById(@Param('id') id: string, @Req() req: any) {
     return this.chatRoomsService.getById(req.user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteChatRoom(@Param('id') id: string) {
+    return this.chatRoomsService.softDelete(id);
   }
 }
