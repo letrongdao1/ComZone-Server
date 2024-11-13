@@ -23,6 +23,10 @@ import axios from 'axios';
 import { CancelOrderDTO } from './dto/cancel-order.dto';
 import { OrderDeliveryStatusEnum } from './dto/order-delivery-status.enum';
 import { UserAddressesService } from '../user-addresses/user-addresses.service';
+import {
+  CompleteOrderFailedDTO,
+  CompleteOrderSuccessfulDTO,
+} from './dto/complete-order.dto';
 
 dotenv.config();
 
@@ -138,6 +142,9 @@ export class OrdersService extends BaseService<Order> {
       OrderDeliveryStatusEnum.RETURNING,
       OrderDeliveryStatusEnum.RETURN_FAIL,
       OrderDeliveryStatusEnum.RETURNED,
+      OrderDeliveryStatusEnum.EXCEPTION,
+      OrderDeliveryStatusEnum.DAMAGE,
+      OrderDeliveryStatusEnum.LOST,
     ];
 
     if (packagingGroup.some((status) => status === fetchedDeliveryStatus)) {
@@ -539,5 +546,38 @@ export class OrdersService extends BaseService<Order> {
         cancelReason: cancelOrderDto.cancelReason || 'Không có lí do',
       })
       .then(() => this.getOne(cancelOrderDto.orderId));
+  }
+
+  async completeOrderToBeSuccessful(
+    userId: string,
+    dto: CompleteOrderSuccessfulDTO,
+  ) {
+    const order = await this.getOne(dto.order);
+    if (!order) throw new NotFoundException('Order cannot be found!');
+
+    if (order.user.id !== userId)
+      throw new ForbiddenException('Order does not belong to this user!');
+
+    return await this.ordersRepository
+      .update(order.id, {
+        status: OrderStatusEnum.SUCCESSFUL,
+        isFeedback: dto.isFeedback,
+      })
+      .then(() => this.getOne(order.id));
+  }
+
+  async completeOrderToBeFailed(userId: string, dto: CompleteOrderFailedDTO) {
+    const order = await this.getOne(dto.order);
+    if (!order) throw new NotFoundException('Order cannot be found!');
+
+    if (order.user.id !== userId)
+      throw new ForbiddenException('Order does not belong to this user!');
+
+    return await this.ordersRepository
+      .update(order.id, {
+        status: OrderStatusEnum.FAILED,
+        note: dto.note || '',
+      })
+      .then(() => this.getOne(order.id));
   }
 }

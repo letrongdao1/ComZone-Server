@@ -18,7 +18,7 @@ export class AuctionService {
     private auctionRepository: Repository<Auction>,
     @InjectRepository(Comic)
     private comicRepository: Repository<Comic>,
-    @InjectRepository(Bid) private bidReposistory: Repository<Bid>,
+    @InjectRepository(Bid) private bidRepository: Repository<Bid>,
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
@@ -87,7 +87,7 @@ export class AuctionService {
     }
 
     // Lấy giá thầu cao nhất cho phiên đấu giá
-    const latestBid = await this.bidReposistory.findOne({
+    const latestBid = await this.bidRepository.findOne({
       where: { auction: { id: auction.id } },
       order: { createdAt: 'ASC' },
     });
@@ -130,6 +130,39 @@ export class AuctionService {
       relations: ['comics', 'comics.genres'],
     });
   }
+
+  async findAuctionBySeller(sellerId: string): Promise<Auction[]> {
+    return await this.auctionRepository.find({
+      where: {
+        comics: {
+          sellerId: { id: sellerId },
+        },
+      },
+      relations: ['comics', 'comics.genres'],
+    });
+  }
+
+  async findJoinedAuctionByUser(userId: string): Promise<Auction[]> {
+    const userBids = await this.bidRepository.find({
+      where: {
+        user: { id: userId },
+      },
+    });
+
+    const auctions = await Promise.all(
+      userBids.map(async (bid) => {
+        return await this.auctionRepository.findOne({
+          where: { id: bid.auction.id },
+        });
+      }),
+    );
+
+    return auctions.filter(
+      (value, index, array) =>
+        index === array.findIndex((auction) => auction.id === value.id),
+    );
+  }
+
   async findUpcomingAuctions(): Promise<Auction[]> {
     const now = new Date();
     return this.auctionRepository.find({
