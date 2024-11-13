@@ -1,26 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { CreateDeliveryInformationDto } from './dto/create-delivery-information.dto';
-import { UpdateDeliveryInformationDto } from './dto/update-delivery-information.dto';
+import { Inject, Injectable } from '@nestjs/common';
+import { CreateDeliveryInformationDTO } from './dto/create-delivery-information.dto';
+import { BaseService } from 'src/common/service.base';
+import { DeliveryInformation } from 'src/entities/delivery-information.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
-export class DeliveryInformationService {
-  create(createDeliveryInformationDto: CreateDeliveryInformationDto) {
-    return 'This action adds a new deliveryInformation';
+export class DeliveryInformationService extends BaseService<DeliveryInformation> {
+  constructor(
+    @InjectRepository(DeliveryInformation)
+    private readonly deliveryInfoRepository: Repository<DeliveryInformation>,
+    @Inject(UsersService) private readonly usersService: UsersService,
+  ) {
+    super(deliveryInfoRepository);
   }
 
-  findAll() {
-    return `This action returns all deliveryInformation`;
+  async createNewDeliveryInfo(
+    userId: string,
+    dto: CreateDeliveryInformationDTO,
+  ) {
+    const user = await this.usersService.getOne(userId);
+
+    const newDeliveryInfo = this.deliveryInfoRepository.create({
+      ...dto,
+      user,
+    });
+
+    return await this.deliveryInfoRepository.save(newDeliveryInfo);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} deliveryInformation`;
-  }
-
-  update(id: number, updateDeliveryInformationDto: UpdateDeliveryInformationDto) {
-    return `This action updates a #${id} deliveryInformation`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} deliveryInformation`;
+  async getByUserId(userId: string) {
+    return await this.deliveryInfoRepository.find({
+      where: { user: { id: userId } },
+      relations: ['user'],
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
   }
 }

@@ -1,34 +1,51 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { DeliveryInformationService } from './delivery-information.service';
-import { CreateDeliveryInformationDto } from './dto/create-delivery-information.dto';
-import { UpdateDeliveryInformationDto } from './dto/update-delivery-information.dto';
+import { CreateDeliveryInformationDTO } from './dto/create-delivery-information.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
+@ApiBearerAuth()
+@ApiTags('Delivery Information')
 @Controller('delivery-information')
 export class DeliveryInformationController {
-  constructor(private readonly deliveryInformationService: DeliveryInformationService) {}
+  constructor(
+    private readonly deliveryInformationService: DeliveryInformationService,
+  ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createDeliveryInformationDto: CreateDeliveryInformationDto) {
-    return this.deliveryInformationService.create(createDeliveryInformationDto);
+  createNewDeliveryInformation(
+    @Req() req: any,
+    @Body() createDeliveryInformationDto: CreateDeliveryInformationDTO,
+  ) {
+    return this.deliveryInformationService.createNewDeliveryInfo(
+      req.user.id,
+      createDeliveryInformationDto,
+    );
   }
 
-  @Get()
-  findAll() {
-    return this.deliveryInformationService.findAll();
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
+  getByUserId(@Req() req: any) {
+    return this.deliveryInformationService.getByUserId(req.user.id);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.deliveryInformationService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDeliveryInformationDto: UpdateDeliveryInformationDto) {
-    return this.deliveryInformationService.update(+id, updateDeliveryInformationDto);
+    return this.deliveryInformationService.getOne(id);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.deliveryInformationService.remove(+id);
+    return this.deliveryInformationService.softDelete(id);
   }
 }

@@ -1,48 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateDeliveryDTO {
-  @ApiProperty({ nullable: true })
-  order?: string;
-
-  @ApiProperty({ nullable: true })
-  exchangeRequest?: string;
-
-  @ApiProperty({ nullable: true })
-  exchangeOffer?: string;
-
+export class CreateExchangeRequestDeliveryDTO {
   @ApiProperty()
-  fromName: string;
+  exchangeRequest: string;
 
-  @ApiProperty()
-  fromPhone: string;
+  @ApiProperty({ example: 'ID of delivery information' })
+  addressId: string;
+}
 
+export class CreateExchangeOfferDeliveryDTO {
   @ApiProperty()
-  fromProvinceId: number;
+  exchangeOffer: string;
 
-  @ApiProperty()
-  fromDistrictId: number;
-
-  @ApiProperty()
-  fromWardId: string;
-
-  @ApiProperty()
-  fromAddress: string;
-
-  @ApiProperty()
-  toName: string;
-
-  @ApiProperty()
-  toPhone: string;
-
-  @ApiProperty()
-  toProvinceId: number;
-
-  @ApiProperty()
-  toDistrictId: number;
-  
-  @ApiProperty()
-  toWardId: string;
-
-  @ApiProperty()
-  toAddress: string;
+  @ApiProperty({ example: 'ID of delivery information' })
+  addressId: string;
 }

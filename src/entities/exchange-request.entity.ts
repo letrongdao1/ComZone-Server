@@ -71,5 +71,5 @@ export class ExchangeRequest extends BaseEntity {
   announcements: Announcement[];
 
   @OneToOne(() => Delivery, (delivery) => delivery.exchangeRequest)
-  delivery: Delivery;
+  deliveries: Delivery[];
 }

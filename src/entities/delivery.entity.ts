@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { Order } from './orders.entity';
 import { ExchangeRequest } from './exchange-request.entity';
 import { ExchangeOffer } from './exchange-offer.entity';
@@ -8,21 +15,24 @@ import { DeliveryInformation } from './delivery-information.entity';
 
 @Entity('delivery')
 export class Delivery extends BaseEntity {
-  @OneToOne(() => Order, (order) => order.delivery)
+  @OneToOne(() => Order, (order) => order.delivery, { nullable: true })
+  @JoinColumn({ name: 'order' })
   order: Order;
 
-  @OneToOne(() => ExchangeRequest, (request) => request.delivery)
+  @ManyToOne(() => ExchangeRequest, (request) => request.deliveries, {
+    nullable: true,
+  })
   exchangeRequest: ExchangeRequest;
 
-  @OneToOne(() => ExchangeOffer, (request) => request.delivery)
+  @ManyToOne(() => ExchangeOffer, (offer) => offer.deliveries, {
+    nullable: true,
+  })
   exchangeOffer: ExchangeOffer;
 
-  @OneToOne(() => DeliveryInformation, (info) => info.from)
-  @JoinColumn({ name: 'from_delivery_information' })
+  @ManyToOne(() => DeliveryInformation, (info) => info.fromDeliveries)
   from: DeliveryInformation;
 
-  @OneToOne(() => DeliveryInformation, (info) => info.to)
-  @JoinColumn({ name: 'to_delivery_information' })
+  @ManyToOne(() => DeliveryInformation, (info) => info.toDeliveries)
   to: DeliveryInformation;
 
   @Column({
@@ -38,6 +48,13 @@ export class Delivery extends BaseEntity {
     nullable: true,
   })
   deliveryFee: number;
+
+  @Column({
+    name: 'estimated_delivery_time',
+    type: 'datetime',
+    nullable: true,
+  })
+  estimatedDeliveryTime: Date;
 
   @Column({
     type: 'enum',

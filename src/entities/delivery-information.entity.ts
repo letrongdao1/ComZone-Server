@@ -1,9 +1,9 @@
-import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/common/entity.base';
 import { User } from './users.entity';
 import { Delivery } from './delivery.entity';
 
-@Entity('delivery')
+@Entity('delivery-information')
 export class DeliveryInformation extends BaseEntity {
   @ManyToOne(() => User, (user) => user.deliveryInformation)
   user: User;
@@ -41,9 +41,9 @@ export class DeliveryInformation extends BaseEntity {
   })
   address: string;
 
-  @OneToOne(() => Delivery, (delivery) => delivery.from)
-  from: Delivery;
+  @OneToMany(() => Delivery, (delivery) => delivery.from)
+  fromDeliveries: Delivery[];
 
-  @OneToOne(() => Delivery, (delivery) => delivery.to)
-  to: Delivery;
+  @OneToMany(() => Delivery, (delivery) => delivery.to)
+  toDeliveries: Delivery[];
 }
