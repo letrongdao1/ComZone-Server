@@ -214,4 +214,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       })
       .then(() => this.getOne(chatRoomId));
   }
+
+  async softDelete(id: string): Promise<any> {
+    return await this.chatRoomsRepository.softDelete(id);
+  }
 }

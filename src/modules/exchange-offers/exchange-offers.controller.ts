@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -89,5 +90,11 @@ export class ExchangeOffersController {
       id,
       ExchangeOfferStatusEnum.PENDING,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteOffer(@Param('id') id: string) {
+    return this.exchangeOffersService.softDelete(id);
   }
 }
