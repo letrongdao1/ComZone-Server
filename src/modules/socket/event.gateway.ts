@@ -101,6 +101,29 @@ export class EventsGateway implements OnModuleInit {
     }
   }
 
+  async notifyUsers(
+    userIds: string[],
+    message: string,
+    auctionId: string,
+    title: string,
+  ) {
+    const createAnnouncementDto: CreateAnnouncementDto = {
+      auctionId,
+      userId: null, // This can be set for each user in the loop below, if necessary
+      message,
+      isRead: false,
+      title,
+    };
+
+    // Emit notification to each user and create individual announcements
+    for (const userId of userIds) {
+      createAnnouncementDto.userId = userId; // Set the current user ID for the announcement
+      await this.announcementService.createAnnouncement(createAnnouncementDto); // Save to the database
+      this.server.to(userId).emit('notification', { message }); // Emit notification
+    }
+
+    console.log('Announcements saved for losing bidders:', userIds);
+  }
   // Broadcast a notification to all connected clients
   broadcastNotification(message: string) {
     this.server.emit('notification', { message });

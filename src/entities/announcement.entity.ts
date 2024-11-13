@@ -1,10 +1,11 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
 import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
 import { ExchangeRequest } from './exchange-request.entity';
 import { ExchangeOffer } from './exchange-offer.entity';
+import { AnnouncementReadStatus } from './annoucement-read-status.entity';
 
 @Entity('announcement')
 export class Announcement extends BaseEntity {
@@ -41,10 +42,9 @@ export class Announcement extends BaseEntity {
   })
   message: string;
 
-  @Column({
-    name: 'is_read',
-    type: 'boolean',
-    default: false,
-  })
-  isRead: boolean;
+  @OneToMany(
+    () => AnnouncementReadStatus,
+    (readStatus) => readStatus.announcement,
+  )
+  readStatuses: AnnouncementReadStatus[];
 }

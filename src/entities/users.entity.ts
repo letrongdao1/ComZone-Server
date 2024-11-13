@@ -18,6 +18,7 @@ import { ChatRoom } from './chat-room.entity';
 import { Announcement } from './announcement.entity';
 import { SellerFeedback } from './seller-feedback.entity';
 import { ChatMessage } from './chat-message.entity';
+import { AnnouncementReadStatus } from './annoucement-read-status.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -182,8 +183,8 @@ export class User extends BaseEntity {
   @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.secondUser)
   secondChatRooms: ChatRoom[];
 
-  @OneToMany(() => Announcement, (announcement) => announcement.user)
-  announcements: Announcement[];
+  @OneToMany(() => AnnouncementReadStatus, (readStatus) => readStatus.user)
+  announcementReadStatuses: AnnouncementReadStatus[];
 
   @OneToMany(() => SellerFeedback, (feedback) => feedback.user)
   userSellerFeedbacks: SellerFeedback[];

@@ -89,7 +89,7 @@ export class AuctionService {
     if (auction.endTime > now) {
       return;
     }
-    console.log('auction1111', auction);
+
     const latestBid = auction.bids.reduce((highest, bid) =>
       bid.price > highest.price ? bid : highest,
     );
@@ -99,36 +99,39 @@ export class AuctionService {
       auction.winner = latestBid.user;
       await this.auctionRepository.save(auction);
 
-      // Notify the winner
       // Notify the winning bidder
       this.eventsGateway.notifyUser(
-        latestBid.user.id, // Winning bidder's user ID
-        `Congratulations! You won the auction for ${auction.comics.title}.`, // Message
-        auction.id, // Auction ID
-        'Chúc mừng', // Title
+        latestBid.user.id,
+        `Congratulations! You won the auction for ${auction.comics.title}.`,
+        auction.id,
+        'Chúc mừng',
       );
 
-      // Notify the losing bidders
-      auction.bids
-        .filter((bid) => bid.user.id !== latestBid.user.id) // Filter out the winning bid
-        .forEach((bid) => {
-          this.eventsGateway.notifyUser(
-            bid.user.id, // Losing bidder's user ID
-            'Cuộc đấu giá đã kết thúc. Rất tiếc bạn đã không chiến thắng.', // Message
-            auction.id, // Auction ID
-            'Kết quả đấu giá', // Title for losing bidder (you can customize this)
-          );
-        });
+      // Collect all losing bidders' userIds
+      const losingUserIds = auction.bids
+        .filter((bid) => bid.user.id !== latestBid.user.id)
+        .map((bid) => bid.user.id);
+
+      // Notify all losing bidders at once
+      if (losingUserIds.length > 0) {
+        this.eventsGateway.notifyUsers(
+          losingUserIds,
+          'Cuộc đấu giá đã kết thúc. Rất tiếc bạn đã không chiến thắng.',
+          auction.id,
+          'Kết quả đấu giá',
+        );
+      }
     } else {
       auction.status = 'FAILED';
       await this.auctionRepository.save(auction);
 
-      // Notify all users in the auction that no bids were placed
+      // Optional: Notify users that the auction ended with no bids
       // this.eventsGateway.broadcastNotification(
-      //   `Auction for ${auction.comics.title} ended with no bids.`,
+      //   `Auction for ${auction.comics.title} ended with no bids.`
       // );
     }
   }
+
   // Get all auctions
   async findAllAuctions(): Promise<Auction[]> {
     return this.auctionRepository.find({
