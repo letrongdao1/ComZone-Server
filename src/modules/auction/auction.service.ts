@@ -13,6 +13,7 @@ import { Bid } from 'src/entities/bid.entity';
 import { Announcement } from 'src/entities/announcement.entity';
 import { AnnouncementService } from '../announcement/announcement.service';
 import { EventsGateway } from '../socket/event.gateway';
+import { User } from 'src/entities/users.entity';
 
 @Injectable()
 export class AuctionService {
@@ -23,7 +24,7 @@ export class AuctionService {
     private comicRepository: Repository<Comic>,
     @InjectRepository(Bid) private bidReposistory: Repository<Bid>,
     @InjectRepository(Announcement)
-    private annoucementRepository: Repository<Announcement>,
+    private announcementRepository: Repository<Announcement>,
     private readonly eventsGateway: EventsGateway,
   ) {}
 
@@ -99,7 +100,7 @@ export class AuctionService {
       auction.winner = latestBid.user;
       await this.auctionRepository.save(auction);
 
-      // Notify the winning bidder
+      // Notify the winning bidder in real-time
       this.eventsGateway.notifyUser(
         latestBid.user.id,
         `Congratulations! You won the auction for ${auction.comics.title}.`,
@@ -108,27 +109,30 @@ export class AuctionService {
       );
 
       // Collect all losing bidders' userIds
-      const losingUserIds = auction.bids
-        .filter((bid) => bid.user.id !== latestBid.user.id)
-        .map((bid) => bid.user.id);
+      const losingUserIds = Array.from(
+        new Set(
+          auction.bids
+            .filter((bid) => bid.user.id !== latestBid.user.id)
+            .map((bid) => bid.user.id),
+        ),
+      );
 
-      // Notify all losing bidders at once
-      if (losingUserIds.length > 0) {
-        this.eventsGateway.notifyUsers(
-          losingUserIds,
-          'Cuộc đấu giá đã kết thúc. Rất tiếc bạn đã không chiến thắng.',
-          auction.id,
-          'Kết quả đấu giá',
-        );
-      }
+      // Create Announcements for Losing Bidders and Notify Them
+      await this.eventsGateway.notifyUsers(
+        losingUserIds,
+        `The auction for ${auction.comics.title} ended. You did not win this time.`,
+        auction.id,
+        'Kết quả đấu giá',
+      );
     } else {
       auction.status = 'FAILED';
       await this.auctionRepository.save(auction);
 
-      // Optional: Notify users that the auction ended with no bids
-      // this.eventsGateway.broadcastNotification(
-      //   `Auction for ${auction.comics.title} ended with no bids.`
-      // );
+      // Optionally create an Announcement for all users if the auction failed
+      const failedAnnouncement = new Announcement();
+      failedAnnouncement.title = `Auction for ${auction.comics.title} failed.`;
+      failedAnnouncement.message = `The auction for ${auction.comics.title} ended without any bids.`;
+      await this.announcementRepository.save(failedAnnouncement);
     }
   }
 

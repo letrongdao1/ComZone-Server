@@ -8,9 +8,6 @@ export class CreateAnnouncementDto {
   @IsString()
   message?: string;
 
-  @IsBoolean()
-  isRead: boolean;
-
   @IsOptional()
   auctionId?: string;
 
@@ -36,7 +33,7 @@ export class UpdateAnnouncementDto {
   @IsString()
   message?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isRead?: boolean;
+  // @IsOptional()
+  // @IsBoolean()
+  // isRead?: boolean;
 }

@@ -1,5 +1,5 @@
 // src/announcement/announcement.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from '../../entities/announcement.entity';
@@ -31,6 +31,20 @@ export class AnnouncementService {
   ) {}
 
   // Create an announcement
+  async markAsRead(announcementId: string, userId: string): Promise<void> {
+    const announcement = await this.announcementRepository.findOne({
+      where: { id: announcementId, user: { id: userId } },
+    });
+
+    if (announcement) {
+      announcement.isRead = true; // Mark as read
+      await this.announcementRepository.save(announcement); // Save the update
+    } else {
+      throw new Error(
+        'Announcement not found or user not authorized to read it',
+      );
+    }
+  }
   async createAnnouncement(
     createAnnouncementDto: CreateAnnouncementDto,
   ): Promise<Announcement> {

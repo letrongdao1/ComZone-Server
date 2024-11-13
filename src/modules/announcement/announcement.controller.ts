@@ -46,6 +46,13 @@ export class AnnouncementController {
     return this.announcementService.update(id, updateAnnouncementDto);
   }
 
+  @Post(':announcementId/read/:userId')
+  async markAnnouncementAsRead(
+    @Param('userId') userId: string,
+    @Param('announcementId') announcementId: string,
+  ): Promise<void> {
+    return this.announcementService.markAsRead(userId, announcementId);
+  }
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<void> {
     return this.announcementService.remove(id);

@@ -71,8 +71,8 @@ export class EventsGateway implements OnModuleInit {
   async notifyUser(
     userId: string,
     message: string,
-    auctionId: string, // Add auctionId to the method parameters
-    title: string, // Add title to the method parameters
+    auctionId: string,
+    title: string,
   ) {
     try {
       // 1. Save the announcement to the database
@@ -80,7 +80,6 @@ export class EventsGateway implements OnModuleInit {
         auctionId,
         userId, // Assuming the user ID is part of the DTO
         message, // The message you want to store
-        isRead: false, // Default to unread when created
         title, // The title of the announcement (could be dynamic)
       };
 
@@ -90,8 +89,12 @@ export class EventsGateway implements OnModuleInit {
           createAnnouncementDto,
         );
 
-      // 2. Emit the notification to the user
-      this.server.to(userId).emit('notification', { message });
+      // 2. Emit the notification to the specific user
+      this.server.to(userId).emit('notification', {
+        message: message,
+        auctionId,
+        title,
+      });
 
       // Optionally, log the saved announcement
       console.log('Announcement saved:', savedAnnouncement);
@@ -107,23 +110,40 @@ export class EventsGateway implements OnModuleInit {
     auctionId: string,
     title: string,
   ) {
-    const createAnnouncementDto: CreateAnnouncementDto = {
-      auctionId,
-      userId: null, // This can be set for each user in the loop below, if necessary
-      message,
-      isRead: false,
-      title,
-    };
+    console.log(':::::::::::::::::', userIds);
 
-    // Emit notification to each user and create individual announcements
+    // Iterate through all userIds
     for (const userId of userIds) {
-      createAnnouncementDto.userId = userId; // Set the current user ID for the announcement
-      await this.announcementService.createAnnouncement(createAnnouncementDto); // Save to the database
-      this.server.to(userId).emit('notification', { message }); // Emit notification
-    }
+      try {
+        // Save the announcement to the database for each user
+        const createAnnouncementDto: CreateAnnouncementDto = {
+          auctionId,
+          userId,
+          message,
+          title,
+        };
 
-    console.log('Announcements saved for losing bidders:', userIds);
+        // Save the announcement
+        const savedAnnouncement =
+          await this.announcementService.createAnnouncement(
+            createAnnouncementDto,
+          );
+
+        // Emit the notification to the specific user
+        this.server.to(userId).emit('notification', {
+          message: message,
+          auctionId,
+          title,
+        });
+
+        // Optionally log the saved announcement
+        console.log('Announcement saved:', savedAnnouncement);
+      } catch (error) {
+        console.error(`Error notifying user ${userId}:`, error);
+      }
+    }
   }
+
   // Broadcast a notification to all connected clients
   broadcastNotification(message: string) {
     this.server.emit('notification', { message });
