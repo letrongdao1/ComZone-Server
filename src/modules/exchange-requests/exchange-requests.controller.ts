@@ -4,13 +4,17 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { ExchangeRequestsService } from './exchange-requests.service';
-import { CreateExchangePostDTO } from './dto/exchange-request.dto';
+import {
+  CreateExchangePostDTO,
+  UpdateDepositAmountDTO,
+} from './dto/exchange-request.dto';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../authorization/roles.decorator';
@@ -51,6 +55,15 @@ export class ExchangeRequestsController {
   @Get('user')
   getAllExchangePostsOfUser(@Req() req: any) {
     return this.exchangeRequestsService.getAllExchangePostsOfUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('deposit-amount/:id')
+  updateDepositAmount(
+    @Param('id') id: string,
+    @Body() dto: UpdateDepositAmountDTO,
+  ) {
+    return this.exchangeRequestsService.updateDepositAmount(id, dto);
   }
 
   @UseGuards(JwtAuthGuard)

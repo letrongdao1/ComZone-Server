@@ -15,7 +15,7 @@ import { Deposit } from './deposit.entity';
 import { ChatRoom } from './chat-room.entity';
 import { Announcement } from './announcement.entity';
 import { BaseEntity } from 'src/common/entity.base';
-import { ExchangeRequestStatusEnum } from 'src/modules/exchange-requests/dto/exchange-request-status.enum';
+import { ExchangeRequestStatusEnum } from '../modules/exchange-requests/dto/exchange-request-status.enum';
 
 @Entity('exchange-request')
 export class ExchangeRequest extends BaseEntity {
@@ -42,6 +42,13 @@ export class ExchangeRequest extends BaseEntity {
     type: 'text',
   })
   postContent: string;
+
+  @Column({
+    name: 'deposit_amount',
+    type: 'float',
+    nullable: true,
+  })
+  depositAmount: number;
 
   @Column({
     type: 'enum',

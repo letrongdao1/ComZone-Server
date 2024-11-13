@@ -7,10 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ExchangeRequest } from 'src/entities/exchange-request.entity';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { ComicService } from '../comics/comics.service';
-import { CreateExchangePostDTO } from './dto/exchange-request.dto';
+import {
+  CreateExchangePostDTO,
+  UpdateDepositAmountDTO,
+} from './dto/exchange-request.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 import { ExchangeRequestStatusEnum } from './dto/exchange-request-status.enum';
@@ -120,6 +123,18 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
         updatedAt: 'DESC',
       },
     });
+  }
+
+  async updateDepositAmount(requestId: string, dto: UpdateDepositAmountDTO) {
+    const exchangeRequest = await this.getOne(requestId);
+    if (!exchangeRequest)
+      throw new NotFoundException('Exchange request cannot be found!');
+
+    return await this.exchangeRequestsRepository
+      .update(requestId, {
+        depositAmount: dto.amount,
+      })
+      .then(() => this.getOne(requestId));
   }
 
   async updateStatus(requestId: string, status: ExchangeRequestStatusEnum) {

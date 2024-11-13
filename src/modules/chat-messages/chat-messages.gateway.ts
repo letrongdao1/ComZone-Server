@@ -9,7 +9,7 @@ import { ChatMessagesService } from './chat-messages.service';
 import { Server, Socket } from 'socket.io';
 import { CreateMessageDTO } from './dto/create-message.dto';
 
-@WebSocketGateway(3001, { cors: { origin: '*' } })
+@WebSocketGateway({ namespace: 'chat', cors: { origin: '*' } })
 export class ChatMessagesGateway {
   constructor(private readonly chatMessagesService: ChatMessagesService) {}
 

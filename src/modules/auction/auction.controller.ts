@@ -12,9 +12,13 @@ import {
 import { AuctionService } from './auction.service';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
+import { Roles } from '../authorization/roles.decorator';
+import { Role } from '../authorization/role.enum';
+import { PermissionsGuard } from '../authorization/permission.guard';
 
+@ApiBearerAuth()
 @ApiTags('Auction')
 @Controller('auction')
 export class AuctionController {
@@ -42,6 +46,21 @@ export class AuctionController {
   async getUpcomingAuctions(): Promise<Auction[]> {
     return this.auctionService.findUpcomingAuctions();
   }
+
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('seller')
+  findAuctionBySeller(@Req() req: any): Promise<Auction[]> {
+    return this.auctionService.findAuctionBySeller(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user/joined')
+  findJoinedAuctionByUser(@Req() req: any): Promise<Auction[]> {
+    return this.auctionService.findJoinedAuctionByUser(req.user.id);
+  }
+
   // Get a single auction by ID
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Auction> {

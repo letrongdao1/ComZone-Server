@@ -149,6 +149,14 @@ export class ExchangeOffersService extends BaseService<ExchangeOffer> {
     );
   }
 
+  async updateSeenStatus(offerId: string) {
+    return await this.exchangeOffersRepository
+      .update(offerId, {
+        status: ExchangeOfferStatusEnum.SEEN,
+      })
+      .then(() => this.getOne(offerId));
+  }
+
   async updateStatus(
     userId: string,
     offerId: string,

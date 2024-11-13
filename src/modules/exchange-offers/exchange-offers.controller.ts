@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -56,6 +57,12 @@ export class ExchangeOffersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch('status/seen/:id')
+  updateSeenStatus(@Param('id') id: string) {
+    return this.exchangeOffersService.updateSeenStatus(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('status/accepted/:id')
   acceptExchangeOffer(@Req() req: any, @Param('id') id: string) {
     return this.exchangeOffersService.updateStatus(
@@ -83,5 +90,11 @@ export class ExchangeOffersController {
       id,
       ExchangeOfferStatusEnum.PENDING,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteOffer(@Param('id') id: string) {
+    return this.exchangeOffersService.softDelete(id);
   }
 }

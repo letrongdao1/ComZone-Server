@@ -18,4 +18,7 @@ export enum OrderDeliveryStatusEnum {
   RETURNING = 'returning',
   RETURN_FAIL = 'return_fail',
   RETURNED = 'returned',
+  EXCEPTION = 'exception',
+  DAMAGE = 'damage',
+  LOST = 'lost',
 }
