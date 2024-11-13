@@ -17,6 +17,7 @@ import { WithdrawalService } from '../withdrawal/withdrawal.service';
 import { PaymentGatewayEnum } from './dto/provider.enum';
 import { DepositsService } from '../deposits/deposits.service';
 import { SellerSubscriptionsService } from '../seller-subscriptions/seller-subscriptions.service';
+import { TransactionStatusEnum } from './dto/transaction-status.enum';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -73,6 +74,8 @@ export class TransactionsService extends BaseService<Transaction> {
       if (!deposit) throw new NotFoundException('Deposit cannot be found!');
       newTransaction.deposit = deposit;
       newTransaction.amount = deposit.amount;
+      newTransaction.status = TransactionStatusEnum.SUCCESSFUL;
+      newTransaction.isUsed = true;
     }
 
     return await this.transactionsRepository.save(newTransaction);

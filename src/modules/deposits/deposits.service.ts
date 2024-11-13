@@ -13,6 +13,7 @@ import { CreateDepositDTO } from './dto/create-deposit.dto';
 import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
 import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
+import { DepositStatusEnum } from './dto/deposit-status.enum';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {
@@ -85,21 +86,35 @@ export class DepositsService extends BaseService<Deposit> {
     });
   }
 
-  async getAllDepositOfAnExchange(exchangeId: string) {
-    return await this.depositsRepository.find({
+  async getDepositsByExchangeRequest(userId: string, exchangeId: string) {
+    const deposits = await this.depositsRepository.find({
       where: { exchangeRequest: { id: exchangeId } },
     });
+
+    return await Promise.all(
+      deposits.map((deposit) => {
+        return {
+          ...deposit,
+          mine: deposit.user.id === userId,
+        };
+      }),
+    );
   }
 
   async refundDepositToAUser(depositId: string) {
     const deposit = await this.getOne(depositId);
     if (!deposit) throw new NotFoundException('Deposit cannot be found!');
 
+    if (deposit.status !== DepositStatusEnum.HOLDING)
+      throw new BadRequestException(
+        'This deposit is not being held by the system!',
+      );
+
     await this.usersService.updateBalance(deposit.user.id, deposit.amount);
 
     return await this.depositsRepository
       .update(depositId, {
-        status: 'REFUNDED',
+        status: DepositStatusEnum.REFUNDED,
       })
       .then(() => this.getOne(depositId));
   }
