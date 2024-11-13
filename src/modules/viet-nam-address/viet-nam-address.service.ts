@@ -95,4 +95,24 @@ export class VietNamAddressService {
       })
       .catch((err) => console.log(err));
   }
+
+  async getProvinceById(id: number) {
+    const provinces = await this.getProvinces();
+    if (!provinces) throw new NotFoundException();
+    return provinces.find((province) => province.id === id);
+  }
+
+  async getDistrictById(provinceId: number, districtId: number) {
+    const districts = await this.getDistrictsByProvinceCode(
+      provinceId.toString(),
+    );
+    if (!districts) throw new NotFoundException();
+    return districts.find((district) => district.id === districtId);
+  }
+
+  async getWardById(districtId: number, wardId: string) {
+    const wards = await this.getWardsByCodes(districtId.toString());
+    if (!wards) throw new NotFoundException();
+    return wards.find((ward) => ward.id === wardId);
+  }
 }

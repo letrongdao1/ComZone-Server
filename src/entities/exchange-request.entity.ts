@@ -16,6 +16,7 @@ import { ChatRoom } from './chat-room.entity';
 import { Announcement } from './announcement.entity';
 import { BaseEntity } from 'src/common/entity.base';
 import { ExchangeRequestStatusEnum } from '../modules/exchange-requests/dto/exchange-request-status.enum';
+import { Delivery } from './delivery.entity';
 
 @Entity('exchange-request')
 export class ExchangeRequest extends BaseEntity {
@@ -68,4 +69,7 @@ export class ExchangeRequest extends BaseEntity {
 
   @OneToMany(() => Announcement, (announcement) => announcement.exchangeRequest)
   announcements: Announcement[];
+
+  @OneToOne(() => Delivery, (delivery) => delivery.exchangeRequest)
+  deliveries: Delivery[];
 }
