@@ -153,6 +153,7 @@ export class AuctionService {
       userBids.map(async (bid) => {
         return await this.auctionRepository.findOne({
           where: { id: bid.auction.id },
+          relations: ['comics', 'comics.genres'],
         });
       }),
     );

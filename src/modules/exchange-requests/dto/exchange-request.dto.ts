@@ -25,3 +25,8 @@ export class AcceptDealingExchangeDTO {
   })
   offerUser: string;
 }
+
+export class UpdateDepositAmountDTO {
+  @ApiProperty()
+  amount: number;
+}

@@ -12,12 +12,13 @@ import {
 import { AuctionService } from './auction.service';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 
+@ApiBearerAuth()
 @ApiTags('Auction')
 @Controller('auction')
 export class AuctionController {

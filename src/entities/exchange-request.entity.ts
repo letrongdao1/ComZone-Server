@@ -44,6 +44,13 @@ export class ExchangeRequest extends BaseEntity {
   postContent: string;
 
   @Column({
+    name: 'deposit_amount',
+    type: 'float',
+    nullable: true,
+  })
+  depositAmount: number;
+
+  @Column({
     type: 'enum',
     enum: ExchangeRequestStatusEnum,
     default: ExchangeRequestStatusEnum.AVAILABLE,

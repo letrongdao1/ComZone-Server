@@ -51,6 +51,19 @@ export class DepositsService extends BaseService<Deposit> {
         status: 'HOLDING',
       });
     } else if (createDepositDto.exchange) {
+      const exchangeRequest = await this.exchangeRequestsService.getOne(
+        createDepositDto.exchange,
+      );
+
+      if (!exchangeRequest)
+        throw new NotFoundException('Exchange request cannot be found!');
+
+      deposit = this.depositsRepository.create({
+        user,
+        exchangeRequest,
+        amount: createDepositDto.amount,
+        status: 'HOLDING',
+      });
     }
 
     await this.usersService.updateBalance(userId, -createDepositDto.amount);
