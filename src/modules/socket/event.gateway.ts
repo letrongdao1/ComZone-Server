@@ -9,11 +9,12 @@ import {
 import { Server, Socket } from 'socket.io';
 import { BidService } from '../bid/bid.service';
 import { CreateBidDto } from '../bid/dto/bid.dto';
+import { CreateAnnouncementDto } from '../announcement/dto/announcement.dto';
+import { AnnouncementService } from '../announcement/announcement.service';
 
 @WebSocketGateway({
   cors: {
-    origin: 'http://localhost:5173', // The frontend origin
-    methods: ['GET', 'POST'],
+    origin: '*', // The frontend origin
     allowedHeaders: ['Content-Type'],
     credentials: true, // Enable credentials (if needed)
   },
@@ -22,7 +23,10 @@ import { CreateBidDto } from '../bid/dto/bid.dto';
 export class EventsGateway implements OnModuleInit {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly bidService: BidService) {}
+  constructor(
+    private readonly bidService: BidService,
+    private readonly announcementService: AnnouncementService,
+  ) {}
 
   onModuleInit() {
     this.server.on('connection', (socket) => {
@@ -61,5 +65,44 @@ export class EventsGateway implements OnModuleInit {
       console.error('Error handling bid:', error);
       return { success: false, message: 'Internal server error' };
     }
+  }
+  // Emit a notification to a specific user by userId
+  // Emit a notification to a specific user by userId
+  async notifyUser(
+    userId: string,
+    message: string,
+    auctionId: string, // Add auctionId to the method parameters
+    title: string, // Add title to the method parameters
+  ) {
+    try {
+      // 1. Save the announcement to the database
+      const createAnnouncementDto: CreateAnnouncementDto = {
+        auctionId,
+        userId, // Assuming the user ID is part of the DTO
+        message, // The message you want to store
+        isRead: false, // Default to unread when created
+        title, // The title of the announcement (could be dynamic)
+      };
+
+      // Save the announcement
+      const savedAnnouncement =
+        await this.announcementService.createAnnouncement(
+          createAnnouncementDto,
+        );
+
+      // 2. Emit the notification to the user
+      this.server.to(userId).emit('notification', { message });
+
+      // Optionally, log the saved announcement
+      console.log('Announcement saved:', savedAnnouncement);
+    } catch (error) {
+      console.error('Error in notifyUser:', error);
+      throw new Error('Failed to notify the user');
+    }
+  }
+
+  // Broadcast a notification to all connected clients
+  broadcastNotification(message: string) {
+    this.server.emit('notification', { message });
   }
 }

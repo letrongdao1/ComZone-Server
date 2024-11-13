@@ -10,6 +10,9 @@ import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 import { Bid } from 'src/entities/bid.entity';
+import { Announcement } from 'src/entities/announcement.entity';
+import { AnnouncementService } from '../announcement/announcement.service';
+import { EventsGateway } from '../socket/event.gateway';
 
 @Injectable()
 export class AuctionService {
@@ -19,6 +22,10 @@ export class AuctionService {
     @InjectRepository(Comic)
     private comicRepository: Repository<Comic>,
     @InjectRepository(Bid) private bidReposistory: Repository<Bid>,
+    @InjectRepository(Announcement)
+    private annoucementRepository: Repository<Announcement>,
+    // private announcementService: AnnouncementService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
@@ -60,7 +67,7 @@ export class AuctionService {
     // Find auctions that have ended and are still marked as "ONGOING"
     const endedAuctions = await this.auctionRepository.find({
       where: { endTime: LessThanOrEqual(now), status: 'ONGOING' },
-      relations: ['bids'],
+      relations: ['bids', 'bids.user'], // Include bids with users
     });
 
     // Use Promise.all to handle each ended auction concurrently
@@ -71,36 +78,56 @@ export class AuctionService {
     );
   }
 
-  // Hàm xác định người chiến thắng cho một phiên đấu giá
-  async declareWinner(
-    auctionId: string,
-  ): Promise<{ winner: string; bid: number } | string> {
+  // Declare winner for a single auction
+  async declareWinner(auctionId: string): Promise<void> {
     const auction = await this.auctionRepository.findOne({
       where: { id: auctionId },
-      relations: ['bids'],
+      relations: ['bids', 'bids.user', 'comics'],
     });
     if (!auction) throw new NotFoundException('Auction not found');
-    // Kiểm tra nếu phiên đấu giá đã kết thúc
+
     const now = new Date();
     if (auction.endTime > now) {
-      return 'Auction is still ongoing';
+      return;
     }
+    console.log('auction1111', auction);
+    const latestBid = auction.bids.reduce((highest, bid) =>
+      bid.price > highest.price ? bid : highest,
+    );
 
-    // Lấy giá thầu cao nhất cho phiên đấu giá
-    const latestBid = await this.bidReposistory.findOne({
-      where: { auction: { id: auction.id } },
-      order: { createdAt: 'ASC' },
-    });
-    console.log('11', latestBid);
     if (latestBid) {
       auction.status = 'PROCESSING';
       auction.winner = latestBid.user;
       await this.auctionRepository.save(auction);
-      return { winner: latestBid.user.id, bid: latestBid.price };
+
+      // Notify the winner
+      // Notify the winning bidder
+      this.eventsGateway.notifyUser(
+        latestBid.user.id, // Winning bidder's user ID
+        `Congratulations! You won the auction for ${auction.comics.title}.`, // Message
+        auction.id, // Auction ID
+        'Chúc mừng', // Title
+      );
+
+      // Notify the losing bidders
+      auction.bids
+        .filter((bid) => bid.user.id !== latestBid.user.id) // Filter out the winning bid
+        .forEach((bid) => {
+          this.eventsGateway.notifyUser(
+            bid.user.id, // Losing bidder's user ID
+            'Cuộc đấu giá đã kết thúc. Rất tiếc bạn đã không chiến thắng.', // Message
+            auction.id, // Auction ID
+            'Kết quả đấu giá', // Title for losing bidder (you can customize this)
+          );
+        });
     } else {
       auction.status = 'FAILED';
       await this.auctionRepository.save(auction);
-      return 'No bids were placed; auction failed';
+
+      // Notify all users in the auction that no bids were placed
+      // this.eventsGateway.broadcastNotification(
+      //   `Auction for ${auction.comics.title} ended with no bids.`,
+      // );
     }
   }
   // Get all auctions

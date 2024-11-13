@@ -23,6 +23,7 @@ import { UsersModule } from '../users/users.module';
     ]),
     // UsersModule,
   ],
+  exports: [AnnouncementService],
   controllers: [AnnouncementController],
   providers: [AnnouncementService],
 })

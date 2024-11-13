@@ -1,3 +1,4 @@
+// auction.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Auction } from 'src/entities/auction.entity';
@@ -7,10 +8,16 @@ import { AuctionService } from './auction.service';
 import { Bid } from 'src/entities/bid.entity';
 import { AuctionSchedulerService } from './auctionSchedule.service';
 
+import { Announcement } from 'src/entities/announcement.entity';
+import { EventsModule } from '../socket/event.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Comic, Auction, Bid])],
+  imports: [
+    TypeOrmModule.forFeature([Auction, Comic, Bid, Announcement]),
+    EventsModule, // Import EventsModule to access EventsGateway
+  ],
   controllers: [AuctionController],
-  providers: [AuctionService, AuctionSchedulerService], // Add AuctionSchedulerService to providers
-  exports: [AuctionService],
+  providers: [AuctionService, AuctionSchedulerService],
+  exports: [AuctionService], // Export AuctionService if you need to use it in other modules
 })
 export class AuctionModule {}

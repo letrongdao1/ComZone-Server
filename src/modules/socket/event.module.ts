@@ -1,11 +1,12 @@
+// events.module.ts
 import { Module } from '@nestjs/common';
 import { EventsGateway } from './event.gateway';
 import { BidModule } from '../bid/bid.module';
-// import { Controller } from "./.controller";
+import { AnnouncementModule } from '../announcement/announcement.module';
 
 @Module({
-  //   controllers: [Controller],
-  imports: [BidModule],
+  exports: [EventsGateway], // Export EventsGateway here
+  imports: [BidModule, AnnouncementModule],
   providers: [EventsGateway],
 })
 export class EventsModule {}
