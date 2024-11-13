@@ -5,6 +5,7 @@ import { OrderItem } from './order-item.entity';
 import { Transaction } from './transactions.entity';
 import { Announcement } from './announcement.entity';
 import { OrderDeliveryStatusEnum } from 'src/modules/orders/dto/order-delivery-status.enum';
+import { Delivery } from './delivery.entity';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -178,4 +179,7 @@ export class Order extends BaseEntity {
 
   @OneToMany(() => Announcement, (announcement) => announcement.order)
   announcements: Announcement[];
+
+  @OneToOne(() => Delivery, (delivery) => delivery.order)
+  delivery: Delivery;
 }

@@ -18,6 +18,8 @@ import { ChatRoom } from './chat-room.entity';
 import { Announcement } from './announcement.entity';
 import { SellerFeedback } from './seller-feedback.entity';
 import { ChatMessage } from './chat-message.entity';
+import { AnnouncementReadStatus } from './annoucement-read-status.entity';
+import { DeliveryInformation } from './delivery-information.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -193,4 +195,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => ChatMessage, (message) => message.user)
   chatMessages: ChatMessage[];
+
+  @OneToMany(() => DeliveryInformation, (info) => info.user)
+  deliveryInformation: DeliveryInformation[];
 }

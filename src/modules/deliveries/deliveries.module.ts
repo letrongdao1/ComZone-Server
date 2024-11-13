@@ -1,0 +1,21 @@
+import { Module } from '@nestjs/common';
+import { DeliveriesService } from './deliveries.service';
+import { DeliveriesController } from './deliveries.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Delivery } from 'src/entities/delivery.entity';
+import { OrdersModule } from '../orders/orders.module';
+import { ExchangeRequestsModule } from '../exchange-requests/exchange-requests.module';
+import { ExchangeOffersModule } from '../exchange-offers/exchange-offers.module';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([Delivery]),
+    OrdersModule,
+    ExchangeRequestsModule,
+    ExchangeOffersModule,
+  ],
+  controllers: [DeliveriesController],
+  providers: [DeliveriesService],
+  exports: [DeliveriesService],
+})
+export class DeliveriesModule {}
