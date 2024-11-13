@@ -9,7 +9,9 @@ import { AnnouncementReadStatus } from './annoucement-read-status.entity';
 
 @Entity('announcement')
 export class Announcement extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.announcements, { eager: true })
+  @ManyToOne(() => User, (user) => user.announcementReadStatuses, {
+    eager: true,
+  })
   user: User;
 
   @ManyToOne(() => Order, (order) => order.announcements, { nullable: true })
