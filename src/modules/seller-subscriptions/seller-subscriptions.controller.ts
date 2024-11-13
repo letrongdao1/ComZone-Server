@@ -5,7 +5,10 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { SellerSubscriptionDTO } from './dto/seller-subscription.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Seller subscription')
 @Controller('seller-subscriptions')
 export class SellerSubscriptionsController {
   constructor(

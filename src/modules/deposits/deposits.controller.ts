@@ -4,7 +4,7 @@ import {
   Get,
   Param,
   Post,
-  Res,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { DepositsService } from './deposits.service';
@@ -20,14 +20,20 @@ export class DepositsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  placeDeposit(@Res() res: any, @Body() createDepositDto: CreateDepositDTO) {
-    return this.depositsService.placeDeposit(res.user.id, createDepositDto);
+  placeDeposit(@Req() req: any, @Body() createDepositDto: CreateDepositDTO) {
+    return this.depositsService.placeDeposit(req.user.id, createDepositDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('user')
-  getDepositsOfUser(@Res() res: any) {
-    return this.depositsService.getAllDepositOfUser(res.user.id);
+  getDepositsOfUser(@Req() req: any) {
+    return this.depositsService.getAllDepositOfUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user/:id')
+  getDepositsByUserId(@Param('id') id: string) {
+    return this.depositsService.getAllDepositOfUser(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -37,8 +43,14 @@ export class DepositsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('exchange/:exchange_id')
-  getDepositsOfAnExchange(@Param('exchange_id') exchangeId: string) {
-    return this.depositsService.getAllDepositOfAnExchange(exchangeId);
+  @Get('exchange-request/:exchange_id')
+  getDepositsOfAnExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.depositsService.getDepositsByExchangeRequest(
+      req.user.id,
+      exchangeId,
+    );
   }
 }

@@ -4,6 +4,7 @@ import { User } from './users.entity';
 import { Auction } from './auction.entity';
 import { ExchangeRequest } from './exchange-request.entity';
 import { Transaction } from './transactions.entity';
+import { DepositStatusEnum } from 'src/modules/deposits/dto/deposit-status.enum';
 
 @Entity('deposit')
 export class Deposit extends BaseEntity {
@@ -30,8 +31,8 @@ export class Deposit extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: ['HOLDING', 'REFUNDED', 'SEIZED'],
-    default: 'HOLDING',
+    enum: DepositStatusEnum,
+    default: DepositStatusEnum.HOLDING,
   })
   status: string;
 
