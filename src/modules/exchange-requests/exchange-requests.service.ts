@@ -12,7 +12,7 @@ import { UsersService } from '../users/users.service';
 import { ComicService } from '../comics/comics.service';
 import {
   CreateExchangePostDTO,
-  UpdateDepositAmountDTO,
+  UpdateExchangeSettingsDTO,
 } from './dto/exchange-request.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
@@ -125,14 +125,18 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
     });
   }
 
-  async updateDepositAmount(requestId: string, dto: UpdateDepositAmountDTO) {
+  async updateExchangeSettings(
+    requestId: string,
+    dto: UpdateExchangeSettingsDTO,
+  ) {
     const exchangeRequest = await this.getOne(requestId);
     if (!exchangeRequest)
       throw new NotFoundException('Exchange request cannot be found!');
 
     return await this.exchangeRequestsRepository
       .update(requestId, {
-        depositAmount: dto.amount,
+        depositAmount: dto.depositAmount,
+        isDeliverRequired: dto.isDeliveryRequired,
       })
       .then(() => this.getOne(requestId));
   }

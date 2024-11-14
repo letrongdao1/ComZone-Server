@@ -13,7 +13,7 @@ import {
 import { ExchangeRequestsService } from './exchange-requests.service';
 import {
   CreateExchangePostDTO,
-  UpdateDepositAmountDTO,
+  UpdateExchangeSettingsDTO,
 } from './dto/exchange-request.dto';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -58,12 +58,12 @@ export class ExchangeRequestsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('deposit-amount/:id')
-  updateDepositAmount(
+  @Patch('exchange-settings/:id')
+  updateExchangeSettings(
     @Param('id') id: string,
-    @Body() dto: UpdateDepositAmountDTO,
+    @Body() dto: UpdateExchangeSettingsDTO,
   ) {
-    return this.exchangeRequestsService.updateDepositAmount(id, dto);
+    return this.exchangeRequestsService.updateExchangeSettings(id, dto);
   }
 
   @UseGuards(JwtAuthGuard)

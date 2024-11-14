@@ -52,6 +52,14 @@ export class ExchangeRequest extends BaseEntity {
   depositAmount: number;
 
   @Column({
+    name: 'is_delivery_required',
+    type: 'boolean',
+    nullable: true,
+    default: false,
+  })
+  isDeliverRequired: boolean;
+
+  @Column({
     type: 'enum',
     enum: ExchangeRequestStatusEnum,
     default: ExchangeRequestStatusEnum.AVAILABLE,

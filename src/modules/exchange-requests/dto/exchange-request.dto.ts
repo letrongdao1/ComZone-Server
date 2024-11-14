@@ -26,7 +26,10 @@ export class AcceptDealingExchangeDTO {
   offerUser: string;
 }
 
-export class UpdateDepositAmountDTO {
+export class UpdateExchangeSettingsDTO {
   @ApiProperty()
-  amount: number;
+  depositAmount: number;
+
+  @ApiProperty({ default: false })
+  isDeliveryRequired: boolean;
 }
