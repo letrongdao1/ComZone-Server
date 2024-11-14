@@ -23,6 +23,7 @@ import { VietNamAddressService } from '../viet-nam-address/viet-nam-address.serv
 import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enum';
 import { Comic } from 'src/entities/comics.entity';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
+import { Order } from 'src/entities/orders.entity';
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ export class DeliveriesService extends BaseService<Delivery> {
   constructor(
     @InjectRepository(Delivery)
     private readonly deliveriesRepository: Repository<Delivery>,
+    @InjectRepository(Order)
+    private readonly ordersRepository: Repository<Order>,
     @Inject(ExchangeRequestsService)
     private readonly exchangeRequestsService: ExchangeRequestsService,
     @Inject(ExchangeOffersService)
@@ -224,12 +227,13 @@ export class DeliveriesService extends BaseService<Delivery> {
     }
   }
 
-  async registerNewGHNDelivery(deliveryId: string) {
+  async registerNewGHNDelivery(deliveryId: string, orderComicsList?: Comic[]) {
     const delivery = await this.deliveriesRepository.findOne({
       where: { id: deliveryId },
       relations: [
         'from',
         'to',
+        'order',
         'exchangeRequest',
         'exchangeRequest.requestComics',
         'exchangeOffer',
@@ -237,6 +241,11 @@ export class DeliveriesService extends BaseService<Delivery> {
       ],
     });
     if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    if (delivery.deliveryTrackingCode)
+      throw new ConflictException(
+        'GHN service has already been registered for this delivery!',
+      );
 
     if (delivery.from.phone.length !== 10 || delivery.to.phone.length !== 10)
       throw new BadRequestException('Only 10-digit phone numbers are valid!');
@@ -261,15 +270,14 @@ export class DeliveriesService extends BaseService<Delivery> {
     };
 
     let comicsList: Comic[];
-    if (delivery.order)
-      comicsList = delivery.order.orderItem.map((item) => {
-        return item.comics;
-      });
-
-    if (delivery.exchangeRequest)
+    if (delivery.order) {
+      if (!orderComicsList)
+        throw new BadRequestException('Ordered comics list is required!');
+      comicsList = orderComicsList;
+    } else if (delivery.exchangeRequest)
       comicsList = delivery.exchangeRequest.requestComics;
-
-    if (delivery.exchangeOffer) comicsList = delivery.exchangeOffer.offerComics;
+    else if (delivery.exchangeOffer)
+      comicsList = delivery.exchangeOffer.offerComics;
 
     const services = await axios
       .post(
@@ -293,7 +301,8 @@ export class DeliveriesService extends BaseService<Delivery> {
       .post(
         'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create',
         {
-          payment_type_id: 1,
+          payment_type_id:
+            delivery.order && delivery.order.paymentMethod === 'COD' ? 2 : 1,
           required_note: 'CHOXEMHANGKHONGTHU',
           from_name: delivery.from.name,
           from_phone: delivery.from.phone,

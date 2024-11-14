@@ -21,7 +21,7 @@ export class Order extends BaseEntity {
   })
   user: User;
 
-  @OneToOne(() => Delivery, (delivery) => delivery.order)
+  @OneToOne(() => Delivery, (delivery) => delivery.order, { eager: true })
   @JoinColumn({ name: 'delivery' })
   delivery: Delivery;
 
@@ -76,7 +76,7 @@ export class Order extends BaseEntity {
   isFeedback: boolean;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
-  orderItem: OrderItem[];
+  orderItems: OrderItem[];
 
   @OneToOne(() => Transaction, (transaction) => transaction.order)
   transaction: Transaction;

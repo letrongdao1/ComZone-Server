@@ -24,10 +24,14 @@ export class Delivery extends BaseEntity {
   })
   exchangeOffer: ExchangeOffer;
 
-  @ManyToOne(() => DeliveryInformation, (info) => info.fromDeliveries)
+  @ManyToOne(() => DeliveryInformation, (info) => info.fromDeliveries, {
+    eager: true,
+  })
   from: DeliveryInformation;
 
-  @ManyToOne(() => DeliveryInformation, (info) => info.toDeliveries)
+  @ManyToOne(() => DeliveryInformation, (info) => info.toDeliveries, {
+    eager: true,
+  })
   to: DeliveryInformation;
 
   @Column({

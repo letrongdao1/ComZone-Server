@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -71,6 +72,12 @@ export class OrdersService extends BaseService<Order> {
       createOrderDto.deliveryId,
     );
     if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    const checkDuplicatedDelivery = await this.ordersRepository.findOne({
+      where: { delivery: { id: createOrderDto.deliveryId } },
+    });
+    if (checkDuplicatedDelivery)
+      throw new ConflictException('Duplicated delivery!');
 
     const newOrder = this.ordersRepository.create({
       user,
@@ -161,6 +168,10 @@ export class OrdersService extends BaseService<Order> {
   async getSellerIdOfAnOrder(orderId: string): Promise<User> {
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: orderId } },
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+      },
     });
 
     if (!orderItemList || orderItemList.length === 0)
@@ -178,6 +189,10 @@ export class OrdersService extends BaseService<Order> {
         user: {
           id: userId,
         },
+      },
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
       },
     });
 
@@ -217,6 +232,9 @@ export class OrdersService extends BaseService<Order> {
       .leftJoinAndSelect('order_item.comics', 'comics')
       .leftJoinAndSelect('order_item.order', 'order')
       .leftJoinAndSelect('comics.sellerId', 'seller')
+      .leftJoinAndSelect('order.delivery', 'delivery')
+      .leftJoinAndSelect('delivery.from', 'from')
+      .leftJoinAndSelect('delivery.to', 'to')
       .where('seller.id = :sellerId', { sellerId })
       .select('order.id')
       .distinct(true)
@@ -322,7 +340,14 @@ export class OrdersService extends BaseService<Order> {
     if (orderItemList.length === 0)
       throw new NotFoundException('No order item of the order can be found!');
 
-    await this.deliveriesService.registerNewGHNDelivery(order.delivery.id);
+    const comicsList = orderItemList.map((item) => {
+      return item.comics;
+    });
+
+    await this.deliveriesService.registerNewGHNDelivery(
+      order.delivery.id,
+      comicsList,
+    );
 
     return await this.getOne(orderId);
   }
