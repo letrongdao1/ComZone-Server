@@ -51,7 +51,7 @@ import { DeliveryInformationModule } from './modules/delivery-information/delive
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         entities: [join(process.cwd(), 'dist/entities/**/*.entity.js')],
-        synchronize: true,
+        synchronize: configService.get('DB_SYNCHRONIZE') === 'TRUE',
       }),
       inject: [ConfigService],
     }),
