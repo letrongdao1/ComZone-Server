@@ -104,9 +104,7 @@ export class Comic extends BaseEntity {
   @OneToMany(() => Auction, (auction) => auction.comics)
   auction: Auction[];
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.comics, {
-    cascade: true,
-  })
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.comics)
   order_item: OrderItem[];
 
   @OneToMany(() => ComicsReport, (comicsReport) => comicsReport.comics)
