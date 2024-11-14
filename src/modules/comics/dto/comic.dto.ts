@@ -96,6 +96,15 @@ export class CreateComicDto {
   quantity: number;
 
   @ApiProperty({
+    description: 'Episodes list of comics collection',
+    example: ['Volume 19', 'Episode 73'],
+    nullable: true,
+  })
+  @IsNotEmpty({ each: true })
+  @IsString({ each: true })
+  episodesList?: string[];
+
+  @ApiProperty({
     description: 'Array of preview chapter URLs',
     example: [
       'https://example.com/preview1.jpg',

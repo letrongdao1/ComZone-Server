@@ -67,6 +67,13 @@ export class Comic extends BaseEntity {
   publishedDate: Date;
 
   @Column({
+    name: 'episodes-list',
+    type: 'simple-json',
+    nullable: true,
+  })
+  episodesList: string[];
+
+  @Column({
     name: 'on_sale_since',
     type: 'datetime',
     nullable: true,
