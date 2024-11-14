@@ -35,6 +35,8 @@ import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module
 import { SellerFeedbackModule } from './modules/seller-feedback/seller-feedback.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AnnouncementModule } from './modules/announcement/announcement.module';
+import { DeliveriesModule } from './modules/deliveries/deliveries.module';
+import { DeliveryInformationModule } from './modules/delivery-information/delivery-information.module';
 
 @Module({
   imports: [
@@ -84,6 +86,8 @@ import { AnnouncementModule } from './modules/announcement/announcement.module';
     DepositsModule,
     ChatRoomsModule,
     ChatMessagesModule,
+    DeliveriesModule,
+    DeliveryInformationModule,
   ],
   controllers: [AppController],
   providers: [

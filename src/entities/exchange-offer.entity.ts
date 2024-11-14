@@ -14,6 +14,7 @@ import { User } from './users.entity';
 import { Transaction } from './transactions.entity';
 import { Announcement } from './announcement.entity';
 import { Comic } from './comics.entity';
+import { Delivery } from './delivery.entity';
 
 @Entity('exchange-offer')
 export class ExchangeOffer extends BaseEntity {
@@ -60,4 +61,7 @@ export class ExchangeOffer extends BaseEntity {
 
   @OneToMany(() => Announcement, (announcement) => announcement.exchangeOffer)
   announcements: Announcement[];
+
+  @OneToOne(() => Delivery, (delivery) => delivery.exchangeOffer)
+  deliveries: Delivery[];
 }

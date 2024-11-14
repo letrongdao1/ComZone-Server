@@ -422,7 +422,7 @@ export class OrdersService extends BaseService<Order> {
         return res.data.data;
       })
       .catch((err) => {
-        console.log('Error getting available services: ', err);
+        console.log('Error getting available services: ', err.response.data);
         throw new BadRequestException(err.response.data);
       });
 
