@@ -32,8 +32,12 @@ export class AnnouncementService {
 
   // Create an announcement
   async markAsRead(announcementId: string, userId: string): Promise<void> {
+    console.log(announcementId, userId);
     const announcement = await this.announcementRepository.findOne({
-      where: { id: announcementId, user: { id: userId } },
+      where: {
+        id: announcementId,
+        user: { id: userId }, // Access the `user` relation and specify `id` inside it
+      },
     });
 
     if (announcement) {
@@ -44,6 +48,18 @@ export class AnnouncementService {
         'Announcement not found or user not authorized to read it',
       );
     }
+  }
+  async getUnreadAnnouncement(
+    userId: string,
+    auctionId: string,
+  ): Promise<Announcement | null> {
+    return this.announcementRepository.findOne({
+      where: {
+        user: { id: userId },
+        auction: { id: auctionId },
+        isRead: false,
+      },
+    });
   }
   async createAnnouncement(
     createAnnouncementDto: CreateAnnouncementDto,

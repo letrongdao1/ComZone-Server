@@ -14,12 +14,10 @@ import { AnnouncementService } from '../announcement/announcement.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // The frontend origin
-    allowedHeaders: ['Content-Type'],
-    credentials: true, // Enable credentials (if needed)
+    origin: '*',
   },
 })
-@Injectable() // Make sure the gateway is injectable
+@Injectable()
 export class EventsGateway implements OnModuleInit {
   @WebSocketServer() server: Server;
 
@@ -28,23 +26,48 @@ export class EventsGateway implements OnModuleInit {
     private readonly announcementService: AnnouncementService,
   ) {}
 
+  private userSockets = new Map<string, Set<string>>();
+
   onModuleInit() {
     this.server.on('connection', (socket) => {
       console.log(`Socket connected: ${socket.id}`);
-      socket.on('joinRoom', (userId) => {
-        // Join the room with the userId
-        socket.join(userId);
-        console.log(`User ${userId} joined room`);
-      });
 
-      socket.on('disconnect', (reason) => {
-        console.log(`Socket ${socket.id} disconnected: ${reason}`);
+      socket.on('disconnect', () => {
+        console.log(`Socket disconnected: ${socket.id}`);
+        this.removeSocketId(socket);
       });
     });
   }
+
+  @SubscribeMessage('joinRoom')
+  handleJoinRoom(
+    @MessageBody() userId: string,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    if (!this.userSockets.has(userId)) {
+      this.userSockets.set(userId, new Set());
+    }
+    this.userSockets.get(userId).add(socket.id);
+    console.log(`User ${userId} connected with socket ID: ${socket.id}`);
+  }
+
+  private removeSocketId(socket: Socket) {
+    for (const [userId, socketIds] of this.userSockets.entries()) {
+      if (socketIds.has(socket.id)) {
+        socketIds.delete(socket.id);
+        console.log(`Removed socket ID ${socket.id} for user ${userId}`);
+        if (socketIds.size === 0) {
+          this.userSockets.delete(userId);
+          console.log(`No remaining sockets for user ${userId}, removed user.`);
+        }
+        break;
+      }
+    }
+  }
+
   @SubscribeMessage('newMessage')
   onNewMessage(@MessageBody() body: any) {
-    console.log(body);
+    console.log('New Message Received:', body);
     this.server.emit('onMessage', {
       msg: 'New Message',
       content: body,
@@ -55,26 +78,17 @@ export class EventsGateway implements OnModuleInit {
   async onPlaceBid(@MessageBody() createBidDto: CreateBidDto): Promise<any> {
     try {
       console.log('Received bid data:', createBidDto);
-
-      // Create a new bid using the BidService
-
-      // Call the create method of BidService to store the bid
       const placeBid = await this.bidService.create(createBidDto);
-      console.log(placeBid);
+      console.log('PlaceBid:', placeBid);
 
-      // Emit the updated bid to all clients
-      this.server.emit('bidUpdate', {
-        placeBid,
-      });
-
-      // Acknowledge the client with success and the created bid data
+      this.server.emit('bidUpdate', { placeBid });
       return { success: true, bid: placeBid };
     } catch (error) {
       console.error('Error handling bid:', error);
       return { success: false, message: 'Internal server error' };
     }
   }
-  // Emit a notification to a specific user by userId
+
   async notifyUser(
     userId: string,
     message: string,
@@ -83,34 +97,39 @@ export class EventsGateway implements OnModuleInit {
     type: string,
     status: string,
   ) {
+    console.log('notifyUser called with:', { userId, message });
     try {
-      // 1. Save the announcement to the database
       const createAnnouncementDto: CreateAnnouncementDto = {
         auctionId,
-        userId, // Assuming the user ID is part of the DTO
-        message, // The message you want to store
-        title, // The title of the announcement (could be dynamic)
+        userId,
+        message,
+        title,
         type,
         status,
       };
 
-      // Save the announcement
+      console.log('Creating announcement...');
       const savedAnnouncement =
         await this.announcementService.createAnnouncement(
           createAnnouncementDto,
         );
+      console.log('Saved announcement:', savedAnnouncement);
 
-      // 2. Emit the notification to the specific user
-      this.server.to(userId).emit('notification', {
-        message: message,
-        auctionId,
-        title,
-        type,
-        status,
-      });
+      const socketIds = Array.from(this.userSockets.get(userId) || []);
+      console.log('Socket IDs for user:', socketIds);
+      this.server.emit('notification', { message: 'Test notification' });
 
-      // Optionally, log the saved announcement
-      console.log('Announcement saved:', savedAnnouncement);
+      // socketIds.forEach((socketId) => {
+      //   this.server.to(socketId).emit('notification', {
+      //     id: savedAnnouncement.id,
+      //     message,
+      //     auctionId,
+      //     title,
+      //     type,
+      //     status,
+      //   });
+      //   console.log('Emitting notification to socket ID:', socketId);
+      // });
     } catch (error) {
       console.error('Error in notifyUser:', error);
       throw new Error('Failed to notify the user');
@@ -125,44 +144,40 @@ export class EventsGateway implements OnModuleInit {
     type: string,
     status: string,
   ) {
-    // Iterate through all userIds
-    for (const userId of userIds) {
-      try {
-        // Save the announcement to the database for each user
-        const createAnnouncementDto: CreateAnnouncementDto = {
-          auctionId,
-          userId,
-          message,
-          title,
-          type,
-          status,
-        };
-
-        // Save the announcement
-        const savedAnnouncement =
-          await this.announcementService.createAnnouncement(
-            createAnnouncementDto,
-          );
-
-        // Emit the notification to the specific user
-        this.server.to(userId).emit('notification', {
-          message: message,
-          auctionId,
-          title,
-          type,
-          status,
-        });
-
-        // Optionally log the saved announcement
-        console.log('Announcement saved:', savedAnnouncement);
-      } catch (error) {
-        console.error(`Error notifying user ${userId}:`, error);
-      }
-    }
+    // for (const userId of userIds) {
+    //   try {
+    //     const createAnnouncementDto: CreateAnnouncementDto = {
+    //       auctionId,
+    //       userId,
+    //       message,
+    //       title,
+    //       type,
+    //       status,
+    //     };
+    //     const savedAnnouncement =
+    //       await this.announcementService.createAnnouncement(
+    //         createAnnouncementDto,
+    //       );
+    //     console.log('Saved announcement for user:', userId);
+    //     const socketIds = Array.from(this.userSockets.get(userId) || []);
+    //     socketIds.forEach((socketId) => {
+    //       this.server.to(socketId).emit('notification', {
+    //         id: savedAnnouncement.id,
+    //         message: message,
+    //         auctionId,
+    //         title,
+    //         type,
+    //         status,
+    //       });
+    //     });
+    //   } catch (error) {
+    //     console.error(`Error notifying user ${userId}:`, error);
+    //   }
+    // }
   }
 
-  // Broadcast a notification to all connected clients
   broadcastNotification(message: string) {
+    console.log('Broadcasting notification to all clients');
     this.server.emit('notification', { message });
   }
 }

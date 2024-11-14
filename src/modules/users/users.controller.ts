@@ -72,4 +72,10 @@ export class UsersController {
   updateUserProfile(@Req() req: any, @Body() userProfileDTO: UserProfileDTO) {
     return this.usersService.updateUserProfile(req.user.id, userProfileDTO);
   }
+
+  @Patch(':id/ban')
+  @UseGuards(JwtAuthGuard)
+  async banUser(@Param('id') userId: string) {
+    return this.usersService.banUser(userId);
+  }
 }

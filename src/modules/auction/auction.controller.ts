@@ -32,6 +32,14 @@ export class AuctionController {
   async findAll(): Promise<Auction[]> {
     return this.auctionService.findAllAuctions();
   }
+  @Get('check-ended-auctions')
+  async checkEndedAuctions() {
+    try {
+      return await this.auctionService.checkAndDeclareWinnersForEndedAuctions();
+    } catch (error) {
+      return { message: 'Failed to check for ended auctions', error };
+    }
+  }
   @UseGuards(JwtAuthGuard)
   @Get('exclude-user')
   async getAuctionsExcludingUser(@Req() req: any): Promise<Auction[]> {

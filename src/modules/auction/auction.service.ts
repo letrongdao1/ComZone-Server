@@ -63,12 +63,11 @@ export class AuctionService {
   }
   async checkAndDeclareWinnersForEndedAuctions() {
     const now = new Date();
-
-    // Find auctions that have ended and are still marked as "ONGOING"
     const endedAuctions = await this.auctionRepository.find({
       where: { endTime: LessThanOrEqual(now), status: 'ONGOING' },
       relations: ['bids', 'bids.user'], // Include bids with users
     });
+    console.log('ended', endedAuctions);
 
     // Use Promise.all to handle each ended auction concurrently
     await Promise.all(
@@ -76,6 +75,7 @@ export class AuctionService {
         await this.declareWinner(auction.id);
       }),
     );
+    return endedAuctions;
   }
 
   // Declare winner for a single auction
@@ -88,7 +88,7 @@ export class AuctionService {
 
     const now = new Date();
     if (auction.endTime > now) {
-      return;
+      return; // Auction hasn't ended yet
     }
 
     const latestBid = auction.bids.reduce((highest, bid) =>

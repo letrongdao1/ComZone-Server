@@ -7,6 +7,8 @@ import {
   Param,
   Put,
   Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import {
@@ -15,6 +17,7 @@ import {
 } from './dto/announcement.dto';
 import { Announcement } from '../../entities/announcement.entity';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
 @ApiTags('announcements')
 @Controller('announcements')
@@ -32,7 +35,17 @@ export class AnnouncementController {
   async findAll(): Promise<Announcement[]> {
     return this.announcementService.findAll();
   }
-
+  @UseGuards(JwtAuthGuard)
+  @Get('/auction/:auctionId/unread')
+  async getUnreadAnnouncementForAuction(
+    @Req() req: any,
+    @Param('auctionId') auctionId: string,
+  ): Promise<Announcement | null> {
+    return this.announcementService.getUnreadAnnouncement(
+      req.user.id,
+      auctionId,
+    );
+  }
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Announcement> {
     return this.announcementService.findOne(id);
@@ -45,13 +58,13 @@ export class AnnouncementController {
   ): Promise<Announcement> {
     return this.announcementService.update(id, updateAnnouncementDto);
   }
-
-  @Post(':announcementId/read/:userId')
+  @UseGuards(JwtAuthGuard)
+  @Post(':announcementId/read/')
   async markAnnouncementAsRead(
-    @Param('userId') userId: string,
+    @Req() req: any,
     @Param('announcementId') announcementId: string,
   ): Promise<void> {
-    return this.announcementService.markAsRead(userId, announcementId);
+    return this.announcementService.markAsRead(announcementId, req.user.id);
   }
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<void> {
