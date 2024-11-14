@@ -7,6 +7,7 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { ComicModule } from '../comics/comics.module';
 import { UserAddressesModule } from '../user-addresses/user-addresses.module';
 import { DeliveriesModule } from '../deliveries/deliveries.module';
+import { OrdersScheduleService } from './order-schedule.service.';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { DeliveriesModule } from '../deliveries/deliveries.module';
     DeliveriesModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersService, OrdersScheduleService],
   exports: [OrdersService],
 })
 export class OrdersModule {}
