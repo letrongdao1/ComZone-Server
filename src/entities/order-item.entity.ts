@@ -7,11 +7,13 @@ import { Order } from './orders.entity';
 export class OrderItem extends BaseEntity {
   @ManyToOne(() => Order, (order) => order.orderItem, {
     eager: true,
+    cascade: true,
   })
   order: Order;
 
   @ManyToOne(() => Comic, (comic) => comic.order_item, {
     eager: true,
+    cascade: true,
   })
   comics: Comic;
 

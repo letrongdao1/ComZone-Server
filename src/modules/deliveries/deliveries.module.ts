@@ -13,7 +13,6 @@ import { ComicModule } from '../comics/comics.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Delivery]),
-    OrdersModule,
     ExchangeRequestsModule,
     ExchangeOffersModule,
     DeliveryInformationModule,

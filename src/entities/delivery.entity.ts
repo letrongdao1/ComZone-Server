@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { Order } from './orders.entity';
 import { ExchangeRequest } from './exchange-request.entity';
 import { ExchangeOffer } from './exchange-offer.entity';
@@ -15,8 +8,10 @@ import { DeliveryInformation } from './delivery-information.entity';
 
 @Entity('delivery')
 export class Delivery extends BaseEntity {
-  @OneToOne(() => Order, (order) => order.delivery, { nullable: true })
-  @JoinColumn({ name: 'order' })
+  @OneToOne(() => Order, (order) => order.delivery, {
+    nullable: true,
+    cascade: true,
+  })
   order: Order;
 
   @ManyToOne(() => ExchangeRequest, (request) => request.deliveries, {

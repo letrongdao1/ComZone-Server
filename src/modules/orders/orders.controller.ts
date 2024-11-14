@@ -15,7 +15,7 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateOrderDTO } from './dto/createOrderDTO';
-import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
+import { GetDeliveryFeeDTO } from '../deliveries/dto/get-delivery-fee.dto';
 import { CancelOrderDTO } from './dto/cancel-order.dto';
 import {
   CompleteOrderFailedDTO,
@@ -68,11 +68,6 @@ export class OrdersController {
   @Get('/:orderId')
   getOrderById(@Param('orderId') orderId: string) {
     return this.ordersService.getOne(orderId);
-  }
-
-  @Post('delivery-details')
-  getDeliveryDetails(@Body() getDeliveryFeeDto: GetDeliveryFeeDTO) {
-    return this.ordersService.getDeliveryDetails(getDeliveryFeeDto);
   }
 
   @Roles(Role.SELLER)

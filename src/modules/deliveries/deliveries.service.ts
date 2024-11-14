@@ -11,18 +11,18 @@ import { Delivery } from 'src/entities/delivery.entity';
 import { Repository } from 'typeorm';
 import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
 import { ExchangeOffersService } from '../exchange-offers/exchange-offers.service';
-import { OrdersService } from '../orders/orders.service';
 import {
   CreateExchangeOfferDeliveryDTO,
   CreateExchangeRequestDeliveryDTO,
+  CreateOrderDeliveryDTO,
 } from './dto/create-delivery.dto';
-import { Order } from 'src/entities/orders.entity';
 import { DeliveryInformationService } from '../delivery-information/delivery-information.service';
 import * as dotenv from 'dotenv';
 import axios from 'axios';
 import { VietNamAddressService } from '../viet-nam-address/viet-nam-address.service';
 import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enum';
 import { Comic } from 'src/entities/comics.entity';
+import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 
 dotenv.config();
 
@@ -31,8 +31,6 @@ export class DeliveriesService extends BaseService<Delivery> {
   constructor(
     @InjectRepository(Delivery)
     private readonly deliveriesRepository: Repository<Delivery>,
-    @Inject(OrdersService)
-    private readonly ordersService: OrdersService,
     @Inject(ExchangeRequestsService)
     private readonly exchangeRequestsService: ExchangeRequestsService,
     @Inject(ExchangeOffersService)
@@ -50,6 +48,31 @@ export class DeliveriesService extends BaseService<Delivery> {
       where: { id },
       relations: ['from', 'to'],
     });
+  }
+
+  async createOrderDelivery(dto: CreateOrderDeliveryDTO) {
+    const fromAddress = await this.deliveryInfoService.getOne(
+      dto.fromAddressId,
+    );
+    if (!fromAddress)
+      throw new NotFoundException(
+        "Seller's delivery information cannot be found!",
+      );
+
+    const toAddress = await this.deliveryInfoService.getOne(dto.toAddressId);
+    if (!toAddress)
+      throw new NotFoundException(
+        "User's delivery information cannot be found!",
+      );
+
+    const newDelivery = this.deliveriesRepository.create({
+      from: fromAddress,
+      to: toAddress,
+    });
+
+    return await this.deliveriesRepository
+      .save(newDelivery)
+      .then(() => this.getOne(newDelivery.id));
   }
 
   async createExchangeRequestDelivery(dto: CreateExchangeRequestDeliveryDTO) {
@@ -215,6 +238,9 @@ export class DeliveriesService extends BaseService<Delivery> {
     });
     if (!delivery) throw new NotFoundException('Delivery cannot be found!');
 
+    if (delivery.from.phone.length !== 10 || delivery.to.phone.length !== 10)
+      throw new BadRequestException('Only 10-digit phone numbers are valid!');
+
     const headers = {
       Token: process.env.GHN_TOKEN,
       ShopId: process.env.GHN_SHOPID,
@@ -328,5 +354,108 @@ export class DeliveriesService extends BaseService<Delivery> {
         console.log('Error creating GHN delivery: ', err.response);
         throw new BadRequestException(err.response.data);
       });
+  }
+
+  async autoUpdateGHNDeliveryStatus(deliveryId: string) {
+    const delivery = await this.getOne(deliveryId);
+
+    if (!delivery || !delivery.deliveryTrackingCode) return;
+
+    const headers = {
+      Token: process.env.GHN_TOKEN,
+      ShopId: process.env.GHN_SHOPID,
+    };
+
+    return await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/detail',
+        {
+          order_code: delivery.deliveryTrackingCode,
+        },
+        { headers },
+      )
+      .then(async (res) => {
+        const deliveryStatus: OrderDeliveryStatusEnum = res.data.data.status;
+        await this.deliveriesRepository.update(deliveryId, {
+          status: deliveryStatus,
+        });
+        return deliveryStatus;
+      })
+      .catch((err) => console.log('Error getting GHN delivery info: ', err));
+  }
+
+  async getDeliveryDetails(getDeliveryFeeDto: GetDeliveryFeeDTO) {
+    const headers = {
+      Token: process.env.GHN_TOKEN,
+      ShopId: process.env.GHN_SHOPID,
+    };
+
+    const availableServices: any[] = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services',
+        {
+          shop_id: parseInt(process.env.GHN_SHOPID),
+          from_district: getDeliveryFeeDto.fromDistrict,
+          to_district: getDeliveryFeeDto.toDistrict,
+        },
+        { headers },
+      )
+      .then((res) => {
+        return res.data.data;
+      })
+      .catch((err) => {
+        console.log('Error getting available services: ', err.response.data);
+        throw new BadRequestException(err.response.data);
+      });
+
+    const deliveryFee = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee',
+        {
+          from_district_id: getDeliveryFeeDto.fromDistrict,
+          from_ward_code: getDeliveryFeeDto.fromWard,
+          to_district_id: getDeliveryFeeDto.toDistrict,
+          to_ward_code: getDeliveryFeeDto.toWard,
+          weight: 100 * getDeliveryFeeDto.comicsQuantity,
+          service_id: availableServices[0].service_id,
+          service_type_id: availableServices[0].service_type_id,
+        },
+        { headers },
+      )
+      .then((res) => {
+        return res.data.data.total;
+      })
+      .catch((err) => {
+        throw new BadRequestException(
+          'Error getting delivery fee: ',
+          err.response.data,
+        );
+      });
+
+    const estDeliveryTime = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/leadtime',
+        {
+          from_district_id: getDeliveryFeeDto.fromDistrict,
+          from_ward_code: getDeliveryFeeDto.fromWard,
+          to_district_id: getDeliveryFeeDto.toDistrict,
+          to_ward_code: getDeliveryFeeDto.toWard,
+          service_id: availableServices[0].service_id,
+        },
+        { headers },
+      )
+      .then((res) => {
+        return res.data.data.leadtime;
+      })
+      .catch((err) => {
+        throw new BadRequestException(
+          'Error getting estimated delivery time: ' + err.response.data,
+        );
+      });
+
+    return {
+      deliveryFee,
+      estDeliveryTime: new Date(estDeliveryTime * 1000),
+    };
   }
 }
