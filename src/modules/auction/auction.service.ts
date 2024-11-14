@@ -103,9 +103,11 @@ export class AuctionService {
       // Notify the winning bidder in real-time
       this.eventsGateway.notifyUser(
         latestBid.user.id,
-        `Congratulations! You won the auction for ${auction.comics.title}.`,
+        `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
         auction.id,
         'Chúc mừng',
+        'AUCTION',
+        'SUCCESSFUL',
       );
 
       // Collect all losing bidders' userIds
@@ -120,9 +122,11 @@ export class AuctionService {
       // Create Announcements for Losing Bidders and Notify Them
       await this.eventsGateway.notifyUsers(
         losingUserIds,
-        `The auction for ${auction.comics.title} ended. You did not win this time.`,
+        `Buổi đấu giá đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
         auction.id,
         'Kết quả đấu giá',
+        'AUCTION',
+        'FAILED',
       );
     } else {
       auction.status = 'FAILED';

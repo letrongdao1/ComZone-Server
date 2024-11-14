@@ -30,10 +30,18 @@ export class EventsGateway implements OnModuleInit {
 
   onModuleInit() {
     this.server.on('connection', (socket) => {
-      console.log(`Connected: ${socket.id}`);
+      console.log(`Socket connected: ${socket.id}`);
+      socket.on('joinRoom', (userId) => {
+        // Join the room with the userId
+        socket.join(userId);
+        console.log(`User ${userId} joined room`);
+      });
+
+      socket.on('disconnect', (reason) => {
+        console.log(`Socket ${socket.id} disconnected: ${reason}`);
+      });
     });
   }
-
   @SubscribeMessage('newMessage')
   onNewMessage(@MessageBody() body: any) {
     console.log(body);
@@ -67,12 +75,13 @@ export class EventsGateway implements OnModuleInit {
     }
   }
   // Emit a notification to a specific user by userId
-  // Emit a notification to a specific user by userId
   async notifyUser(
     userId: string,
     message: string,
     auctionId: string,
     title: string,
+    type: string,
+    status: string,
   ) {
     try {
       // 1. Save the announcement to the database
@@ -81,6 +90,8 @@ export class EventsGateway implements OnModuleInit {
         userId, // Assuming the user ID is part of the DTO
         message, // The message you want to store
         title, // The title of the announcement (could be dynamic)
+        type,
+        status,
       };
 
       // Save the announcement
@@ -94,6 +105,8 @@ export class EventsGateway implements OnModuleInit {
         message: message,
         auctionId,
         title,
+        type,
+        status,
       });
 
       // Optionally, log the saved announcement
@@ -109,9 +122,9 @@ export class EventsGateway implements OnModuleInit {
     message: string,
     auctionId: string,
     title: string,
+    type: string,
+    status: string,
   ) {
-    console.log(':::::::::::::::::', userIds);
-
     // Iterate through all userIds
     for (const userId of userIds) {
       try {
@@ -121,6 +134,8 @@ export class EventsGateway implements OnModuleInit {
           userId,
           message,
           title,
+          type,
+          status,
         };
 
         // Save the announcement
@@ -134,6 +149,8 @@ export class EventsGateway implements OnModuleInit {
           message: message,
           auctionId,
           title,
+          type,
+          status,
         });
 
         // Optionally log the saved announcement

@@ -53,6 +53,10 @@ export class AuthService {
       throw new NotFoundException('Email cannot be found!');
     }
 
+    if (user.status === 'banned') {
+      throw new UnauthorizedException('User is banned');
+    }
+
     if (!bcrypt.compareSync(loginUserDto.password, user?.password)) {
       throw new UnauthorizedException('Incorrect password!');
     }

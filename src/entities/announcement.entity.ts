@@ -42,6 +42,18 @@ export class Announcement extends BaseEntity {
   message: string;
 
   @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  status: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  type: string;
+
+  @Column({
     name: 'is_read',
     type: 'boolean',
     default: false,

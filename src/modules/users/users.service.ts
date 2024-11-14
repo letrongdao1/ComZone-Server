@@ -188,4 +188,15 @@ export class UsersService extends BaseService<User> {
   async updatePassword(userId: string, password: string) {
     return await this.userRepository.update(userId, { password });
   }
+  async banUser(userId: string) {
+    const user = await this.getOne(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.status = 'banned';
+    await this.userRepository.save(user);
+
+    return { message: 'User banned successfully', userId };
+  }
 }
