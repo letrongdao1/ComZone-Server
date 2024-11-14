@@ -224,6 +224,11 @@ export class ComicService {
       throw new NotFoundException('Comic not found');
     }
 
+    if (status === ComicsStatusEnum.AVAILABLE)
+      await this.comicRepository.update(comicsId, {
+        onSaleSince: new Date(),
+      });
+
     // Update the status of the comic
     comic.status = status;
     await this.comicRepository.save(comic);

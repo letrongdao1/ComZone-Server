@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { DeliveriesService } from './deliveries.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -33,8 +41,21 @@ export class DeliveriesController {
     return this.deliveriesService.createExchangeOfferDelivery(dto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('details')
   getDeliveryDetails(@Body() getDeliveryFeeDto: GetDeliveryFeeDTO) {
     return this.deliveriesService.getDeliveryDetails(getDeliveryFeeDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange-request/:id')
+  getByExchangeRequest(@Param('id') id: string) {
+    return this.deliveriesService.getByExchangeRequest(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange-offer/:id')
+  getByExchangeOffer(@Param('id') id: string) {
+    return this.deliveriesService.getByExchangeOffer(id);
   }
 }

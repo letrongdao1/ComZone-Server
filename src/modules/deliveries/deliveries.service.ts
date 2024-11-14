@@ -467,4 +467,16 @@ export class DeliveriesService extends BaseService<Delivery> {
       estDeliveryTime: new Date(estDeliveryTime * 1000),
     };
   }
+
+  async getByExchangeRequest(requestId: string) {
+    return await this.deliveriesRepository.find({
+      where: { exchangeRequest: { id: requestId } },
+    });
+  }
+
+  async getByExchangeOffer(offerId: string) {
+    return await this.deliveriesRepository.find({
+      where: { exchangeOffer: { id: offerId } },
+    });
+  }
 }

@@ -57,6 +57,28 @@ export class SellerFeedbackService {
     return feedback;
   }
 
+  async findBySeller(id: string, limit?: number): Promise<any> {
+    if (!limit)
+      return await this.sellerFeedbackRepository.find({
+        where: { seller: { id } },
+        relations: ['user', 'seller'],
+        order: {
+          updatedAt: 'DESC',
+          createdAt: 'DESC',
+        },
+      });
+    else
+      return await this.sellerFeedbackRepository.findAndCount({
+        where: { seller: { id } },
+        relations: ['user', 'seller'],
+        take: limit,
+        order: {
+          updatedAt: 'DESC',
+          createdAt: 'DESC',
+        },
+      });
+  }
+
   async updateFeedback(
     id: string,
     dto: UpdateSellerFeedbackDto,

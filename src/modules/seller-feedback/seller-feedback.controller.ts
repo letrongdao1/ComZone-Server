@@ -29,6 +29,16 @@ export class SellerFeedbackController {
     return this.sellerFeedbackService.findAll();
   }
 
+  @Get('seller/some/:id')
+  findSomeBySeller(@Param('id') id: string) {
+    return this.sellerFeedbackService.findBySeller(id, 8);
+  }
+
+  @Get('seller/all/:id')
+  findAllBySeller(@Param('id') id: string) {
+    return this.sellerFeedbackService.findBySeller(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.sellerFeedbackService.findOne(id);
