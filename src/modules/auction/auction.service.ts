@@ -67,7 +67,6 @@ export class AuctionService {
       where: { endTime: LessThanOrEqual(now), status: 'ONGOING' },
       relations: ['bids', 'bids.user'], // Include bids with users
     });
-    console.log('ended', endedAuctions);
 
     // Use Promise.all to handle each ended auction concurrently
     await Promise.all(
@@ -91,11 +90,12 @@ export class AuctionService {
       return; // Auction hasn't ended yet
     }
 
-    const latestBid = auction.bids.reduce((highest, bid) =>
-      bid.price > highest.price ? bid : highest,
-    );
+    if (auction.bids.length > 0) {
+      // Find the highest bid
+      const latestBid = auction.bids.reduce((highest, bid) =>
+        bid.price > highest.price ? bid : highest,
+      );
 
-    if (latestBid) {
       auction.status = 'PROCESSING';
       auction.winner = latestBid.user;
       await this.auctionRepository.save(auction);
@@ -129,6 +129,7 @@ export class AuctionService {
         'FAILED',
       );
     } else {
+      // No bids, so the auction failed
       auction.status = 'FAILED';
       await this.auctionRepository.save(auction);
 
