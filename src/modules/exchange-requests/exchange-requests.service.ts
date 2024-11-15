@@ -149,6 +149,28 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
       .then(() => this.getOne(requestId));
   }
 
+  async completeExchangeRequest(
+    userId: string,
+    exchangeRequestId: string,
+    status:
+      | ExchangeRequestStatusEnum.SUCCESSFUL
+      | ExchangeRequestStatusEnum.FAILED,
+  ) {
+    const exchangeRequest = await this.exchangeRequestsRepository.findOne({
+      where: { id: exchangeRequestId },
+      relations: ['user'],
+    });
+
+    if (exchangeRequest.user.id !== userId)
+      throw new ForbiddenException('Only the requested user can make changes!');
+
+    return await this.exchangeRequestsRepository
+      .update(exchangeRequestId, {
+        status,
+      })
+      .then(() => this.getOne(exchangeRequestId));
+  }
+
   async softDeleteExchangePost(userId: string, exchangeId: string) {
     const exchange = await this.getOne(exchangeId);
     if (userId !== exchange.user.id)
