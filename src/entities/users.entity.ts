@@ -19,6 +19,9 @@ import { Announcement } from './announcement.entity';
 import { SellerFeedback } from './seller-feedback.entity';
 import { ChatMessage } from './chat-message.entity';
 import { DeliveryInformation } from './delivery-information.entity';
+import { Exchange } from './exchange.entity';
+import { ExchangeComicsList } from './exchange-comics-list.entity';
+import { ExchangeConfirmation } from './exchange-confirmation.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -87,11 +90,11 @@ export class User extends BaseEntity {
   status: string;
 
   @Column({
-    name: 'is_verified',
+    name: 'is_active',
     type: 'boolean',
     default: false,
   })
-  is_verified: boolean;
+  isActive: boolean;
 
   @Column({
     name: 'follower_count',
@@ -147,11 +150,17 @@ export class User extends BaseEntity {
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
 
-  @OneToMany(() => ExchangeRequest, (request) => request.user)
-  exchangeRequests: ExchangeRequest[];
+  @OneToMany(() => Exchange, (request) => request.requestUser)
+  exchangeRequests: Exchange[];
 
-  @OneToMany(() => ExchangeOffer, (offer) => offer.user)
-  exchangeOffers: ExchangeOffer[];
+  @OneToMany(() => Exchange, (offer) => offer.postUser)
+  exchangeOffers: Exchange[];
+
+  @OneToMany(() => ExchangeComicsList, (list) => list.user)
+  exchangeComicsList: ExchangeComicsList[];
+
+  @OneToMany(() => ExchangeConfirmation, (confirmation) => confirmation.user)
+  exchangeConfirmations: ExchangeConfirmation[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];

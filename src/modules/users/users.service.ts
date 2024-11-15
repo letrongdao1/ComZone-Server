@@ -43,7 +43,7 @@ export class UsersService extends BaseService<User> {
         'phone',
         'avatar',
         'role',
-        'is_verified',
+        'isActive',
         'balance',
         'nonWithdrawableAmount',
         'createdAt',
@@ -175,8 +175,10 @@ export class UsersService extends BaseService<User> {
       .then(() => this.getOne(userId));
   }
 
-  async updateUserIsVerified(userId: string) {
-    return await this.userRepository.update(userId, { is_verified: true });
+  async updateUserIsActive(userId: string, active: boolean) {
+    console.log(`User ${userId} is ${active ? 'now ONLINE' : 'OFFLINE'}!`);
+    if (active === false) this.updateLastActive(userId);
+    return await this.userRepository.update(userId, { isActive: active });
   }
 
   async updateUserProfile(userId: string, userProfileDto: UserProfileDTO) {
