@@ -26,8 +26,6 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    await this.usersService.updateUserIsVerified(userId);
-
     await this.usersService.updateRoleToSeller(userId);
 
     const newSellerInfo = this.sellerDetailsRepository.create({

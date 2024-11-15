@@ -18,6 +18,7 @@ import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
 import { ExchangeOffer } from './exchange-offer.entity';
 import { ChatMessage } from './chat-message.entity';
 import { ComicsTypeEnum } from 'src/modules/comics/dto/comic-type.enum';
+import { ExchangeComicsList } from './exchange-comics-list.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -105,6 +106,11 @@ export class Comic extends BaseEntity {
     default: ComicsStatusEnum.UNAVAILABLE,
   })
   status: string;
+
+  @ManyToMany(() => ExchangeComicsList, (list) => list.comicsList, {
+    cascade: true,
+  })
+  exchange: ExchangeComicsList[];
 
   @ManyToMany(() => ExchangeRequest, (request) => request.requestComics, {
     cascade: true,

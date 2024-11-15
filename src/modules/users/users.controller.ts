@@ -73,6 +73,18 @@ export class UsersController {
     return this.usersService.updateUserProfile(req.user.id, userProfileDTO);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('active-status/online')
+  updateUserActiveStatusOnline(@Req() req: any) {
+    return this.usersService.updateUserIsActive(req.user.id, true);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('active-status/offline')
+  updateUserActiveStatusOffline(@Req() req: any) {
+    return this.usersService.updateUserIsActive(req.user.id, false);
+  }
+
   @Patch(':id/ban')
   @UseGuards(JwtAuthGuard)
   async banUser(@Param('id') userId: string) {
