@@ -20,6 +20,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
+import { ExchangeRequestStatusEnum } from './dto/exchange-request-status.enum';
 
 @ApiBearerAuth()
 @ApiTags('Exchange requests')
@@ -64,6 +65,26 @@ export class ExchangeRequestsController {
     @Body() dto: UpdateExchangeSettingsDTO,
   ) {
     return this.exchangeRequestsService.updateExchangeSettings(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('status/successful/:id')
+  completeAsSuccessful(@Req() req: any, @Param('id') requestId: string) {
+    return this.exchangeRequestsService.completeExchangeRequest(
+      req.user.id,
+      requestId,
+      ExchangeRequestStatusEnum.SUCCESSFUL,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('status/failed/:id')
+  completeAsFailed(@Req() req: any, @Param('id') requestId: string) {
+    return this.exchangeRequestsService.completeExchangeRequest(
+      req.user.id,
+      requestId,
+      ExchangeRequestStatusEnum.FAILED,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

@@ -17,6 +17,7 @@ import { ChatRoom } from './chat-room.entity';
 import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
 import { ExchangeOffer } from './exchange-offer.entity';
 import { ChatMessage } from './chat-message.entity';
+import { ComicsTypeEnum } from 'src/modules/comics/dto/comic-type.enum';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -43,6 +44,9 @@ export class Comic extends BaseEntity {
   @Column()
   coverImage: string;
 
+  @Column({ type: 'simple-json', nullable: true })
+  previewChapter: string[];
+
   @Column({
     type: 'enum',
     enum: ['REGULAR', 'SPECIAL', 'LIMITED'],
@@ -57,14 +61,19 @@ export class Comic extends BaseEntity {
   })
   condition: string;
 
+  @Column('varchar', { nullable: true, default: '2019' })
+  publishedDate: string;
+
   @Column({
     type: 'int',
     nullable: true,
   })
   page: number;
 
-  @Column('datetime')
-  publishedDate: Date;
+  @Column({
+    default: 1,
+  })
+  quantity: number;
 
   @Column({
     name: 'episodes-list',
@@ -80,8 +89,15 @@ export class Comic extends BaseEntity {
   })
   onSaleSince: Date;
 
-  @Column('float')
+  @Column('float', { nullable: true })
   price: number;
+
+  @Column({
+    type: 'enum',
+    enum: ComicsTypeEnum,
+    default: ComicsTypeEnum.SELL,
+  })
+  type: string;
 
   @Column({
     type: 'enum',
@@ -89,14 +105,6 @@ export class Comic extends BaseEntity {
     default: ComicsStatusEnum.UNAVAILABLE,
   })
   status: string;
-
-  @Column({
-    default: 1,
-  })
-  quantity: number;
-
-  @Column({ type: 'simple-json', nullable: true })
-  previewChapter: string[];
 
   @ManyToMany(() => ExchangeRequest, (request) => request.requestComics, {
     cascade: true,

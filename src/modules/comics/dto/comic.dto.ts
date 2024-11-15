@@ -123,9 +123,9 @@ export class CreateComicDto {
   edition: string;
 
   @ApiProperty({
-    example: 'Date',
+    example: 'Year of publication',
   })
-  publishedDate: Date;
+  publishedDate: string;
 
   @ApiProperty({
     description: 'Condition of the comic (e.g., USED, SEALED)',
