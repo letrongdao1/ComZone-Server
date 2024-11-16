@@ -221,10 +221,10 @@ export class UpdateComicDto {
   price?: number;
 
   @ApiProperty({
-    example: 'Date',
+    example: 'string',
   })
   @IsOptional()
-  publishedDate?: Date;
+  publishedDate?: string;
 
   @ApiProperty({
     description: 'Status of the comic',

@@ -42,6 +42,7 @@ export class AuctionService {
     const existingAuction = await this.auctionRepository.findOne({
       where: { comics: { id: comic.id } },
     });
+    console.log('zzz', existingAuction);
 
     if (existingAuction) {
       throw new ConflictException(
@@ -50,7 +51,8 @@ export class AuctionService {
     }
 
     // Change the comic's status to AUCTION
-    comic.status = ComicsStatusEnum.AUCTION;
+    comic.status = 'AVAILABLE';
+    comic.type = ComicsStatusEnum.AUCTION;
     await this.comicRepository.save(comic); // Save the updated status
 
     // Create a new auction and associate it with the comic

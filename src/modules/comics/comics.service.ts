@@ -138,7 +138,7 @@ export class ComicService {
     const comics = await this.comicRepository.find({
       where: { sellerId: { id: seller.id } },
       order: {
-        createdAt: 'ASC', // Sorting by createdAt in descending order
+        createdAt: 'DESC', // Sorting by createdAt in descending order
       },
     });
 
