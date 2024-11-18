@@ -106,7 +106,7 @@ export class AuctionService {
       this.eventsGateway.notifyUser(
         latestBid.user.id,
         `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
-        auction.id,
+        { id: auction.id },
         'Chúc mừng',
         'AUCTION',
         'SUCCESSFUL',
@@ -125,7 +125,7 @@ export class AuctionService {
       await this.eventsGateway.notifyUsers(
         losingUserIds,
         `Buổi đấu giá đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
-        auction.id,
+        { id: auction.id },
         'Kết quả đấu giá',
         'AUCTION',
         'FAILED',

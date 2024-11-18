@@ -19,7 +19,7 @@ export class Auction extends BaseEntity {
   })
   reservePrice: number;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, eager: true })
   @JoinColumn({ name: 'winner_id' })
   winner: User;
 

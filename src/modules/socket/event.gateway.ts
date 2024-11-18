@@ -80,14 +80,14 @@ export class EventsGateway implements OnModuleInit {
   async notifyUser(
     userId: string,
     message: string,
-    auctionId: string,
+    auction: { id: string },
     title: string,
     type: string,
     status: string,
   ) {
     try {
       const createAnnouncementDto: CreateAnnouncementDto = {
-        auctionId,
+        auctionId: auction.id,
         userId,
         message,
         title,
@@ -103,9 +103,9 @@ export class EventsGateway implements OnModuleInit {
 
       // Emit to the room where the user has joined (based on userId)
       this.server.to(userId).emit('notification', {
-        announcementId: savedAnnouncement.id,
+        id: savedAnnouncement.id,
         message,
-        auctionId,
+        auction,
         title,
         type,
         status,
@@ -119,7 +119,7 @@ export class EventsGateway implements OnModuleInit {
   async notifyUsers(
     userIds: string[],
     message: string,
-    auctionId: string,
+    auction: { id: string },
     title: string,
     type: string,
     status: string,
@@ -127,7 +127,7 @@ export class EventsGateway implements OnModuleInit {
     for (const userId of userIds) {
       try {
         const createAnnouncementDto: CreateAnnouncementDto = {
-          auctionId,
+          auctionId: auction.id,
           userId,
           message,
           title,
@@ -144,7 +144,7 @@ export class EventsGateway implements OnModuleInit {
         this.server.to(userId).emit('notification', {
           id: savedAnnouncement.id,
           message,
-          auctionId,
+          auction,
           title,
           type,
           status,
