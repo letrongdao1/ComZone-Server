@@ -6,12 +6,16 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateExchangePostDTO } from './dto/post.dto';
 import { ExchangePostStatusEnum } from './dto/post.enum';
+import { Exchange } from 'src/entities/exchange.entity';
 
 @Injectable()
 export class ExchangePostsService extends BaseService<ExchangePost> {
   constructor(
     @InjectRepository(ExchangePost)
     private readonly postsRepository: Repository<ExchangePost>,
+    @InjectRepository(Exchange)
+    private readonly exchangesRepository: Repository<Exchange>,
+
     private readonly usersService: UsersService,
   ) {
     super(postsRepository);
@@ -27,7 +31,7 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
     return await this.postsRepository.save(newPost);
   }
 
-  shuffle(array: ExchangePost[]) {
+  shuffle(array: any[]) {
     for (let i = array.length - 1; i >= 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
@@ -35,11 +39,28 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
     return array;
   }
 
-  async getAvailablePosts() {
+  async getAvailablePosts(userId?: string) {
     const posts = await this.postsRepository.find({
       where: { status: ExchangePostStatusEnum.AVAILABLE },
     });
-    return this.shuffle(posts);
+
+    const newList = await Promise.all(
+      posts.map(async (post) => {
+        const mine = userId ? post.user.id === userId : false;
+        const alreadyExchange = await this.exchangesRepository.findOne({
+          where: { post: { id: post.id }, requestUser: { id: userId } },
+        });
+        
+        return {
+          ...post,
+          mine,
+          already: userId ? alreadyExchange !== null : false,
+          alreadyExchange,
+        };
+      }),
+    );
+
+    return this.shuffle(newList);
   }
 
   async getSearchedPosts(key: string) {

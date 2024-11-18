@@ -29,6 +29,12 @@ export class ExchangePostsController {
     return this.exchangePostsService.getAvailablePosts();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('available/user')
+  getAvailablePostsLoggedIn(@Req() req: any) {
+    return this.exchangePostsService.getAvailablePosts(req.user.id);
+  }
+
   @Get('search')
   getSearchedPosts(@Query('key') key: string) {
     return this.exchangePostsService.getSearchedPosts(key);
