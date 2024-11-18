@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsString } from 'class-validator';
 
-export class UpdateRequestOnExchangeDTO {
+export class CreateExchangeDTO {
   @ApiProperty()
-  exchangeId: string;
+  postId: string;
 
   @ApiProperty()
   @IsArray({ each: true })

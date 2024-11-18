@@ -60,7 +60,7 @@ export class ComicService {
 
   async findByStatus(status: string): Promise<Comic[]> {
     return await this.comicRepository.find({
-      where: { status },
+      where: { type: ComicsTypeEnum.SELL, status },
       relations: ['genres', 'sellerId'],
     });
   }

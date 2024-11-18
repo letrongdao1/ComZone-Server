@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { UsersService } from '../users/users.service';
 import { ComicsExchangeService } from '../comics/comics.exchange.service';
-import { UpdateRequestOnExchangeDTO } from './dto/exchange-comics.dto';
+import { CreateExchangeDTO } from './dto/exchange-comics.dto';
 import { Comic } from 'src/entities/comics.entity';
 
 @Injectable()
@@ -25,13 +25,12 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
     super(exchangeComicsRepository);
   }
 
-  async createRequestOnExchange(
-    userId: string,
-    dto: UpdateRequestOnExchangeDTO,
-  ) {
+  async createRequestOnExchange(userId: string, dto: CreateExchangeDTO) {
     const user = await this.usersService.getOne(userId);
-    const exchange = await this.exchangesService.getOne(dto.exchangeId);
-    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+    const exchange = await this.exchangesService.createNewExchange(
+      userId,
+      dto.postId,
+    );
 
     const requestUserComicsList = await Promise.all(
       dto.requestUserComicsList.map(async (comicsId: string) => {
@@ -71,24 +70,28 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
       },
     );
 
-    await Promise.all(
+    const newRequestUserList = await Promise.all(
       createdExchangeComicsForRequestUser.map(
         async (exchangeComics) =>
           await this.exchangeComicsRepository.save(exchangeComics),
       ),
     );
 
-    await Promise.all(
+    const newPostUserList = await Promise.all(
       createdExchangeComicsForPostUser.map(
         async (exchangeComics) =>
           await this.exchangeComicsRepository.save(exchangeComics),
       ),
     );
 
-    return await this.exchangesService.updateRequestUser(userId, exchange.id);
+    return {
+      exchange: exchange,
+      requestUserList: newRequestUserList,
+      postUserList: newPostUserList,
+    };
   }
 
-  async getByExchange(exchangeId: string) {
+  async getByExchange(userId: string, exchangeId: string) {
     const exchange = await this.exchangesService.getOne(exchangeId);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
@@ -115,6 +118,7 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
 
     return {
       exchange,
+      isRequestUser: exchange.requestUser.id === userId,
       requestUserList,
       postUserList,
     };

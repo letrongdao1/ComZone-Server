@@ -10,7 +10,7 @@ import { Exchange } from 'src/entities/exchange.entity';
 import { IsNull, Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { BaseService } from 'src/common/service.base';
-import { CreateExchangeDTO, ExchangeDealsDTO } from './dto/create-exchange.dto';
+import { ExchangeDealsDTO } from './dto/create-exchange.dto';
 import { ExchangeStatusEnum } from './dto/exchange-status-enum';
 import { StatusQueryEnum } from './dto/status-query.enum';
 import { ExchangePostsService } from '../exchange-posts/exchange-posts.service';
@@ -28,9 +28,9 @@ export class ExchangesService extends BaseService<Exchange> {
     super(exchangesRepository);
   }
 
-  async createNewExchange(userId: string, dto: CreateExchangeDTO) {
+  async createNewExchange(userId: string, postId: string) {
     const user = await this.usersService.getOne(userId);
-    const post = await this.postsService.getOne(dto.post);
+    const post = await this.postsService.getOne(postId);
 
     const newExchange = this.exchangesRepository.create({
       post: post,
