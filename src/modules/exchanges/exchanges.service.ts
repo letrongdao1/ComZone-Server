@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exchange } from 'src/entities/exchange.entity';
-import { Not, Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { BaseService } from 'src/common/service.base';
 import { CreateExchangeDTO, ExchangeDealsDTO } from './dto/create-exchange.dto';
@@ -86,7 +86,7 @@ export class ExchangesService extends BaseService<Exchange> {
         return await this.exchangesRepository.find({
           where: {
             postUser: { id: userId },
-            requestUser: Not(undefined),
+            requestUser: Not(IsNull()),
           },
         });
       }
