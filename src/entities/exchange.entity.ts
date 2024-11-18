@@ -9,26 +9,15 @@ import { Transaction } from './transactions.entity';
 import { Deposit } from './deposit.entity';
 import { Announcement } from './announcement.entity';
 import { ChatRoom } from './chat-room.entity';
+import { ExchangePost } from './exchange-post.entity';
 
 @Entity('exchanges')
 export class Exchange extends BaseEntity {
+  @ManyToOne(() => ExchangePost, (post) => post.exchanges, { eager: true })
+  post: ExchangePost;
+
   @ManyToOne(() => User, (user) => user.exchangeRequests, { eager: true })
   requestUser: User;
-
-  @ManyToOne(() => User, (user) => user.exchangeOffers, { eager: true })
-  postUser: User;
-
-  @Column({
-    name: 'post_content',
-    type: 'text',
-  })
-  postContent: string;
-
-  @Column({
-    type: 'simple-json',
-    nullable: true,
-  })
-  images: string[];
 
   @Column({
     name: 'compensation_amount',
@@ -72,6 +61,6 @@ export class Exchange extends BaseEntity {
   @OneToMany(() => ChatRoom, (room) => room.exchange)
   chatRooms: ChatRoom[];
 
-  @ManyToMany(() => Delivery, (delivery) => delivery.exchanges)
+  @OneToMany(() => Delivery, (delivery) => delivery.exchange)
   deliveries: Delivery[];
 }

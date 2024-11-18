@@ -20,6 +20,7 @@ import { DeliveryInformation } from './delivery-information.entity';
 import { Exchange } from './exchange.entity';
 import { ExchangeConfirmation } from './exchange-confirmation.entity';
 import { ExchangeComics } from './exchange-comics.entity';
+import { ExchangePost } from './exchange-post.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -151,8 +152,8 @@ export class User extends BaseEntity {
   @OneToMany(() => Exchange, (request) => request.requestUser)
   exchangeRequests: Exchange[];
 
-  @OneToMany(() => Exchange, (offer) => offer.postUser)
-  exchangeOffers: Exchange[];
+  @OneToMany(() => ExchangePost, (post) => post.user)
+  posts: ExchangePost[];
 
   @OneToMany(() => ExchangeComics, (exchangeComics) => exchangeComics.user)
   exchangeComics: ExchangeComics[];

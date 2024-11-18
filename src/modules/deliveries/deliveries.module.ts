@@ -9,11 +9,12 @@ import { DeliveryInformationModule } from '../delivery-information/delivery-info
 import { VietNamAddressModule } from '../viet-nam-address/viet-nam-address.module';
 import { ComicModule } from '../comics/comics.module';
 import { Order } from 'src/entities/orders.entity';
+import { ExchangesModule } from '../exchanges/exchanges.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Delivery, Order]),
-    ExchangeRequestsModule,
+    ExchangesModule,
     ExchangeOffersModule,
     DeliveryInformationModule,
     VietNamAddressModule,
