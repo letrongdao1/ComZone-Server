@@ -52,16 +52,15 @@ export class DepositsService extends BaseService<Deposit> {
         status: 'HOLDING',
       });
     } else if (createDepositDto.exchange) {
-      const exchangeRequest = await this.exchangeRequestsService.getOne(
+      const exchange = await this.exchangeRequestsService.getOne(
         createDepositDto.exchange,
       );
 
-      if (!exchangeRequest)
-        throw new NotFoundException('Exchange request cannot be found!');
+      if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
       deposit = this.depositsRepository.create({
         user,
-        exchangeRequest,
+        exchange,
         amount: createDepositDto.amount,
         status: 'HOLDING',
       });
@@ -87,18 +86,17 @@ export class DepositsService extends BaseService<Deposit> {
   }
 
   async getDepositsByExchangeRequest(userId: string, exchangeId: string) {
-    const deposits = await this.depositsRepository.find({
-      where: { exchangeRequest: { id: exchangeId } },
-    });
-
-    return await Promise.all(
-      deposits.map((deposit) => {
-        return {
-          ...deposit,
-          mine: deposit.user.id === userId,
-        };
-      }),
-    );
+    // const deposits = await this.depositsRepository.find({
+    //   where: { exchangeRequest: { id: exchangeId } },
+    // });
+    // return await Promise.all(
+    //   deposits.map((deposit) => {
+    //     return {
+    //       ...deposit,
+    //       mine: deposit.user.id === userId,
+    //     };
+    //   }),
+    // );
   }
 
   async refundDepositToAUser(depositId: string) {
@@ -141,24 +139,22 @@ export class DepositsService extends BaseService<Deposit> {
   }
 
   async refundAllDepositsOfAnExchange(exchangeId: string) {
-    const exchange = await this.exchangeRequestsService.getOne(exchangeId);
-    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
-
-    const depositList = await this.depositsRepository.find({
-      where: { exchangeRequest: { id: exchangeId } },
-    });
-
-    return await Promise.all(
-      depositList.map(async (deposit) => {
-        await this.refundDepositToAUser(deposit.id);
-      }),
-    )
-      .catch((err) => console.log(err))
-      .finally(() => {
-        return {
-          message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
-        };
-      });
+    // const exchange = await this.exchangeRequestsService.getOne(exchangeId);
+    // if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+    // const depositList = await this.depositsRepository.find({
+    //   where: { exchangeRequest: { id: exchangeId } },
+    // });
+    // return await Promise.all(
+    //   depositList.map(async (deposit) => {
+    //     await this.refundDepositToAUser(deposit.id);
+    //   }),
+    // )
+    //   .catch((err) => console.log(err))
+    //   .finally(() => {
+    //     return {
+    //       message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
+    //     };
+    //   });
   }
 
   async seizeADeposit(depositId: string) {

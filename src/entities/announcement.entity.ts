@@ -5,6 +5,7 @@ import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
 import { ExchangeRequest } from './exchange-request.entity';
 import { ExchangeOffer } from './exchange-offer.entity';
+import { Exchange } from './exchange.entity';
 
 @Entity('announcement')
 export class Announcement extends BaseEntity {
@@ -20,15 +21,10 @@ export class Announcement extends BaseEntity {
   })
   auction: Auction;
 
-  @ManyToOne(() => ExchangeRequest, (request) => request.announcements, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.announcements, {
     nullable: true,
   })
-  exchangeRequest: ExchangeRequest;
-
-  @ManyToOne(() => ExchangeOffer, (offer) => offer.announcements, {
-    nullable: true,
-  })
-  exchangeOffer: ExchangeOffer;
+  exchange: Exchange;
 
   @Column({
     type: 'varchar',

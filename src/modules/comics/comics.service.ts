@@ -7,7 +7,7 @@ import { Comic } from 'src/entities/comics.entity';
 import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
-import { ExchangeComicsDTO } from './dto/exchange-comics.dto';
+import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
 
 @Injectable()
 export class ComicService {
@@ -41,26 +41,6 @@ export class ComicService {
     });
 
     return await this.comicRepository.save(comic);
-  }
-
-  async createExchangeComics(
-    userId: string,
-    exchangeComicsDto: ExchangeComicsDTO,
-    type: ComicsStatusEnum.EXCHANGE_REQUEST | ComicsStatusEnum.EXCHANGE_OFFER,
-  ) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User cannot be found!');
-
-    const newExchangeComics = this.comicRepository.create({
-      sellerId: user,
-      ...exchangeComicsDto,
-      previewChapter: exchangeComicsDto.previewChapter
-        ? exchangeComicsDto.previewChapter
-        : [],
-      status: type,
-    });
-
-    return await this.comicRepository.save(newExchangeComics);
   }
 
   async findAll(): Promise<Comic[]> {

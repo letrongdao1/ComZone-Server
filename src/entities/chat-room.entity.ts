@@ -2,8 +2,8 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Comic } from './comics.entity';
-import { ExchangeRequest } from './exchange-request.entity';
 import { ChatMessage } from './chat-message.entity';
+import { Exchange } from './exchange.entity';
 
 @Entity('chat-room')
 export class ChatRoom extends BaseEntity {
@@ -22,9 +22,9 @@ export class ChatRoom extends BaseEntity {
   @ManyToOne(() => Comic, (comics) => comics.chatRooms)
   comics: Comic;
 
-  @ManyToOne(() => ExchangeRequest, (request) => request.chatRooms)
-  exchangeRequest: ExchangeRequest;
+  @ManyToOne(() => Exchange, (exchange) => exchange.chatRooms)
+  exchange: Exchange;
 
-  @OneToMany(() => ChatMessage, (message) => message.chatRoom)
+  @OneToMany(() => ChatMessage, (mess) => mess.chatRoom)
   chatMessages: ChatMessage[];
 }

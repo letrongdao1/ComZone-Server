@@ -55,13 +55,4 @@ export class ExchangeOffer extends BaseEntity {
     default: 'PENDING',
   })
   status: string;
-
-  @OneToOne(() => Transaction, (transaction) => transaction.exchangeOffer)
-  transactions: Transaction[];
-
-  @OneToMany(() => Announcement, (announcement) => announcement.exchangeOffer)
-  announcements: Announcement[];
-
-  @OneToOne(() => Delivery, (delivery) => delivery.exchangeOffer)
-  deliveries: Delivery[];
 }

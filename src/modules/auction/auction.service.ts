@@ -14,6 +14,7 @@ import { Announcement } from 'src/entities/announcement.entity';
 import { AnnouncementService } from '../announcement/announcement.service';
 import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
+import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
 
 @Injectable()
 export class AuctionService {
@@ -52,7 +53,7 @@ export class AuctionService {
 
     // Change the comic's status to AUCTION
     comic.status = 'AVAILABLE';
-    comic.type = ComicsStatusEnum.AUCTION;
+    comic.type = ComicsTypeEnum.AUCTION;
     await this.comicRepository.save(comic); // Save the updated status
 
     // Create a new auction and associate it with the comic
