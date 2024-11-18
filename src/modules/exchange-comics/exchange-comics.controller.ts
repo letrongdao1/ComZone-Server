@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ExchangeComicsService } from './exchange-comics.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { UpdateRequestOnExchangeDTO } from './dto/exchange-comics.dto';
+import { CreateExchangeDTO } from './dto/exchange-comics.dto';
 
 @Controller('exchange-comics')
 export class ExchangeComicsController {
@@ -17,16 +17,13 @@ export class ExchangeComicsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  createRequestOnExchange(
-    @Req() req: any,
-    @Body() dto: UpdateRequestOnExchangeDTO,
-  ) {
+  createRequestOnExchange(@Req() req: any, @Body() dto: CreateExchangeDTO) {
     return this.exchangeComicsService.createRequestOnExchange(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('exchange/:id')
-  getByExchange(@Param('id') id: string) {
-    return this.exchangeComicsService.getByExchange(id);
+  @Get('exchange/:exchange_id')
+  getByExchange(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.exchangeComicsService.getByExchange(req.user.id, id);
   }
 }
