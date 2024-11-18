@@ -5,7 +5,7 @@ import { Delivery } from './delivery.entity';
 
 @Entity('delivery-information')
 export class DeliveryInformation extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.deliveryInformation)
+  @ManyToOne(() => User, (user) => user.deliveryInformation, { eager: true })
   user: User;
 
   @Column({

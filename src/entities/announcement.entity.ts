@@ -3,8 +3,6 @@ import { Column, Entity, ManyToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
-import { ExchangeRequest } from './exchange-request.entity';
-import { ExchangeOffer } from './exchange-offer.entity';
 import { Exchange } from './exchange.entity';
 
 @Entity('announcement')

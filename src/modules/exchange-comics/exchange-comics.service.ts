@@ -119,4 +119,15 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
       postUserList,
     };
   }
+
+  async getComicsListByUserAndExchange(userId: string, exchangeId: string) {
+    const exchangeComics = await this.exchangeComicsRepository.find({
+      where: { user: { id: userId }, exchange: { id: exchangeId } },
+      relations: ['comics'],
+    });
+
+    return exchangeComics.map((item) => {
+      return item.comics;
+    });
+  }
 }

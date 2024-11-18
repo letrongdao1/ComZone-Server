@@ -11,9 +11,7 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateChatRoomDTO } from './create-chat-room.dto';
 import { ComicService } from '../comics/comics.service';
-import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
 import { ChatMessage } from 'src/entities/chat-message.entity';
-import { ExchangeOffersService } from '../exchange-offers/exchange-offers.service';
 import { ExchangesService } from '../exchanges/exchanges.service';
 
 @Injectable()
