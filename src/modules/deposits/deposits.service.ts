@@ -12,8 +12,8 @@ import { Repository } from 'typeorm';
 import { CreateDepositDTO } from './dto/create-deposit.dto';
 import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
-import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
+import { ExchangesService } from '../exchanges/exchanges.service';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {
@@ -22,8 +22,8 @@ export class DepositsService extends BaseService<Deposit> {
     private readonly depositsRepository: Repository<Deposit>,
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(AuctionService) private readonly auctionsService: AuctionService,
-    @Inject(ExchangeRequestsService)
-    private readonly exchangeRequestsService: ExchangeRequestsService,
+    @Inject(ExchangesService)
+    private readonly exchangesService: ExchangesService,
   ) {
     super(depositsRepository);
   }
@@ -52,7 +52,7 @@ export class DepositsService extends BaseService<Deposit> {
         status: 'HOLDING',
       });
     } else if (createDepositDto.exchange) {
-      const exchange = await this.exchangeRequestsService.getOne(
+      const exchange = await this.exchangesService.getOne(
         createDepositDto.exchange,
       );
 
@@ -85,18 +85,18 @@ export class DepositsService extends BaseService<Deposit> {
     });
   }
 
-  async getDepositsByExchangeRequest(userId: string, exchangeId: string) {
-    // const deposits = await this.depositsRepository.find({
-    //   where: { exchangeRequest: { id: exchangeId } },
-    // });
-    // return await Promise.all(
-    //   deposits.map((deposit) => {
-    //     return {
-    //       ...deposit,
-    //       mine: deposit.user.id === userId,
-    //     };
-    //   }),
-    // );
+  async getDepositsByExchange(userId: string, exchangeId: string) {
+    const deposits = await this.depositsRepository.find({
+      where: { exchange: { id: exchangeId } },
+    });
+    return await Promise.all(
+      deposits.map((deposit) => {
+        return {
+          ...deposit,
+          mine: deposit.user.id === userId,
+        };
+      }),
+    );
   }
 
   async refundDepositToAUser(depositId: string) {

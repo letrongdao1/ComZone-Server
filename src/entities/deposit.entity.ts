@@ -2,7 +2,6 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Auction } from './auction.entity';
-import { ExchangeRequest } from './exchange-request.entity';
 import { Transaction } from './transactions.entity';
 import { DepositStatusEnum } from 'src/modules/deposits/dto/deposit-status.enum';
 import { Exchange } from './exchange.entity';

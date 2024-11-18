@@ -7,7 +7,6 @@ import { Withdrawal } from './withdrawal.entity';
 import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { ExchangeSubscription } from './exchange-subscription.entity';
-import { ExchangeOffer } from './exchange-offer.entity';
 import { Exchange } from './exchange.entity';
 
 @Entity('transactions')

@@ -10,8 +10,6 @@ import {
 import { Auction } from 'src/entities/auction.entity';
 import { User } from 'src/entities/users.entity';
 import { Order } from 'src/entities/orders.entity';
-import { ExchangeRequest } from 'src/entities/exchange-request.entity';
-import { ExchangeOffer } from 'src/entities/exchange-offer.entity';
 
 @Injectable()
 export class AnnouncementService {
@@ -24,10 +22,6 @@ export class AnnouncementService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(Auction)
     private readonly auctionRepository: Repository<Auction>,
-    @InjectRepository(ExchangeRequest)
-    private readonly exchangeRequestRepository: Repository<ExchangeRequest>,
-    @InjectRepository(ExchangeOffer)
-    private readonly exchangeOfferRepository: Repository<ExchangeOffer>,
   ) {}
 
   // Create an announcement
