@@ -9,7 +9,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class ExchangeComicsDTO {
+export class CreateExchangeComicsDTO {
   @ApiProperty({
     description: 'Title of the comic',
     example: 'Comic Title',
@@ -24,7 +24,6 @@ export class ExchangeComicsDTO {
     description: 'Author of the comic',
     example: 'Author Name',
   })
-  @IsNotEmpty()
   @IsString()
   @MinLength(2)
   @MaxLength(50)
@@ -33,7 +32,6 @@ export class ExchangeComicsDTO {
   @ApiProperty({
     description: 'URL for comic cover image',
     example: 'https://example.com/image2.jpg',
-    nullable: true,
   })
   @IsString()
   coverImage: string;
@@ -44,6 +42,7 @@ export class ExchangeComicsDTO {
       'https://example.com/preview1.jpg',
       'https://example.com/preview2.jpg',
     ],
+    nullable: true,
   })
   @IsArray()
   @IsString({ each: true })
@@ -68,11 +67,21 @@ export class ExchangeComicsDTO {
     example: 'This is a great comic about...',
   })
   @IsString()
-  description?: string;
+  description: string;
 
   @ApiProperty({
     example: 1,
   })
   @IsNumber()
   quantity: number;
+
+  @ApiProperty({
+    description: 'Episodes list of comics collection',
+    example: ['Volume 19', 'Episode 73'],
+    nullable: true,
+  })
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsString({ each: true })
+  episodesList?: string[];
 }

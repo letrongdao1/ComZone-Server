@@ -8,14 +8,14 @@ import { ExchangeRequestsModule } from '../exchange-requests/exchange-requests.m
 import { ComicModule } from '../comics/comics.module';
 import { ChatMessage } from 'src/entities/chat-message.entity';
 import { ExchangeOffersModule } from '../exchange-offers/exchange-offers.module';
+import { ExchangesModule } from '../exchanges/exchanges.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ChatRoom, ChatMessage]),
     UsersModule,
     ComicModule,
-    ExchangeRequestsModule,
-    ExchangeOffersModule,
+    ExchangesModule,
   ],
   controllers: [ChatRoomsController],
   providers: [ChatRoomsService],

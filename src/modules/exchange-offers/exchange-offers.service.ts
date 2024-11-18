@@ -46,61 +46,52 @@ export class ExchangeOffersService extends BaseService<ExchangeOffer> {
   }
 
   async createNewExchangeOffer(userId: string, dto: CreateExchangeOfferDTO) {
-    console.log(dto);
-    console.log(userId);
-    const user = await this.usersService.getOne(userId);
-
-    const exchangeRequest = await this.exchangeRequestsService.getOne(
-      dto.exchangeRequest,
-    );
-
-    console.log(exchangeRequest);
-
-    if (!exchangeRequest)
-      throw new NotFoundException('Exchange request cannot be found!');
-
-    if (userId === exchangeRequest.user.id)
-      throw new BadRequestException("Cannot offer self's exchange request!");
-
-    const foundUserOffer = await this.exchangeOffersRepository.findOne({
-      where: {
-        user: { id: userId },
-        exchangeRequest: { id: dto.exchangeRequest },
-      },
-    });
-
-    if (foundUserOffer) {
-      console.log(foundUserOffer);
-      throw new ConflictException(
-        'This user has already made an offer for this request! Try updating instead!',
-      );
-    }
-
-    const offerComics = await Promise.all(
-      dto.offerComics.map(async (comicsId: string) => {
-        const comics = await this.comicsService.findOne(comicsId);
-        if (!comics) throw new NotFoundException('Comics cannot be found!');
-        if (comics.sellerId.id !== userId)
-          throw new BadRequestException(
-            `Comics ${comicsId} does not belong to this user!`,
-          );
-        if (comics.status !== ComicsStatusEnum.EXCHANGE_OFFER)
-          throw new BadRequestException(
-            `Comics ${comicsId} is not used to offer any exchanges!`,
-          );
-        return comics;
-      }),
-    );
-
-    const newOffer = this.exchangeOffersRepository.create({
-      exchangeRequest,
-      user,
-      offerComics,
-      compensationAmount: dto.compensationAmount || 0,
-      status: 'PENDING',
-    });
-
-    return await this.exchangeOffersRepository.save(newOffer);
+    // console.log(dto);
+    // console.log(userId);
+    // const user = await this.usersService.getOne(userId);
+    // const exchangeRequest = await this.exchangeRequestsService.getOne(
+    //   dto.exchangeRequest,
+    // );
+    // console.log(exchangeRequest);
+    // if (!exchangeRequest)
+    //   throw new NotFoundException('Exchange request cannot be found!');
+    // if (userId === exchangeRequest.user.id)
+    //   throw new BadRequestException("Cannot offer self's exchange request!");
+    // const foundUserOffer = await this.exchangeOffersRepository.findOne({
+    //   where: {
+    //     user: { id: userId },
+    //     exchangeRequest: { id: dto.exchangeRequest },
+    //   },
+    // });
+    // if (foundUserOffer) {
+    //   console.log(foundUserOffer);
+    //   throw new ConflictException(
+    //     'This user has already made an offer for this request! Try updating instead!',
+    //   );
+    // }
+    // const offerComics = await Promise.all(
+    //   dto.offerComics.map(async (comicsId: string) => {
+    //     const comics = await this.comicsService.findOne(comicsId);
+    //     if (!comics) throw new NotFoundException('Comics cannot be found!');
+    //     if (comics.sellerId.id !== userId)
+    //       throw new BadRequestException(
+    //         `Comics ${comicsId} does not belong to this user!`,
+    //       );
+    //     if (comics.status !== ComicsStatusEnum.EXCHANGE_OFFER)
+    //       throw new BadRequestException(
+    //         `Comics ${comicsId} is not used to offer any exchanges!`,
+    //       );
+    //     return comics;
+    //   }),
+    // );
+    // const newOffer = this.exchangeOffersRepository.create({
+    //   exchangeRequest,
+    //   user,
+    //   offerComics,
+    //   compensationAmount: dto.compensationAmount || 0,
+    //   status: 'PENDING',
+    // });
+    // return await this.exchangeOffersRepository.save(newOffer);
   }
 
   async getByExchangeRequest(requestId: string) {
@@ -143,10 +134,10 @@ export class ExchangeOffersService extends BaseService<ExchangeOffer> {
   }
 
   async getExchangeOfferComicsByUser(userId: string) {
-    return await this.comicsExchangeService.findOfferedExchangeComicsByUser(
-      userId,
-      false,
-    );
+    // return await this.comicsExchangeService.findOfferedExchangeComicsByUser(
+    //   userId,
+    //   false,
+    // );
   }
 
   async updateSeenStatus(offerId: string) {

@@ -24,10 +24,7 @@ export class CreateAnnouncementDto {
   orderId?: string; // ID of the order related to the announcement
 
   @IsOptional()
-  exchangeRequestId?: string; // ID of the exchange request related to the announcement
-
-  @IsOptional()
-  exchangeOfferId?: string; // ID of the exchange offer related to the announcement
+  exchangeId?: string; // ID of the exchange request related to the announcement
 }
 
 export class UpdateAnnouncementDto {

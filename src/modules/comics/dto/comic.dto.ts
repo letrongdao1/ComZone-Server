@@ -100,6 +100,7 @@ export class CreateComicDto {
     example: ['Volume 19', 'Episode 73'],
     nullable: true,
   })
+  @IsArray()
   @IsNotEmpty({ each: true })
   @IsString({ each: true })
   episodesList?: string[];

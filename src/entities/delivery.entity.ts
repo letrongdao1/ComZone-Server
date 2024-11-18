@@ -1,10 +1,16 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToOne,
+} from 'typeorm';
 import { Order } from './orders.entity';
-import { ExchangeRequest } from './exchange-request.entity';
-import { ExchangeOffer } from './exchange-offer.entity';
 import { OrderDeliveryStatusEnum } from 'src/modules/orders/dto/order-delivery-status.enum';
 import { BaseEntity } from 'src/common/entity.base';
 import { DeliveryInformation } from './delivery-information.entity';
+import { Exchange } from './exchange.entity';
 
 @Entity('delivery')
 export class Delivery extends BaseEntity {
@@ -14,15 +20,21 @@ export class Delivery extends BaseEntity {
   })
   order: Order;
 
-  @ManyToOne(() => ExchangeRequest, (request) => request.deliveries, {
+  @ManyToMany(() => Exchange, (exchange) => exchange.deliveries, {
     nullable: true,
   })
-  exchangeRequest: ExchangeRequest;
-
-  @ManyToOne(() => ExchangeOffer, (offer) => offer.deliveries, {
-    nullable: true,
+  @JoinTable({
+    name: 'exchange_delivery',
+    joinColumn: {
+      name: 'delivery',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'exchange',
+      referencedColumnName: 'id',
+    },
   })
-  exchangeOffer: ExchangeOffer;
+  exchanges: Exchange[];
 
   @ManyToOne(() => DeliveryInformation, (info) => info.fromDeliveries, {
     eager: true,

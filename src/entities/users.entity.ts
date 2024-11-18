@@ -7,8 +7,6 @@ import { Transaction } from './transactions.entity';
 import { Address } from './address.entity';
 import { Follow } from './follow.entity';
 import { Bid } from './bid.entity';
-import { ExchangeRequest } from './exchange-request.entity';
-import { ExchangeOffer } from './exchange-offer.entity';
 import { SourceOfFund } from './source-of-fund.entity';
 import { WalletDeposit } from './wallet-deposit.entity';
 import { Deposit } from './deposit.entity';
@@ -20,8 +18,8 @@ import { SellerFeedback } from './seller-feedback.entity';
 import { ChatMessage } from './chat-message.entity';
 import { DeliveryInformation } from './delivery-information.entity';
 import { Exchange } from './exchange.entity';
-import { ExchangeComicsList } from './exchange-comics-list.entity';
 import { ExchangeConfirmation } from './exchange-confirmation.entity';
+import { ExchangeComics } from './exchange-comics.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -156,8 +154,8 @@ export class User extends BaseEntity {
   @OneToMany(() => Exchange, (offer) => offer.postUser)
   exchangeOffers: Exchange[];
 
-  @OneToMany(() => ExchangeComicsList, (list) => list.user)
-  exchangeComicsList: ExchangeComicsList[];
+  @OneToMany(() => ExchangeComics, (exchangeComics) => exchangeComics.user)
+  exchangeComics: ExchangeComics[];
 
   @OneToMany(() => ExchangeConfirmation, (confirmation) => confirmation.user)
   exchangeConfirmations: ExchangeConfirmation[];

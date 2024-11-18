@@ -14,6 +14,7 @@ import { ComicService } from '../comics/comics.service';
 import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.service';
 import { ChatMessage } from 'src/entities/chat-message.entity';
 import { ExchangeOffersService } from '../exchange-offers/exchange-offers.service';
+import { ExchangesService } from '../exchanges/exchanges.service';
 
 @Injectable()
 export class ChatRoomsService extends BaseService<ChatRoom> {
@@ -24,10 +25,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     private readonly chatMessagesRepository: Repository<ChatMessage>,
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(ComicService) private readonly comicsService: ComicService,
-    @Inject(ExchangeRequestsService)
-    private readonly exchangeRequestsService: ExchangeRequestsService,
-    @Inject(ExchangeOffersService)
-    private readonly exchangeOffersService: ExchangeOffersService,
+    @Inject(ExchangesService)
+    private readonly exchangesService: ExchangesService,
   ) {
     super(chatRoomsRepository);
   }
@@ -39,8 +38,9 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
         'firstUser',
         'secondUser',
         'comics',
-        'exchangeRequest',
-        'exchangeRequest.requestComics',
+        'exchange',
+        'exchange.postUser',
+        'exchange.requestUser',
         'lastMessage',
       ],
     });
@@ -53,10 +53,7 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     if (!firstUser || !secondUser || firstUser.id === secondUser.id)
       throw new NotFoundException('Invalid user!');
 
-    if (
-      (!dto.comics && !dto.exchangeRequest) ||
-      (dto.comics && dto.exchangeRequest)
-    )
+    if ((!dto.comics && !dto.exchange) || (dto.comics && dto.exchange))
       throw new BadRequestException(
         'There must be exactly only 1 comics or 1 exchange request for a chat room!',
       );
@@ -66,21 +63,17 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       if (!comics) throw new NotFoundException('Comics cannot be found!');
     }
 
-    if (dto.exchangeRequest) {
-      const exchangeRequest = await this.exchangeRequestsService.getOne(
-        dto.exchangeRequest,
-      );
-      if (!exchangeRequest)
-        throw new NotFoundException(
-          'Exchange request request cannot be found!',
-        );
+    if (dto.exchange) {
+      const exchange = await this.exchangesService.getOne(dto.exchange);
+      if (!exchange)
+        throw new NotFoundException('Exchange request cannot be found!');
     }
 
     const foundChatRooms = await this.chatRoomsRepository
       .createQueryBuilder('chat_room')
       .leftJoinAndSelect('chat_room.firstUser', 'first')
       .leftJoinAndSelect('chat_room.secondUser', 'second')
-      .leftJoinAndSelect('chat_room.exchangeRequest', 'exchangeRequest')
+      .leftJoinAndSelect('chat_room.exchange', 'exchange')
       .leftJoinAndSelect('chat_room.comics', 'comics')
       .where('first.id = :userId AND second.id = :secondUserId', {
         userId,
@@ -95,9 +88,7 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     const foundRoom = foundChatRooms.find(
       (chatRoom) =>
         (chatRoom.comics && dto.comics && chatRoom.comics.id === dto.comics) ||
-        (chatRoom.exchangeRequest &&
-          dto.exchangeRequest &&
-          chatRoom.exchangeRequest.id === dto.exchangeRequest),
+        true,
     );
 
     if (foundRoom) {
@@ -114,7 +105,7 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
               'firstUser',
               'secondUser',
               'comics',
-              'exchangeRequest',
+              'exchange',
               'lastMessage',
             ],
           }),
@@ -125,9 +116,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       firstUser,
       secondUser,
       comics: dto.comics && (await this.comicsService.findOne(dto.comics)),
-      exchangeRequest:
-        dto.exchangeRequest &&
-        (await this.exchangeRequestsService.getOne(dto.exchangeRequest)),
+      exchange:
+        dto.exchange && (await this.exchangesService.getOne(dto.exchange)),
     });
 
     return await this.chatRoomsRepository.save(newChatRoom);
@@ -139,9 +129,9 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       .leftJoinAndSelect('chat_room.firstUser', 'firstUser')
       .leftJoinAndSelect('chat_room.secondUser', 'secondUser')
       .leftJoinAndSelect('chat_room.comics', 'comics')
-      .leftJoinAndSelect('chat_room.exchangeRequest', 'exchangeRequest')
-      .leftJoinAndSelect('exchangeRequest.requestComics', 'requestComics')
-      .leftJoinAndSelect('exchangeRequest.user', 'requestUser')
+      .leftJoinAndSelect('chat_room.exchange', 'exchange')
+      .leftJoinAndSelect('exchange.postUser', 'postUser')
+      .leftJoinAndSelect('exchange.requestUser', 'requestUser')
       .leftJoinAndSelect('chat_room.lastMessage', 'lastMessage')
       .leftJoinAndSelect('lastMessage.comics', 'lastMessageComics')
       .leftJoinAndSelect('lastMessage.user', 'lastUser')

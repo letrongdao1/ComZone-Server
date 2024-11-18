@@ -18,7 +18,7 @@ import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
 import { ExchangeOffer } from './exchange-offer.entity';
 import { ChatMessage } from './chat-message.entity';
 import { ComicsTypeEnum } from 'src/modules/comics/dto/comic-type.enum';
-import { ExchangeComicsList } from './exchange-comics-list.entity';
+import { ExchangeComics } from './exchange-comics.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -62,7 +62,7 @@ export class Comic extends BaseEntity {
   })
   condition: string;
 
-  @Column('varchar', { nullable: true, default: '2019' })
+  @Column('varchar', { nullable: true })
   publishedDate: string;
 
   @Column({
@@ -107,10 +107,10 @@ export class Comic extends BaseEntity {
   })
   status: string;
 
-  @ManyToMany(() => ExchangeComicsList, (list) => list.comicsList, {
+  @ManyToMany(() => ExchangeComics, (exchangeComics) => exchangeComics.comics, {
     cascade: true,
   })
-  exchange: ExchangeComicsList[];
+  exchangeComics: ExchangeComics[];
 
   @ManyToMany(() => ExchangeRequest, (request) => request.requestComics, {
     cascade: true,
