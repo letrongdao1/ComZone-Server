@@ -43,14 +43,11 @@ export class DepositsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('exchange-request/:exchange_id')
+  @Get('exchange/:exchange_id')
   getDepositsOfAnExchange(
     @Req() req: any,
     @Param('exchange_id') exchangeId: string,
   ) {
-    return this.depositsService.getDepositsByExchangeRequest(
-      req.user.id,
-      exchangeId,
-    );
+    return this.depositsService.getDepositsByExchange(req.user.id, exchangeId);
   }
 }

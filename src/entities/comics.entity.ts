@@ -11,11 +11,9 @@ import { User } from './users.entity';
 import { Genre } from './genres.entity';
 import { OrderItem } from './order-item.entity';
 import { Auction } from './auction.entity';
-import { ExchangeRequest } from './exchange-request.entity';
 import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
 import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
-import { ExchangeOffer } from './exchange-offer.entity';
 import { ChatMessage } from './chat-message.entity';
 import { ComicsTypeEnum } from 'src/modules/comics/dto/comic-type.enum';
 import { ExchangeComics } from './exchange-comics.entity';
@@ -111,16 +109,6 @@ export class Comic extends BaseEntity {
     cascade: true,
   })
   exchangeComics: ExchangeComics[];
-
-  @ManyToMany(() => ExchangeRequest, (request) => request.requestComics, {
-    cascade: true,
-  })
-  exchangeRequests: ExchangeRequest[];
-
-  @ManyToMany(() => ExchangeOffer, (offer) => offer.offerComics, {
-    cascade: true,
-  })
-  exchangeOffers: ExchangeOffer[];
 
   @OneToMany(() => Auction, (auction) => auction.comics)
   auction: Auction[];
