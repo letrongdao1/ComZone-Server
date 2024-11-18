@@ -11,7 +11,7 @@ import { DeliveriesService } from './deliveries.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CreateExchangeRequestDeliveryDTO,
+  CreateExchangeDeliveryDTO,
   CreateExchangeOfferDeliveryDTO,
   CreateOrderDeliveryDTO,
 } from './dto/create-delivery.dto';
@@ -30,15 +30,12 @@ export class DeliveriesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('exchange-request')
-  createExchangeRequestDelivery(@Body() dto: CreateExchangeRequestDeliveryDTO) {
-    return this.deliveriesService.createExchangeRequestDelivery(dto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('exchange-offer')
-  createNewExchangeOfferDelivery(@Body() dto: CreateExchangeOfferDeliveryDTO) {
-    return this.deliveriesService.createExchangeOfferDelivery(dto);
+  @Post('exchange')
+  createExchangeDelivery(
+    @Req() req: any,
+    @Body() dto: CreateExchangeDeliveryDTO,
+  ) {
+    return this.deliveriesService.createExchangeDelivery(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard)

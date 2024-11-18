@@ -13,7 +13,7 @@ import { ExchangeRequestsService } from '../exchange-requests/exchange-requests.
 import { ExchangeOffersService } from '../exchange-offers/exchange-offers.service';
 import {
   CreateExchangeOfferDeliveryDTO,
-  CreateExchangeRequestDeliveryDTO,
+  CreateExchangeDeliveryDTO,
   CreateOrderDeliveryDTO,
 } from './dto/create-delivery.dto';
 import { DeliveryInformationService } from '../delivery-information/delivery-information.service';
@@ -24,6 +24,7 @@ import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enu
 import { Comic } from 'src/entities/comics.entity';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 import { Order } from 'src/entities/orders.entity';
+import { ExchangesService } from '../exchanges/exchanges.service';
 
 dotenv.config();
 
@@ -34,8 +35,8 @@ export class DeliveriesService extends BaseService<Delivery> {
     private readonly deliveriesRepository: Repository<Delivery>,
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
-    @Inject(ExchangeRequestsService)
-    private readonly exchangeRequestsService: ExchangeRequestsService,
+
+    private readonly exchangesService: ExchangesService,
     @Inject(ExchangeOffersService)
     private readonly exchangeOffersService: ExchangeOffersService,
     @Inject(DeliveryInformationService)
@@ -78,71 +79,71 @@ export class DeliveriesService extends BaseService<Delivery> {
       .then(() => this.getOne(newDelivery.id));
   }
 
-  async createExchangeRequestDelivery(dto: CreateExchangeRequestDeliveryDTO) {
-    // if (!dto.exchangeRequest) return;
-    // const deliveryInfo = await this.deliveryInfoService.getOne(dto.addressId);
-    // if (!deliveryInfo)
-    //   throw new NotFoundException('Delivery information cannot be found!');
-    // const exchangeRequest = await this.exchangeRequestsService.getOne(
-    //   dto.exchangeRequest,
-    // );
-    // if (!exchangeRequest)
-    //   throw new NotFoundException('Exchange request cannot be found!');
-    // const foundRequest = await this.deliveriesRepository.find({
-    //   where: { exchangeRequest: { id: dto.exchangeRequest } },
-    // });
-    // if (foundRequest && foundRequest.length === 2)
-    //   throw new ConflictException(
-    //     'Already recorded this delivery information!',
-    //   );
-    // const checkExisted = await this.deliveriesRepository.find({
-    //   where: {
-    //     exchangeOffer: { exchangeRequest: { id: exchangeRequest.id } },
-    //   },
-    //   relations: ['from', 'to'],
-    // });
-    // if (checkExisted.length === 2) {
-    //   const missingFrom = checkExisted.find((value) => value.to);
-    //   const missingTo = checkExisted.find((value) => value.from);
-    //   const from = await this.deliveriesRepository
-    //     .update(missingFrom.id, {
-    //       from: deliveryInfo,
-    //       exchangeRequest,
-    //     })
-    //     .then(() => this.getOne(missingFrom.id));
-    //   const to = await this.deliveriesRepository
-    //     .update(missingTo.id, {
-    //       to: deliveryInfo,
-    //       exchangeRequest,
-    //     })
-    //     .then(() => this.getOne(missingTo.id));
-    //   await this.registerNewGHNDelivery(missingFrom.id);
-    //   await this.registerNewGHNDelivery(missingTo.id);
-    //   return {
-    //     message: 'Successfully created 2 GHN deliveries!',
-    //     data: {
-    //       from,
-    //       to,
-    //     },
-    //   };
-    // } else {
-    //   const newFrom = this.deliveriesRepository.create({
-    //     exchangeRequest,
-    //     from: deliveryInfo,
-    //   });
-    //   const newTo = this.deliveriesRepository.create({
-    //     exchangeRequest,
-    //     to: deliveryInfo,
-    //   });
-    //   return await this.deliveriesRepository
-    //     .save([newFrom, newTo])
-    //     .then(async () => {
-    //       return {
-    //         first: await this.getOne(newFrom.id),
-    //         second: await this.getOne(newTo.id),
-    //       };
-    //     });
-    // }
+  async createExchangeDelivery(userId: string, dto: CreateExchangeDeliveryDTO) {
+    const deliveryInfo = await this.deliveryInfoService.getOne(dto.addressId);
+    if (!deliveryInfo)
+      throw new NotFoundException('Delivery information cannot be found!');
+
+    const exchange = await this.exchangesService.getOne(dto.exchange);
+    if (!exchange)
+      throw new NotFoundException('Exchange request cannot be found!');
+
+    const foundExchangeDelivery = await this.deliveriesRepository.find({
+      where: { exchange: { id: dto.exchange }, from: { user: { id: userId } } },
+    });
+
+    if (foundExchangeDelivery && foundExchangeDelivery.length === 2)
+      throw new ConflictException(
+        'Already recorded this delivery information!',
+      );
+
+    const checkExisted = await this.deliveriesRepository.find({
+      where: {
+        exchange: { id: exchange.id },
+      },
+      relations: ['from', 'to'],
+    });
+    if (checkExisted.length === 2) {
+      const missingFrom = checkExisted.find((value) => value.to);
+      const missingTo = checkExisted.find((value) => value.from);
+      const from = await this.deliveriesRepository
+        .update(missingFrom.id, {
+          from: deliveryInfo,
+        })
+        .then(() => this.getOne(missingFrom.id));
+      const to = await this.deliveriesRepository
+        .update(missingTo.id, {
+          to: deliveryInfo,
+        })
+        .then(() => this.getOne(missingTo.id));
+
+      await this.registerNewGHNDelivery(missingFrom.id);
+      await this.registerNewGHNDelivery(missingTo.id);
+      return {
+        message: 'Successfully created 2 GHN deliveries!',
+        data: {
+          from,
+          to,
+        },
+      };
+    } else {
+      const newFrom = this.deliveriesRepository.create({
+        exchange,
+        from: deliveryInfo,
+      });
+      const newTo = this.deliveriesRepository.create({
+        exchange,
+        to: deliveryInfo,
+      });
+      return await this.deliveriesRepository
+        .save([newFrom, newTo])
+        .then(async () => {
+          return {
+            from: await this.getOne(newFrom.id),
+            to: await this.getOne(newTo.id),
+          };
+        });
+    }
   }
 
   async createExchangeOfferDelivery(dto: CreateExchangeOfferDeliveryDTO) {

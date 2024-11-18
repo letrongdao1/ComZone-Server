@@ -39,7 +39,7 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
         'secondUser',
         'comics',
         'exchange',
-        'exchange.postUser',
+        'exchange.post',
         'exchange.requestUser',
         'lastMessage',
       ],
@@ -130,7 +130,8 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       .leftJoinAndSelect('chat_room.secondUser', 'secondUser')
       .leftJoinAndSelect('chat_room.comics', 'comics')
       .leftJoinAndSelect('chat_room.exchange', 'exchange')
-      .leftJoinAndSelect('exchange.postUser', 'postUser')
+      .leftJoinAndSelect('exchange.post', 'post')
+      .leftJoinAndSelect('post.user', 'postUser')
       .leftJoinAndSelect('exchange.requestUser', 'requestUser')
       .leftJoinAndSelect('chat_room.lastMessage', 'lastMessage')
       .leftJoinAndSelect('lastMessage.comics', 'lastMessageComics')

@@ -7,9 +7,9 @@ export class CreateOrderDeliveryDTO {
   @ApiProperty({ example: "ID of user's delivery information" })
   toAddressId: string;
 }
-export class CreateExchangeRequestDeliveryDTO {
+export class CreateExchangeDeliveryDTO {
   @ApiProperty()
-  exchangeRequest: string;
+  exchange: string;
 
   @ApiProperty({ example: 'ID of delivery information' })
   addressId: string;

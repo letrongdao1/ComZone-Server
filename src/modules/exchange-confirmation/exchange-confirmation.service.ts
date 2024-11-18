@@ -4,7 +4,7 @@ import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity'
 import { Repository } from 'typeorm';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { BaseService } from 'src/common/service.base';
-import { CreateDTO } from './dto/exc-confirmation.dto';
+import { CreateConfirmationDTO } from './dto/exc-confirmation.dto';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -18,25 +18,47 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     super(excConfirmationRepository);
   }
 
-  async createNewConfirmation(dto: CreateDTO) {
+  async createNewConfirmation(userId: string, dto: CreateConfirmationDTO) {
     const exchange = await this.exchangesService.getOne(dto.exchangeId);
     if (!exchange) throw new NotFoundException();
 
-    const user =
-      exchange.requestUser.id === dto.userId
-        ? exchange.requestUser
-        : exchange.postUser.id === dto.userId
-          ? exchange.postUser
-          : null;
+    const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException();
+
+    await this.exchangesService.updateDeals(userId, dto.exchangeId, {
+      compensationAmount: dto.compensationAmount,
+      depositAmount: dto.depositAmount,
+    });
 
     const newConfimation = this.excConfirmationRepository.create({
       exchange,
       user,
+      dealingConfirm: true,
     });
 
     return await this.excConfirmationRepository.save(newConfimation);
   }
 
-  async updateConfirmation() {}
+  async getByUserAndExchange(userId: string, exchangeId: string) {
+    return await this.excConfirmationRepository.findOne({
+      where: {
+        user: { id: userId },
+        exchange: { id: exchangeId },
+      },
+    });
+  }
+
+  async updateDeliveryConfirmation(userId: string, exchangeId: string) {
+    const exchangeConfirmation = await this.excConfirmationRepository.findOne({
+      where: {
+        exchange: { id: exchangeId },
+        user: { id: userId },
+      },
+    });
+    return await this.excConfirmationRepository
+      .update(exchangeConfirmation.id, {
+        deliveryConfirm: true,
+      })
+      .then(() => this.getOne(exchangeConfirmation.id));
+  }
 }

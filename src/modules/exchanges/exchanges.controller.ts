@@ -13,7 +13,6 @@ import { ExchangesService } from './exchanges.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateExchangeDTO, ExchangeDealsDTO } from './dto/create-exchange.dto';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { ExchangeStatusEnum } from './dto/exchange-status-enum';
 import { StatusQueryEnum } from './dto/status-query.enum';
 
 @ApiBearerAuth()
@@ -28,16 +27,6 @@ export class ExchangesController {
     return this.exchangesService.createNewExchange(req.user.id, dto);
   }
 
-  @Get('all/pending')
-  getAllExchangePendingPosts() {
-    return this.exchangesService.getAllPendingExchanges();
-  }
-
-  @Get('search')
-  getSearchedPosts(@Query('key') key: string) {
-    return this.exchangesService.getSearchedPosts(key);
-  }
-
   @ApiQuery({ name: 'status', type: 'enum', enum: StatusQueryEnum })
   @UseGuards(JwtAuthGuard)
   @Get('user/status')
@@ -48,13 +37,14 @@ export class ExchangesController {
     return this.exchangesService.getByStatusQuery(req.user.id, status);
   }
 
+  @Get(':id')
+  getById(@Param('id') id: string) {
+    return this.exchangesService.getOne(id);
+  }
+
   @UseGuards(JwtAuthGuard)
-  @Patch('deals/:exchange_id')
-  updateDeals(
-    @Req() req: any,
-    @Param('exchange_id') exchangeId: string,
-    @Body() dto: ExchangeDealsDTO,
-  ) {
-    return this.exchangesService;
+  @Patch('accept/:id')
+  acceptExchangeRequest(@Req() req: any, @Param('id') id: string) {
+    return this.exchangesService.updateExchangeToDealing(req.user.id, id);
   }
 }

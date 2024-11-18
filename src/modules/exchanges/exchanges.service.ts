@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -10,9 +11,9 @@ import { IsNull, Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { BaseService } from 'src/common/service.base';
 import { CreateExchangeDTO, ExchangeDealsDTO } from './dto/create-exchange.dto';
-import { ComicsExchangeService } from '../comics/comics.exchange.service';
 import { ExchangeStatusEnum } from './dto/exchange-status-enum';
 import { StatusQueryEnum } from './dto/status-query.enum';
+import { ExchangePostsService } from '../exchange-posts/exchange-posts.service';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -21,51 +22,21 @@ export class ExchangesService extends BaseService<Exchange> {
     private readonly exchangesRepository: Repository<Exchange>,
     @Inject(UsersService)
     private readonly usersService: UsersService,
+    @Inject(ExchangePostsService)
+    private readonly postsService: ExchangePostsService,
   ) {
     super(exchangesRepository);
   }
 
   async createNewExchange(userId: string, dto: CreateExchangeDTO) {
     const user = await this.usersService.getOne(userId);
+    const post = await this.postsService.getOne(dto.post);
+
     const newExchange = this.exchangesRepository.create({
-      postUser: user,
-      postContent: dto.postContent,
-      images: dto.images,
+      post: post,
+      requestUser: user,
     });
     return await this.exchangesRepository.save(newExchange);
-  }
-
-  shuffle(array: Exchange[]) {
-    for (let i = array.length - 1; i >= 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  }
-
-  async getAllPendingExchanges() {
-    const exchanges = await this.exchangesRepository.find({
-      where: { status: ExchangeStatusEnum.PENDING },
-    });
-
-    return this.shuffle(exchanges);
-  }
-
-  async getSearchedPosts(key: string) {
-    if (!key || key.length === 0) return await this.getAllPendingExchanges();
-
-    return await this.exchangesRepository
-      .createQueryBuilder('exchange')
-      .leftJoinAndSelect('exchange.postUser', 'postUser')
-      .where(
-        'LOWER(exchange.postContent) LIKE :key AND exchange.status = :status',
-        {
-          key: `%${key.toLowerCase()}%`,
-          status: ExchangeStatusEnum.PENDING,
-        },
-      )
-      .orderBy('exchange.updatedAt')
-      .getMany();
   }
 
   async getByStatusQuery(userId: string, query: StatusQueryEnum) {
@@ -77,7 +48,7 @@ export class ExchangesService extends BaseService<Exchange> {
               requestUser: { id: userId },
             },
             {
-              postUser: { id: userId },
+              post: { user: { id: userId } },
             },
           ],
         });
@@ -85,23 +56,127 @@ export class ExchangesService extends BaseService<Exchange> {
       case StatusQueryEnum.PENDING_REQUEST: {
         return await this.exchangesRepository.find({
           where: {
-            postUser: { id: userId },
+            post: { user: { id: userId } },
             requestUser: Not(IsNull()),
+            status: ExchangeStatusEnum.PENDING,
           },
         });
       }
-      case StatusQueryEnum.SENT_REQUEST:
-      case StatusQueryEnum.IN_PROGRESS:
-      case StatusQueryEnum.IN_DELIVERY:
-      case StatusQueryEnum.FINISHED_DELIVERY:
-      case StatusQueryEnum.SUCCESSFUL:
-      case StatusQueryEnum.CANCELED:
+      case StatusQueryEnum.SENT_REQUEST: {
+        return await this.exchangesRepository.find({
+          where: {
+            requestUser: { id: userId },
+            status: ExchangeStatusEnum.PENDING,
+          },
+        });
+      }
+      case StatusQueryEnum.IN_PROGRESS: {
+        return await this.exchangesRepository.find({
+          where: [
+            {
+              post: { user: { id: userId } },
+              status: ExchangeStatusEnum.DEALING,
+            },
+            {
+              requestUser: { id: userId },
+              status: ExchangeStatusEnum.DEALING,
+            },
+          ],
+        });
+      }
+      case StatusQueryEnum.IN_DELIVERY: {
+        return await this.exchangesRepository.find({
+          where: [
+            {
+              post: { user: { id: userId } },
+              status: ExchangeStatusEnum.DELIVERING,
+            },
+            {
+              requestUser: { id: userId },
+              status: ExchangeStatusEnum.DELIVERING,
+            },
+          ],
+        });
+      }
+      case StatusQueryEnum.FINISHED_DELIVERY: {
+        return await this.exchangesRepository.find({
+          where: [
+            {
+              post: { user: { id: userId } },
+              status: ExchangeStatusEnum.DELIVERED,
+            },
+            {
+              requestUser: { id: userId },
+              status: ExchangeStatusEnum.DELIVERED,
+            },
+          ],
+        });
+      }
+      case StatusQueryEnum.SUCCESSFUL: {
+        return await this.exchangesRepository.find({
+          where: [
+            {
+              post: { user: { id: userId } },
+              status: ExchangeStatusEnum.SUCCESSFUL,
+            },
+            {
+              requestUser: { id: userId },
+              status: ExchangeStatusEnum.SUCCESSFUL,
+            },
+          ],
+        });
+      }
+      case StatusQueryEnum.CANCELED: {
+        return await this.exchangesRepository.find({
+          where: [
+            {
+              post: { user: { id: userId } },
+              status: ExchangeStatusEnum.CANCELED,
+            },
+            {
+              requestUser: { id: userId },
+              status: ExchangeStatusEnum.CANCELED,
+            },
+          ],
+        });
+      }
     }
+  }
+
+  async updateExchangeToDealing(userId: string, exchangeId: string) {
+    const exchange = await this.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    if (exchange.post.user.id !== userId)
+      throw new ForbiddenException(
+        'Only post user can accept requests on this post!',
+      );
+
+    const exchangesOnPost = await this.exchangesRepository.find({
+      where: { post: { id: exchange.post.id } },
+    });
+    await Promise.all(
+      exchangesOnPost.map(async (exc) => {
+        await this.exchangesRepository.update(exc.id, {
+          status:
+            exc.id === exchange.id
+              ? ExchangeStatusEnum.DEALING
+              : ExchangeStatusEnum.REJECTED,
+        });
+      }),
+    );
+
+    await this.postsService.hidePost(exchange.post.id);
+
+    return await this.getOne(exchangeId);
   }
 
   async updateDeals(userId: string, exchangeId: string, dto: ExchangeDealsDTO) {
     const exchange = await this.getOne(exchangeId);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    if (exchange.status !== ExchangeStatusEnum.DEALING)
+      throw new BadRequestException('Only DEALING exchanges can be updated!');
 
     if (!exchange.requestUser || exchange.requestUser.id !== userId)
       throw new ForbiddenException(
@@ -109,8 +184,8 @@ export class ExchangesService extends BaseService<Exchange> {
       );
 
     return await this.exchangesRepository.update(exchangeId, {
-      compensationAmount: dto.compensationAmount,
-      depositAmount: dto.depositAmount,
+      compensationAmount: dto.compensationAmount || 0,
+      depositAmount: dto.depositAmount || 0,
     });
   }
 
