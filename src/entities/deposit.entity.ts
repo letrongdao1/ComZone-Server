@@ -5,6 +5,7 @@ import { Auction } from './auction.entity';
 import { ExchangeRequest } from './exchange-request.entity';
 import { Transaction } from './transactions.entity';
 import { DepositStatusEnum } from 'src/modules/deposits/dto/deposit-status.enum';
+import { Exchange } from './exchange.entity';
 
 @Entity('deposit')
 export class Deposit extends BaseEntity {
@@ -17,11 +18,11 @@ export class Deposit extends BaseEntity {
   })
   auction: Auction;
 
-  @ManyToOne(() => ExchangeRequest, (request) => request.deposits, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.deposits, {
     nullable: true,
     eager: true,
   })
-  exchangeRequest: ExchangeRequest;
+  exchange: Exchange;
 
   @Column({
     type: 'float',

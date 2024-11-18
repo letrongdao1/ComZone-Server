@@ -27,8 +27,7 @@ import { PlansModule } from './modules/exchange-subs/plans/plans.module';
 import { EventsModule } from './modules/socket/event.module';
 import { AuctionModule } from './modules/auction/auction.module';
 import { DepositsModule } from './modules/deposits/deposits.module';
-import { ExchangeRequestsModule } from './modules/exchange-requests/exchange-requests.module';
-import { ExchangeOffersModule } from './modules/exchange-offers/exchange-offers.module';
+import { ExchangesModule } from './modules/exchanges/exchanges.module';
 import { BidModule } from './modules/bid/bid.module';
 import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
 import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
@@ -37,6 +36,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AnnouncementModule } from './modules/announcement/announcement.module';
 import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { DeliveryInformationModule } from './modules/delivery-information/delivery-information.module';
+import { ExchangeComicsModule } from './modules/exchange-comics/exchange-comics.module';
+import { ExchangeConfirmationModule } from './modules/exchange-confirmation/exchange-confirmation.module';
 
 @Module({
   imports: [
@@ -71,8 +72,7 @@ import { DeliveryInformationModule } from './modules/delivery-information/delive
     ZalopayModule,
     VietNamAddressModule,
     TransactionsModule,
-    ExchangeRequestsModule,
-    ExchangeOffersModule,
+    ExchangesModule,
     UserAddressesModule,
     OtpModule,
     SellerDetailsModule,
@@ -88,6 +88,8 @@ import { DeliveryInformationModule } from './modules/delivery-information/delive
     ChatMessagesModule,
     DeliveriesModule,
     DeliveryInformationModule,
+    ExchangeComicsModule,
+    ExchangeConfirmationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -64,14 +64,8 @@ export class AnnouncementService {
   async createAnnouncement(
     createAnnouncementDto: CreateAnnouncementDto,
   ): Promise<Announcement> {
-    const {
-      userId,
-      orderId,
-      auctionId,
-      exchangeRequestId,
-      exchangeOfferId,
-      ...rest
-    } = createAnnouncementDto;
+    const { userId, orderId, auctionId, exchangeId, ...rest } =
+      createAnnouncementDto;
 
     const user = userId
       ? await this.userRepository.findOne({ where: { id: userId } })
@@ -81,16 +75,6 @@ export class AnnouncementService {
       : null;
     const auction = auctionId
       ? await this.auctionRepository.findOne({ where: { id: auctionId } })
-      : null;
-    const exchangeRequest = exchangeRequestId
-      ? await this.exchangeRequestRepository.findOne({
-          where: { id: exchangeRequestId },
-        })
-      : null;
-    const exchangeOffer = exchangeOfferId
-      ? await this.exchangeOfferRepository.findOne({
-          where: { id: exchangeOfferId },
-        })
       : null;
 
     // Throw error if the entities are not found
@@ -103,12 +87,6 @@ export class AnnouncementService {
     if (auctionId && !auction) {
       throw new Error('Auction not found');
     }
-    if (exchangeRequestId && !exchangeRequest) {
-      throw new Error('Exchange request not found');
-    }
-    if (exchangeOfferId && !exchangeOffer) {
-      throw new Error('Exchange offer not found');
-    }
 
     // Create the announcement and set the relationships
     const announcement = this.announcementRepository.create({
@@ -116,8 +94,7 @@ export class AnnouncementService {
       user: user || undefined,
       order: order || undefined,
       auction: auction || undefined,
-      exchangeRequest: exchangeRequest || undefined,
-      exchangeOffer: exchangeOffer || undefined,
+      exchange: undefined,
     });
 
     return await this.announcementRepository.save(announcement);

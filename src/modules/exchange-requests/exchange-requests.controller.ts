@@ -44,12 +44,12 @@ export class ExchangeRequestsController {
 
   @Get('available')
   getAvailableExchangePostsAsGuest() {
-    return this.exchangeRequestsService.getAvailableExchangePosts();
+    // return this.exchangeRequestsService.getAvailableExchangePosts();
   }
 
   @Get('search')
   getSearchedExchangesAsGuest(@Query('key') key: string) {
-    return this.exchangeRequestsService.getSearchedExchanges(key);
+    // return this.exchangeRequestsService.getSearchedExchanges(key);
   }
 
   @UseGuards(JwtAuthGuard)

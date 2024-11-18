@@ -6,17 +6,14 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  OneToOne,
 } from 'typeorm';
 import { User } from './users.entity';
 import { Comic } from './comics.entity';
 import { ExchangeOffer } from './exchange-offer.entity';
-import { Deposit } from './deposit.entity';
 import { ChatRoom } from './chat-room.entity';
 import { Announcement } from './announcement.entity';
 import { BaseEntity } from 'src/common/entity.base';
 import { ExchangeRequestStatusEnum } from '../modules/exchange-requests/dto/exchange-request-status.enum';
-import { Delivery } from './delivery.entity';
 
 @Entity('exchange-request')
 export class ExchangeRequest extends BaseEntity {
@@ -68,16 +65,4 @@ export class ExchangeRequest extends BaseEntity {
 
   @OneToMany(() => ExchangeOffer, (offer) => offer.exchangeRequest)
   exchangeOffers: ExchangeOffer[];
-
-  @OneToMany(() => Deposit, (deposit) => deposit.exchangeRequest)
-  deposits: Deposit[];
-
-  @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.exchangeRequest)
-  chatRooms: ChatRoom[];
-
-  @OneToMany(() => Announcement, (announcement) => announcement.exchangeRequest)
-  announcements: Announcement[];
-
-  @OneToOne(() => Delivery, (delivery) => delivery.exchangeRequest)
-  deliveries: Delivery[];
 }

@@ -17,7 +17,6 @@ import {
 import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 import { ExchangeRequestStatusEnum } from './dto/exchange-request-status.enum';
-import { ExchangeComicsDTO } from '../comics/dto/exchange-comics.dto';
 import { ComicsExchangeService } from '../comics/comics.exchange.service';
 
 @Injectable()
@@ -37,82 +36,70 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
     userId: string,
     createExchangePostDto: CreateExchangePostDTO,
   ) {
-    const user = await this.usersService.getOne(userId);
-    if (!user) throw new NotFoundException('User cannot be found!');
-
-    const availableOfferComics =
-      await this.comicsExchangeService.findOfferedExchangeComicsByUser(
-        user.id,
-        false,
-      );
-
-    if (!availableOfferComics && availableOfferComics.length === 0)
-      throw new ForbiddenException(
-        'This user must have at least 1 offer comics to create new exchange request!',
-      );
-
-    const requestComics: Comic[] = await Promise.all(
-      createExchangePostDto.requestedComics.map(
-        async (comicsDto: ExchangeComicsDTO) => {
-          return await this.comicsService.createExchangeComics(
-            userId,
-            comicsDto,
-            ComicsStatusEnum.EXCHANGE_REQUEST,
-          );
-        },
-      ),
-    );
-
-    const newExchangePost = this.exchangeRequestsRepository.create({
-      user: user,
-      requestComics,
-      postContent: createExchangePostDto.postContent,
-    });
-
-    return await this.exchangeRequestsRepository.save(newExchangePost);
-  }
-
-  shuffle(array: ExchangeRequest[]) {
-    for (let i = array.length - 1; i >= 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  }
-
-  async getAvailableExchangePosts() {
-    const exchanges = await this.exchangeRequestsRepository.find({
-      where: {
-        status: ExchangeRequestStatusEnum.AVAILABLE,
-      },
-    });
-
-    return this.shuffle(exchanges);
-  }
-
-  async getSearchedExchanges(key: string) {
-    if (!key || key.length === 0) return await this.getAvailableExchangePosts();
-
-    const searchedComicsList =
-      await this.comicsExchangeService.searchExchangeRequestComicsByTitleAndAuthor(
-        key,
-      );
-
-    const filteredComicsList = searchedComicsList.filter(
-      (comics) => comics.status === ComicsStatusEnum.EXCHANGE_REQUEST,
-    );
-
-    return await Promise.all(
-      filteredComicsList.map(async (comics: Comic) => {
-        return await this.exchangeRequestsRepository.findOne({
-          where: {
-            requestComics: {
-              id: comics.id,
-            },
-          },
-        });
-      }),
-    );
+    //   const user = await this.usersService.getOne(userId);
+    //   if (!user) throw new NotFoundException('User cannot be found!');
+    //   const availableOfferComics =
+    //     await this.comicsExchangeService.findOfferedExchangeComicsByUser(
+    //       user.id,
+    //       false,
+    //     );
+    //   if (!availableOfferComics && availableOfferComics.length === 0)
+    //     throw new ForbiddenException(
+    //       'This user must have at least 1 offer comics to create new exchange request!',
+    //     );
+    //   const requestComics: Comic[] = await Promise.all(
+    //     createExchangePostDto.requestedComics.map(
+    //       async (comicsDto: ExchangeComicsDTO) => {
+    //         return await this.comicsService.createExchangeComics(
+    //           userId,
+    //           comicsDto,
+    //           ComicsStatusEnum.EXCHANGE_REQUEST,
+    //         );
+    //       },
+    //     ),
+    //   );
+    //   const newExchangePost = this.exchangeRequestsRepository.create({
+    //     user: user,
+    //     requestComics,
+    //     postContent: createExchangePostDto.postContent,
+    //   });
+    //   return await this.exchangeRequestsRepository.save(newExchangePost);
+    // }
+    // shuffle(array: ExchangeRequest[]) {
+    //   for (let i = array.length - 1; i >= 0; i--) {
+    //     const j = Math.floor(Math.random() * (i + 1));
+    //     [array[i], array[j]] = [array[j], array[i]];
+    //   }
+    //   return array;
+    // }
+    // async getAvailableExchangePosts() {
+    //   const exchanges = await this.exchangeRequestsRepository.find({
+    //     where: {
+    //       status: ExchangeRequestStatusEnum.AVAILABLE,
+    //     },
+    //   });
+    //   return this.shuffle(exchanges);
+    // }
+    // async getSearchedExchanges(key: string) {
+    //   if (!key || key.length === 0) return await this.getAvailableExchangePosts();
+    //   const searchedComicsList =
+    //     await this.comicsExchangeService.searchExchangeRequestComicsByTitleAndAuthor(
+    //       key,
+    //     );
+    //   const filteredComicsList = searchedComicsList.filter(
+    //     (comics) => comics.status === ComicsStatusEnum.EXCHANGE_REQUEST,
+    //   );
+    //   return await Promise.all(
+    //     filteredComicsList.map(async (comics: Comic) => {
+    //       return await this.exchangeRequestsRepository.findOne({
+    //         where: {
+    //           requestComics: {
+    //             id: comics.id,
+    //           },
+    //         },
+    //       });
+    //     }),
+    //   );
   }
 
   async getAllExchangePostsOfUser(userId: string) {
@@ -192,21 +179,20 @@ export class ExchangeRequestsService extends BaseService<ExchangeRequest> {
   }
 
   async undoDelete(exchangeId: string) {
-    await this.restore(exchangeId);
-    const exchange = await this.getOne(exchangeId);
-    if (!exchange) throw new NotFoundException();
-
-    await Promise.all(
-      exchange.requestComics.map(async (comics) => {
-        await this.comicsService.update(comics.id, {
-          status: ComicsStatusEnum.EXCHANGE_REQUEST,
-        });
-      }),
-    );
-    await this.exchangeRequestsRepository.update(exchangeId, {
-      status: ExchangeRequestStatusEnum.AVAILABLE,
-    });
-    return this.getOne(exchangeId);
+    // await this.restore(exchangeId);
+    // const exchange = await this.getOne(exchangeId);
+    // if (!exchange) throw new NotFoundException();
+    // await Promise.all(
+    //   exchange.requestComics.map(async (comics) => {
+    //     await this.comicsService.update(comics.id, {
+    //       status: ComicsStatusEnum.EXCHANGE_REQUEST,
+    //     });
+    //   }),
+    // );
+    // await this.exchangeRequestsRepository.update(exchangeId, {
+    //   status: ExchangeRequestStatusEnum.AVAILABLE,
+    // });
+    // return this.getOne(exchangeId);
   }
 
   async remove(exchangeId: string) {

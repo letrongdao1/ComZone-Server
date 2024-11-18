@@ -8,6 +8,7 @@ import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { ExchangeSubscription } from './exchange-subscription.entity';
 import { ExchangeOffer } from './exchange-offer.entity';
+import { Exchange } from './exchange.entity';
 
 @Entity('transactions')
 export class Transaction extends BaseEntity {
@@ -61,12 +62,12 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'exchange-subscription' })
   exchangeSubscription: ExchangeSubscription;
 
-  @OneToOne(() => ExchangeOffer, (offer) => offer.transactions, {
+  @OneToOne(() => Exchange, (exchange) => exchange.transactions, {
     nullable: true,
     eager: true,
   })
-  @JoinColumn({ name: 'exchange-offer' })
-  exchangeOffer: ExchangeOffer;
+  @JoinColumn({ name: 'exchange' })
+  exchange: Exchange;
 
   @Column({
     type: 'varchar',

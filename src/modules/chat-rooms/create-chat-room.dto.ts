@@ -12,5 +12,5 @@ export class CreateChatRoomDTO {
   @ApiProperty({
     nullable: true,
   })
-  exchangeRequest: string;
+  exchange: string;
 }

@@ -10,7 +10,6 @@ import {
   UseGuards,
   Req,
   Patch,
-  NotFoundException,
 } from '@nestjs/common';
 import { ComicService } from './comics.service';
 import {
@@ -24,7 +23,7 @@ import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
-import { ExchangeComicsDTO } from './dto/exchange-comics.dto';
+import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
 import { ComicsExchangeService } from './comics.exchange.service';
 
@@ -48,16 +47,12 @@ export class ComicController {
   @Roles(Role.MEMBER, Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Post('exchange-offer')
+  @Post('exchange')
   createExchangeOfferComics(
     @Req() req: any,
-    @Body() exchangeComicsDto: ExchangeComicsDTO,
+    @Body() dto: CreateExchangeComicsDTO,
   ) {
-    return this.comicService.createExchangeComics(
-      req.user.id,
-      exchangeComicsDto,
-      ComicsStatusEnum.EXCHANGE_OFFER,
-    );
+    return this.comicsExchangeService.createExchangeComics(req.user.id, dto);
   }
 
   @UseGuards(PermissionsGuard)
@@ -127,20 +122,14 @@ export class ComicController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/exchange-offer/user')
-  findOfferedExchangeComicsByLoggedInUser(@Req() req: any) {
-    return this.comicsExchangeService.findOfferedExchangeComicsByUser(
-      req.user.id,
-      false,
-    );
+  @Get('/exchange/user')
+  getExchangeComicsOfUser(@Req() req: any) {
+    return this.comicsExchangeService.getExchangeComicsOfUser(req.user.id);
   }
 
-  @Get('/exchange-offer/:user_id')
+  @Get('/exchange/:user_id')
   findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
-    return this.comicsExchangeService.findOfferedExchangeComicsByUser(
-      userId,
-      false,
-    );
+    return this.comicsExchangeService.getExchangeComicsOfUser(userId);
   }
 
   @Get(':id')
