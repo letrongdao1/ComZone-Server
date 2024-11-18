@@ -39,6 +39,7 @@ export class OrderItemsService extends BaseService<OrderItem> {
 
   async create(orderItem: CreateOrderItemDTO): Promise<any> {
     const { order: orderId, comics: comicsId } = orderItem;
+    console.log(comicsId);
 
     if (!orderId) throw new BadRequestException('Invalid order id!');
 

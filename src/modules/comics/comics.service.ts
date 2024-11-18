@@ -53,7 +53,7 @@ export class ComicService {
 
   async findOne(id: string): Promise<Comic> {
     return await this.comicRepository.findOne({
-      where: { id, type: ComicsTypeEnum.SELL },
+      where: { id },
       relations: ['genres', 'sellerId'],
     });
   }

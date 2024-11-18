@@ -58,8 +58,7 @@ export class Auction extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: ['UPCOMING', 'PROCESSING', 'ONGOING', 'SUCCESSFUL', 'FAILED'],
-    default: 'ONGOING',
+    enum: ['UPCOMING', 'ONGOING', 'SUCCESSFUL', 'FAILED', 'COMPLETED'],
   })
   status: string;
 

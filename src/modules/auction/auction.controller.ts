@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Patch,
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
 import { Auction } from '../../entities/auction.entity';
@@ -68,8 +69,16 @@ export class AuctionController {
   findJoinedAuctionByUser(@Req() req: any): Promise<Auction[]> {
     return this.auctionService.findJoinedAuctionByUser(req.user.id);
   }
-
   // Get a single auction by ID
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/status/completed')
+  async updateStatusToCompleted(
+    @Param('id') id: string,
+    @Req() req: any,
+  ): Promise<Auction> {
+    const user = req.user; // Get the ID of the authenticated user
+    return this.auctionService.updateAuctionStatusToCompleted(id, user);
+  }
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Auction> {
     return this.auctionService.findAuctionById(id);

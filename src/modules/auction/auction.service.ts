@@ -11,7 +11,6 @@ import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 import { Bid } from 'src/entities/bid.entity';
 import { Announcement } from 'src/entities/announcement.entity';
-import { AnnouncementService } from '../announcement/announcement.service';
 import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
@@ -99,7 +98,7 @@ export class AuctionService {
         bid.price > highest.price ? bid : highest,
       );
 
-      auction.status = 'PROCESSING';
+      auction.status = 'SUCCESSFUL';
       auction.winner = latestBid.user;
       await this.auctionRepository.save(auction);
 
@@ -204,7 +203,20 @@ export class AuctionService {
         index === array.findIndex((auction) => auction.id === value.id),
     );
   }
+  async updateAuctionStatusToCompleted(
+    id: string,
+    user: User,
+  ): Promise<Auction> {
+    const auction = await this.auctionRepository.findOne({ where: { id } });
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${id} not found`);
+    }
 
+    // Update the status
+    auction.status = 'COMPLETED';
+    auction.winner = user;
+    return this.auctionRepository.save(auction); // Save changes
+  }
   async findUpcomingAuctions(): Promise<Auction[]> {
     const now = new Date();
     return this.auctionRepository.find({
