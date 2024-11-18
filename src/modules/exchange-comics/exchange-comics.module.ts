@@ -16,5 +16,6 @@ import { ComicModule } from '../comics/comics.module';
   ],
   controllers: [ExchangeComicsController],
   providers: [ExchangeComicsService],
+  exports: [ExchangeComicsService],
 })
 export class ExchangeComicsModule {}

@@ -14,11 +14,3 @@ export class CreateExchangeDeliveryDTO {
   @ApiProperty({ example: 'ID of delivery information' })
   addressId: string;
 }
-
-export class CreateExchangeOfferDeliveryDTO {
-  @ApiProperty()
-  exchangeOffer: string;
-
-  @ApiProperty({ example: 'ID of delivery information' })
-  addressId: string;
-}
