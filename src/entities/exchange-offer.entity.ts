@@ -24,7 +24,7 @@ export class ExchangeOffer extends BaseEntity {
   @JoinColumn({ name: 'exchange_request' })
   exchangeRequest: ExchangeRequest;
 
-  @ManyToOne(() => User, (user) => user.exchangeOffers, {
+  @ManyToOne(() => User, (user) => user.exchangeRequests, {
     eager: true,
   })
   @JoinColumn({ name: 'user' })

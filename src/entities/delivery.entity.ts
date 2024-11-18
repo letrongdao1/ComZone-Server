@@ -20,21 +20,10 @@ export class Delivery extends BaseEntity {
   })
   order: Order;
 
-  @ManyToMany(() => Exchange, (exchange) => exchange.deliveries, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.deliveries, {
     nullable: true,
   })
-  @JoinTable({
-    name: 'exchange_delivery',
-    joinColumn: {
-      name: 'delivery',
-      referencedColumnName: 'id',
-    },
-    inverseJoinColumn: {
-      name: 'exchange',
-      referencedColumnName: 'id',
-    },
-  })
-  exchanges: Exchange[];
+  exchange: Exchange;
 
   @ManyToOne(() => DeliveryInformation, (info) => info.fromDeliveries, {
     eager: true,

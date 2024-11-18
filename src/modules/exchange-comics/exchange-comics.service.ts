@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ExchangeComics } from 'src/entities/exchange-comics.entity';
@@ -61,7 +65,7 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
       (comics: Comic) => {
         return this.exchangeComicsRepository.create({
           exchange,
-          user: exchange.postUser,
+          user: exchange.post.user,
           comics,
         });
       },
@@ -82,5 +86,37 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
     );
 
     return await this.exchangesService.updateRequestUser(userId, exchange.id);
+  }
+
+  async getByExchange(exchangeId: string) {
+    const exchange = await this.exchangesService.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    if (!exchange.requestUser)
+      throw new BadRequestException(
+        'This post did not get any exchange requests yet!',
+      );
+
+    const requestUserList = await this.exchangeComicsRepository.find({
+      where: {
+        exchange: { id: exchangeId },
+        user: { id: exchange.requestUser.id },
+      },
+      relations: ['comics'],
+    });
+
+    const postUserList = await this.exchangeComicsRepository.find({
+      where: {
+        exchange: { id: exchangeId },
+        user: { id: exchange.post.user.id },
+      },
+      relations: ['comics'],
+    });
+
+    return {
+      exchange,
+      requestUserList,
+      postUserList,
+    };
   }
 }

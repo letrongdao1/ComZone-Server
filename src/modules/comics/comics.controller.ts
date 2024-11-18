@@ -58,8 +58,8 @@ export class ComicController {
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.comicService.findAll();
+  findAllSellComics() {
+    return this.comicService.findAllSellComics();
   }
 
   @UseGuards(JwtAuthGuard)
@@ -117,7 +117,7 @@ export class ComicController {
       return this.comicService.findByAuthor(author);
     } else {
       // Handle case where no filters are provided (e.g., return all comics)
-      return this.comicService.findAll();
+      return this.comicService.findAllSellComics();
     }
   }
 

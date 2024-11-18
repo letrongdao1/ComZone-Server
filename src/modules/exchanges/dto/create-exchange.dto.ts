@@ -1,14 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString } from 'class-validator';
 
 export class CreateExchangeDTO {
   @ApiProperty()
-  postContent: string;
-
-  @ApiProperty({ nullable: true })
-  @IsArray({ each: true })
-  @IsString({ each: true })
-  images: string[];
+  post: string;
 }
 
 export class ExchangeDealsDTO {

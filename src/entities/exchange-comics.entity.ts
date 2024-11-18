@@ -6,18 +6,12 @@ import { Comic } from './comics.entity';
 
 @Entity('exchange-comics')
 export class ExchangeComics extends BaseEntity {
-  @ManyToOne(() => Exchange, (exchange) => exchange.exchangeComics, {
-    eager: true,
-  })
+  @ManyToOne(() => Exchange, (exchange) => exchange.exchangeComics)
   exchange: Exchange;
 
-  @ManyToOne(() => User, (user) => user.exchangeComics, {
-    eager: true,
-  })
+  @ManyToOne(() => User, (user) => user.exchangeComics)
   user: User;
 
-  @ManyToOne(() => Comic, (comics) => comics.exchangeComics, {
-    eager: true,
-  })
+  @ManyToOne(() => Comic, (comics) => comics.exchangeComics)
   comics: Comic;
 }

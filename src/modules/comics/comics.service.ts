@@ -8,6 +8,7 @@ import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
 import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
+import { ComicsTypeEnum } from './dto/comic-type.enum';
 
 @Injectable()
 export class ComicService {
@@ -43,15 +44,16 @@ export class ComicService {
     return await this.comicRepository.save(comic);
   }
 
-  async findAll(): Promise<Comic[]> {
+  async findAllSellComics(): Promise<Comic[]> {
     return await this.comicRepository.find({
+      where: { type: ComicsTypeEnum.SELL },
       relations: ['genres', 'sellerId'],
     });
   }
 
   async findOne(id: string): Promise<Comic> {
     return await this.comicRepository.findOne({
-      where: { id },
+      where: { id, type: ComicsTypeEnum.SELL },
       relations: ['genres', 'sellerId'],
     });
   }
@@ -116,7 +118,7 @@ export class ComicService {
 
     // Modify the find query to sort by createdAt in descending order
     const comics = await this.comicRepository.find({
-      where: { sellerId: { id: seller.id } },
+      where: { sellerId: { id: seller.id }, type: ComicsTypeEnum.SELL },
       order: {
         createdAt: 'DESC', // Sorting by createdAt in descending order
       },
@@ -132,13 +134,13 @@ export class ComicService {
     if (sellerId) {
       // Exclude comics of the specified seller
       return this.comicRepository.find({
-        where: { sellerId: Not(sellerId), status },
+        where: { sellerId: Not(sellerId), type: ComicsTypeEnum.SELL, status },
         relations: ['genres', 'sellerId'],
       });
     } else {
       // Return all comics with the specified status
       return this.comicRepository.find({
-        where: { status },
+        where: { status, type: ComicsTypeEnum.SELL },
         relations: ['genres', 'sellerId'],
       });
     }
@@ -153,6 +155,9 @@ export class ComicService {
 
   async findAllAndSortByPrice(order: 'ASC' | 'DESC' = 'ASC'): Promise<Comic[]> {
     const options: FindManyOptions<Comic> = {
+      where: {
+        type: ComicsTypeEnum.SELL,
+      },
       order: {
         price: order,
       },
@@ -170,6 +175,7 @@ export class ComicService {
       .leftJoin('comic.genres', 'genre')
       .where('genre.id IN (:...genreIds)', { genreIds }) // Filter by genre IDs
       .andWhere('comic.author = :author', { author }) // Filter by author
+      .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .groupBy('comic.id')
       .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Check for at least the provided genres
       .getMany();
@@ -180,6 +186,7 @@ export class ComicService {
       .createQueryBuilder('comic')
       .leftJoin('comic.genres', 'genre')
       .where('genre.id IN (:...genreIds)', { genreIds })
+      .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .groupBy('comic.id')
       .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Match at least the provided genres
       .getMany();
@@ -188,6 +195,7 @@ export class ComicService {
     return this.comicRepository
       .createQueryBuilder('comic')
       .where('comic.author = :author', { author })
+      .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .getMany();
   }
 
