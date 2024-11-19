@@ -40,4 +40,10 @@ export class ExchangesController {
   acceptExchangeRequest(@Req() req: any, @Param('id') id: string) {
     return this.exchangesService.updateExchangeToDealing(req.user.id, id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('reject/:id')
+  rejectExchangeRequest(@Req() req: any, @Param('id') id: string) {
+    return this.exchangesService.rejectExchangeRequest(req.user.id, id);
+  }
 }
