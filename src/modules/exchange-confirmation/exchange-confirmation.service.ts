@@ -45,6 +45,7 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
         user: { id: userId },
         exchange: { id: exchangeId },
       },
+      relations: ['exchange', 'user'],
     });
   }
 
