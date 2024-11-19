@@ -25,10 +25,11 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException();
 
-    await this.exchangesService.updateDeals(userId, dto.exchangeId, {
-      compensationAmount: dto.compensationAmount,
-      depositAmount: dto.depositAmount,
-    });
+    if (!exchange.compensationAmount && !exchange.depositAmount)
+      await this.exchangesService.updateDeals(userId, dto.exchangeId, {
+        compensationAmount: dto.compensationAmount,
+        depositAmount: dto.depositAmount,
+      });
 
     const newConfimation = this.excConfirmationRepository.create({
       exchange,

@@ -9,6 +9,7 @@ import { ComicModule } from '../comics/comics.module';
 import { Order } from 'src/entities/orders.entity';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module';
+import { DeliveriesScheduleService } from './delivery-schedule.service.';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module'
     ComicModule,
   ],
   controllers: [DeliveriesController],
-  providers: [DeliveriesService],
+  providers: [DeliveriesService, DeliveriesScheduleService],
   exports: [DeliveriesService],
 })
 export class DeliveriesModule {}
