@@ -13,6 +13,9 @@ export class CreateOrderDTO {
   @ApiProperty()
   addressId: string;
 
+  @ApiProperty()
+  type?: string;
+
   @ApiProperty({ nullable: true })
   note?: string;
 }

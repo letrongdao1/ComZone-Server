@@ -13,6 +13,7 @@ import { Transaction } from './transactions.entity';
 import { Announcement } from './announcement.entity';
 import { Delivery } from './delivery.entity';
 import { OrderStatusEnum } from 'src/modules/orders/dto/order-status.enum';
+import { OrderTypeEnum } from 'src/modules/orders/dto/order-type.enum';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -46,6 +47,12 @@ export class Order extends BaseEntity {
     default: false,
   })
   isPaid: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: OrderTypeEnum,
+  })
+  type: string;
 
   @Column({
     type: 'enum',
