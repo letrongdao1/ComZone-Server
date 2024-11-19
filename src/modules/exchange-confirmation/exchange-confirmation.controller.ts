@@ -11,7 +11,10 @@ import {
 import { ExchangeConfirmationService } from './exchange-confirmation.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateConfirmationDTO } from './dto/exc-confirmation.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Exchange Confirmation')
 @Controller('exchange-confirmation')
 export class ExchangeConfirmationController {
   constructor(

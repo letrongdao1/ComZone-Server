@@ -8,5 +8,5 @@ export class CreateDepositDTO {
   exchange?: string;
 
   @ApiProperty()
-  amount: number;
+  amount?: number;
 }

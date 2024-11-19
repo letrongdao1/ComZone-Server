@@ -6,6 +6,7 @@ import { Deposit } from 'src/entities/deposit.entity';
 import { UsersModule } from '../users/users.module';
 import { AuctionModule } from '../auction/auction.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
+import { DeliveriesModule } from '../deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ExchangesModule } from '../exchanges/exchanges.module';
     UsersModule,
     AuctionModule,
     ExchangesModule,
+    DeliveriesModule,
   ],
   controllers: [DepositsController],
   providers: [DepositsService],

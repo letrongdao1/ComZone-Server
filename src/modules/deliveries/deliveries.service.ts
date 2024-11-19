@@ -45,11 +45,16 @@ export class DeliveriesService extends BaseService<Delivery> {
     super(deliveriesRepository);
   }
 
-  async getOne(id: string): Promise<Delivery> {
-    return this.deliveriesRepository.findOne({
-      where: { id },
-      relations: ['from', 'to'],
+  async getAll(): Promise<Delivery[]> {
+    const deliveries = await this.deliveriesRepository.find({
+      order: { updatedAt: 'DESC' },
     });
+    await Promise.all(
+      deliveries.map(async (delivery) => {
+        await this.autoUpdateGHNDeliveryStatus(delivery.id);
+      }),
+    );
+    return deliveries;
   }
 
   async createOrderDelivery(dto: CreateOrderDeliveryDTO) {
@@ -116,15 +121,9 @@ export class DeliveriesService extends BaseService<Delivery> {
         })
         .then(() => this.getOne(missingTo.id));
 
-      await this.registerNewGHNDelivery(missingFrom.id);
-      await this.registerNewGHNDelivery(missingTo.id);
-
       return {
-        message: 'Successfully created 2 GHN deliveries!',
-        data: {
-          from,
-          to,
-        },
+        from,
+        to,
       };
     } else {
       const newFrom = this.deliveriesRepository.create({
