@@ -329,7 +329,7 @@ export class DeliveriesService extends BaseService<Delivery> {
           from_ward_code: getDeliveryFeeDto.fromWard,
           to_district_id: getDeliveryFeeDto.toDistrict,
           to_ward_code: getDeliveryFeeDto.toWard,
-          weight: 100 * getDeliveryFeeDto.comicsQuantity,
+          weight: 500 * getDeliveryFeeDto.comicsQuantity,
           service_id: availableServices[0].service_id,
           service_type_id: availableServices[0].service_type_id,
         },
