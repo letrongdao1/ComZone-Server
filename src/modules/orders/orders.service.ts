@@ -17,7 +17,6 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicService } from '../comics/comics.service';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
-import { GetDeliveryFeeDTO } from '../deliveries/dto/get-delivery-fee.dto';
 import * as dotenv from 'dotenv';
 import axios from 'axios';
 import { CancelOrderDTO } from './dto/cancel-order.dto';

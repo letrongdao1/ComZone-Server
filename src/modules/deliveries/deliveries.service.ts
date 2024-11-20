@@ -329,7 +329,7 @@ export class DeliveriesService extends BaseService<Delivery> {
           from_ward_code: getDeliveryFeeDto.fromWard,
           to_district_id: getDeliveryFeeDto.toDistrict,
           to_ward_code: getDeliveryFeeDto.toWard,
-          weight: 100 * getDeliveryFeeDto.comicsQuantity,
+          weight: 500 * getDeliveryFeeDto.comicsQuantity,
           service_id: availableServices[0].service_id,
           service_type_id: availableServices[0].service_type_id,
         },
@@ -352,6 +352,82 @@ export class DeliveriesService extends BaseService<Delivery> {
           from_ward_code: getDeliveryFeeDto.fromWard,
           to_district_id: getDeliveryFeeDto.toDistrict,
           to_ward_code: getDeliveryFeeDto.toWard,
+          service_id: availableServices[0].service_id,
+        },
+        { headers },
+      )
+      .then((res) => {
+        return res.data.data.leadtime;
+      })
+      .catch((err) => {
+        throw new BadRequestException(
+          'Error getting estimated delivery time: ' + err.response.data,
+        );
+      });
+    return {
+      deliveryFee,
+      estDeliveryTime: new Date(estDeliveryTime * 1000),
+    };
+  }
+
+  async getDeliveryDetailsByDeliveryId(deliveryId: string) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: { id: deliveryId },
+    });
+    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    const headers = {
+      Token: process.env.GHN_TOKEN,
+      ShopId: process.env.GHN_SHOPID,
+    };
+    const availableServices: any[] = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services',
+        {
+          shop_id: parseInt(process.env.GHN_SHOPID),
+          from_district: delivery.from.districtId,
+          to_district: delivery.to.districtId,
+        },
+        { headers },
+      )
+      .then((res) => {
+        return res.data.data;
+      })
+      .catch((err) => {
+        console.log('Error getting available services: ', err.response.data);
+        throw new BadRequestException(err.response.data);
+      });
+    const deliveryFee = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee',
+        {
+          from_district_id: delivery.from.districtId,
+          from_ward_code: delivery.from.wardId,
+          to_district_id: delivery.to.districtId,
+          to_ward_code: delivery.to.wardId,
+          weight: 1000,
+          service_id: availableServices[0].service_id,
+          service_type_id: availableServices[0].service_type_id,
+        },
+        { headers },
+      )
+      .then((res) => {
+        return res.data.data.total;
+      })
+      .catch((err) => {
+        throw new BadRequestException(
+          'Error getting delivery fee: ',
+          err.response.data,
+        );
+      });
+    const estDeliveryTime = await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/leadtime',
+        {
+          from_district_id: delivery.from.districtId,
+          from_ward_code: delivery.from.wardId,
+          to_district_id: delivery.to.districtId,
+          to_ward_code: delivery.to.wardId,
           service_id: availableServices[0].service_id,
         },
         { headers },

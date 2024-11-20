@@ -20,7 +20,7 @@ export class TransactionDTO {
   exchangeSubscription?: string;
 
   @ApiProperty({ nullable: true })
-  exchangeCompensation?: string;
+  exchange?: string;
 
   @ApiProperty()
   amount: number;
