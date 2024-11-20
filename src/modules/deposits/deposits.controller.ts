@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { DepositsService } from './deposits.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { CreateDepositDTO } from './dto/create-deposit.dto';
+import { CreateDepositDTO, ExchangeDepositDTO } from './dto/create-deposit.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
@@ -22,6 +22,12 @@ export class DepositsController {
   @Post()
   placeDeposit(@Req() req: any, @Body() createDepositDto: CreateDepositDTO) {
     return this.depositsService.placeDeposit(req.user.id, createDepositDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('exchange')
+  placeExchangeDeposit(@Req() req: any, @Body() dto: ExchangeDepositDTO) {
+    return this.depositsService.placeExchangeDeposit(req.user.id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
