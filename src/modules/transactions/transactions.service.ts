@@ -113,13 +113,6 @@ export class TransactionsService extends BaseService<Transaction> {
       isUsed: true,
     });
 
-    let compensatedTransaction = this.transactionsRepository.create({
-      code: generateNumericCode(8),
-      user,
-      exchange,
-      isUsed: true,
-    });
-
     newTransaction.exchange = exchange;
     newTransaction.status = TransactionStatusEnum.SUCCESSFUL;
     newTransaction.isUsed = true;
@@ -131,8 +124,9 @@ export class TransactionsService extends BaseService<Transaction> {
         userDelivery.deliveryFee;
     } else {
       newTransaction.amount = exchange.depositAmount + userDelivery.deliveryFee;
-      compensatedTransaction.amount = exchange.compensationAmount;
     }
+
+    return await this.transactionsRepository.save(newTransaction);
   }
 
   async getAllTransactionsOfUser(userId: string) {
