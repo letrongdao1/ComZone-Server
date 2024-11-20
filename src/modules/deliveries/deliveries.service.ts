@@ -452,4 +452,14 @@ export class DeliveriesService extends BaseService<Delivery> {
       relations: ['exchange'],
     });
   }
+
+  async getByExchangeAndUser(userId: string, exchangeId: string) {
+    return await this.deliveriesRepository.findOne({
+      where: {
+        exchange: { id: exchangeId },
+        from: { user: { id: userId } },
+      },
+      relations: ['exchange'],
+    });
+  }
 }

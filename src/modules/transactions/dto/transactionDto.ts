@@ -42,3 +42,8 @@ export class TransactionDTO {
   })
   isUsed?: boolean;
 }
+
+export class ExchangeTransactionDTO {
+  @ApiProperty({ example: 'Exchange ID' })
+  exchange: string;
+}

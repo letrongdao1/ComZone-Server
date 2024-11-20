@@ -54,4 +54,10 @@ export class DeliveriesController {
   getByExchange(@Param('id') id: string) {
     return this.deliveriesService.getByExchange(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange/from-user/:exchange_id')
+  getByExchangeAndUser(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.deliveriesService.getByExchangeAndUser(req.user.id, id);
+  }
 }

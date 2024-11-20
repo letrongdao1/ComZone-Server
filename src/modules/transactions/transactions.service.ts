@@ -96,12 +96,37 @@ export class TransactionsService extends BaseService<Transaction> {
     const exchange = await this.exchangesService.getOne(exchangeId);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
-    let newTransaction: Transaction;
+    const deliveries = await this.deliveriesService.getByExchange(exchangeId);
+    const userDelivery = deliveries.find(
+      (delivery) => delivery.from.user.id === userId,
+    );
+
+    if (!userDelivery.deliveryFee || userDelivery.deliveryFee === 0)
+      throw new BadRequestException(
+        'Cannot find delivery fee of this exchange!',
+      );
+
+    let newTransaction = this.transactionsRepository.create({
+      code: generateNumericCode(8),
+      user,
+      exchange,
+      isUsed: true,
+    });
+
+    newTransaction.exchange = exchange;
+    newTransaction.status = TransactionStatusEnum.SUCCESSFUL;
+    newTransaction.isUsed = true;
+
     if (exchange.post.user.id === userId) {
-      newTransaction.exchange = exchange;
       newTransaction.amount =
-        exchange.depositAmount + exchange.compensationAmount;
+        exchange.depositAmount +
+        exchange.compensationAmount +
+        userDelivery.deliveryFee;
+    } else {
+      newTransaction.amount = exchange.depositAmount + userDelivery.deliveryFee;
     }
+
+    return await this.transactionsRepository.save(newTransaction);
   }
 
   async getAllTransactionsOfUser(userId: string) {
