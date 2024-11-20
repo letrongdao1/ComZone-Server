@@ -8,7 +8,10 @@ export class Bid extends BaseEntity {
   @ManyToOne(() => User, (user) => user.bids, { eager: true })
   user: User;
 
-  @ManyToOne(() => Auction, (auction) => auction.bids, { eager: true })
+  @ManyToOne(() => Auction, (auction) => auction.bids, {
+    cascade: true,
+    eager: true,
+  })
   auction: Auction;
 
   @Column({

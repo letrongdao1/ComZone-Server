@@ -1,4 +1,4 @@
-import { OnModuleInit, Injectable } from '@nestjs/common';
+import { OnModuleInit, Injectable, Inject, forwardRef } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,6 +11,8 @@ import { BidService } from '../bid/bid.service';
 import { CreateBidDto } from '../bid/dto/bid.dto';
 import { CreateAnnouncementDto } from '../announcement/dto/announcement.dto';
 import { AnnouncementService } from '../announcement/announcement.service';
+import { User } from 'src/entities/users.entity';
+import { AuctionService } from '../auction/auction.service';
 
 @WebSocketGateway({
   cors: {
@@ -24,6 +26,8 @@ export class EventsGateway implements OnModuleInit {
   constructor(
     private readonly bidService: BidService,
     private readonly announcementService: AnnouncementService,
+    @Inject(forwardRef(() => AuctionService))
+    private readonly auctionService: AuctionService, // AuctionService should be correctly injected here
   ) {}
 
   private userSockets = new Map<string, Set<string>>();
@@ -75,6 +79,34 @@ export class EventsGateway implements OnModuleInit {
       console.error('Error handling bid:', error);
       return { success: false, message: 'Internal server error' };
     }
+  }
+  @SubscribeMessage('updateAuctionStatus')
+  async handleUpdateAuctionStatus(
+    @MessageBody()
+    data: {
+      auctionId: string;
+      currentPrice: number;
+      user: User;
+    },
+  ) {
+    const { auctionId, currentPrice, user } = data;
+    const bid = await this.bidService.create({
+      userId: user.id,
+      auctionId,
+      price: currentPrice,
+    });
+    console.log('11111', bid);
+
+    const updatedAuction =
+      await this.auctionService.updateAuctionStatusToCompleted(
+        auctionId,
+        currentPrice,
+        user,
+      );
+    console.log('12312', updatedAuction);
+
+    // Emit the updated auction data (including winner and status) to the clients
+    this.server.emit('auctionUpdated', updatedAuction); // 'auctionUpdated' is the event name
   }
 
   async notifyUser(

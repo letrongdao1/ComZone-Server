@@ -74,10 +74,15 @@ export class AuctionController {
   @Patch(':id/status/completed')
   async updateStatusToCompleted(
     @Param('id') id: string,
+    @Body('currentPrice') currentPrice: number,
     @Req() req: any,
   ): Promise<Auction> {
     const user = req.user; // Get the ID of the authenticated user
-    return this.auctionService.updateAuctionStatusToCompleted(id, user);
+    return this.auctionService.updateAuctionStatusToCompleted(
+      id,
+      currentPrice,
+      user,
+    );
   }
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Auction> {

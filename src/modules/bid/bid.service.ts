@@ -23,6 +23,7 @@ export class BidService {
 
   async create(createBidDto: CreateBidDto): Promise<Bid> {
     const { userId, auctionId, price } = createBidDto;
+    console.log('121312', createBidDto);
 
     // Check if the user exists
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -40,6 +41,7 @@ export class BidService {
     if (!auction) {
       throw new NotFoundException(`Auction with ID ${auctionId} not found`);
     }
+    console.log('AUCTION', auction);
 
     // Determine the minimum acceptable bid based on the current price or reserve price
     const minimumBid = auction.currentPrice

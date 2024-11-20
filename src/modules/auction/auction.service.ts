@@ -2,18 +2,20 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
-import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 import { Bid } from 'src/entities/bid.entity';
 import { Announcement } from 'src/entities/announcement.entity';
 import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
+import { BidService } from '../bid/bid.service';
 
 @Injectable()
 export class AuctionService {
@@ -25,7 +27,9 @@ export class AuctionService {
     @InjectRepository(Bid) private bidReposistory: Repository<Bid>,
     @InjectRepository(Announcement)
     private announcementRepository: Repository<Announcement>,
-    private readonly eventsGateway: EventsGateway,
+    private readonly bidService: BidService,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway, // Use forwardRef to resolve circular dependency
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
@@ -88,6 +92,7 @@ export class AuctionService {
     if (!auction) throw new NotFoundException('Auction not found');
 
     const now = new Date();
+    console.log(now);
     if (auction.endTime > now) {
       return; // Auction hasn't ended yet
     }
@@ -205,18 +210,72 @@ export class AuctionService {
   }
   async updateAuctionStatusToCompleted(
     id: string,
+    currentPrice: number,
     user: User,
   ): Promise<Auction> {
-    const auction = await this.auctionRepository.findOne({ where: { id } });
+    const auction = await this.auctionRepository.findOne({
+      where: { id },
+      relations: ['comics', 'bids', 'bids.user'],
+    });
     if (!auction) {
       throw new NotFoundException(`Auction with ID ${id} not found`);
     }
 
-    // Update the status
+    // Check if the current price matches the highest bid and if the user is placing the max bid
+    if (auction.maxPrice !== currentPrice) {
+      throw new ConflictException(
+        'The current price must match the highest bid to complete the auction.',
+      );
+    }
+    // Update auction status and winner
     auction.status = 'COMPLETED';
     auction.winner = user;
-    return this.auctionRepository.save(auction); // Save changes
+    auction.endTime = new Date();
+    console.log('Today:', new Date().toISOString());
+    console.log('Updated endTime:', auction.endTime);
+    // Save the updated auction
+    const updatedAuction = await this.auctionRepository.save(auction);
+
+    // Notify the winner and losers
+    this.notifyWinnerAndLosers(auction);
+
+    return updatedAuction;
   }
+
+  async notifyWinnerAndLosers(auction: Auction) {
+    // Get the winning bid
+    const winningBid = auction.bids.reduce((maxBid, bid) =>
+      bid.price > maxBid.price ? bid : maxBid,
+    );
+    // Notify the winner
+    this.eventsGateway.notifyUser(
+      winningBid.user.id,
+      `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
+      { id: auction.id },
+      'Chúc mừng',
+      'AUCTION',
+      'SUCCESSFUL',
+    );
+
+    console.log('winningBid', winningBid);
+
+    // Collect the losing bidders
+    const losingBidders = auction.bids.filter(
+      (bid) => bid.user.id !== winningBid.user.id,
+    );
+    console.log('losingBidders', losingBidders);
+    // Notify the losing bidders
+    const losingUserIds = losingBidders.map((bid) => bid.user.id);
+    this.eventsGateway.notifyUsers(
+      losingUserIds,
+      `Buổi đấu giá đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
+      { id: auction.id },
+      'Kết quả đấu giá',
+      'AUCTION',
+      'FAILED',
+    );
+  }
+
   async findUpcomingAuctions(): Promise<Auction[]> {
     const now = new Date();
     return this.auctionRepository.find({

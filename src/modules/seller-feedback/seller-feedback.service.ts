@@ -44,7 +44,9 @@ export class SellerFeedbackService {
   }
 
   async findAll(): Promise<SellerFeedback[]> {
-    return this.sellerFeedbackRepository.find();
+    return this.sellerFeedbackRepository.find({
+      relations: ['user', 'seller'],
+    });
   }
 
   async findOne(id: string): Promise<SellerFeedback> {

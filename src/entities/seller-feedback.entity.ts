@@ -4,10 +4,10 @@ import { User } from './users.entity';
 
 @Entity('seller-feedback')
 export class SellerFeedback extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.userSellerFeedbacks)
+  @ManyToOne(() => User, (user) => user.userSellerFeedbacks, { eager: true })
   user: User;
 
-  @ManyToOne(() => User, (user) => user.sellerFeedbacks)
+  @ManyToOne(() => User, (user) => user.sellerFeedbacks, { eager: true })
   seller: User;
 
   @Column({
