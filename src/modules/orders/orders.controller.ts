@@ -15,7 +15,6 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateOrderDTO } from './dto/createOrderDTO';
-import { GetDeliveryFeeDTO } from '../deliveries/dto/get-delivery-fee.dto';
 import { CancelOrderDTO } from './dto/cancel-order.dto';
 import {
   CompleteOrderFailedDTO,

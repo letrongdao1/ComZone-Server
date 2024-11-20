@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Deposit } from 'src/entities/deposit.entity';
 import { Repository } from 'typeorm';
-import { CreateDepositDTO } from './dto/create-deposit.dto';
+import { CreateDepositDTO, ExchangeDepositDTO } from './dto/create-deposit.dto';
 import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
@@ -52,45 +52,56 @@ export class DepositsService extends BaseService<Deposit> {
         user,
         auction,
         amount: createDepositDto.amount,
-        status: 'HOLDING',
+        status: DepositStatusEnum.HOLDING,
       });
-    } else if (createDepositDto.exchange) {
-      const exchange = await this.exchangesService.getOne(
-        createDepositDto.exchange,
-      );
-
-      if (!exchange) throw new NotFoundException('Exchange cannot be found!');
-      if (!exchange.depositAmount)
-        throw new NotFoundException(
-          'Exchange deposit amount is yet initialized!',
-        );
-
-      deposit = this.depositsRepository.create({
-        user,
-        exchange,
-        amount: exchange.depositAmount,
-        status: 'HOLDING',
-      });
-
-      //Auto create 2 GHN deliveries after finishing placing deposits
-      const foundDeposit = await this.depositsRepository.findOne({
-        where: { exchange: { id: createDepositDto.exchange } },
-      });
-      if (!foundDeposit) return;
-
-      const exchangeDeliveries = await this.deliveriesService.getByExchange(
-        createDepositDto.exchange,
-      );
-      await Promise.all(
-        exchangeDeliveries.map(async (delivery) => {
-          await this.deliveriesService.registerNewGHNDelivery(delivery.id);
-        }),
-      );
     }
 
     await this.usersService.updateBalance(userId, -createDepositDto.amount);
 
     return await this.depositsRepository.save(deposit);
+  }
+
+  async placeExchangeDeposit(userId: string, dto: ExchangeDepositDTO) {
+    const user = await this.usersService.getOne(userId);
+
+    const exchange = await this.exchangesService.getOne(dto.exchange);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    if (!exchange.depositAmount || exchange.depositAmount === 0)
+      throw new NotFoundException(
+        'Exchange deposit amount is yet initialized!',
+      );
+
+    if (user.balance < exchange.depositAmount)
+      throw new ForbiddenException('Insufficient balance!');
+
+    const newDeposit = this.depositsRepository.create({
+      user,
+      exchange,
+      amount: exchange.depositAmount,
+      status: DepositStatusEnum.HOLDING,
+    });
+
+    await this.usersService.updateBalance(userId, -exchange.depositAmount);
+
+    await this.depositsRepository.save(newDeposit);
+
+    //Auto create 2 GHN deliveries after finishing placing deposits
+    const foundDeposit = await this.depositsRepository.find({
+      where: { exchange: { id: dto.exchange } },
+    });
+    if (foundDeposit.length < 2) return;
+
+    const exchangeDeliveries = await this.deliveriesService.getByExchange(
+      dto.exchange,
+    );
+    await Promise.all(
+      exchangeDeliveries.map(async (delivery) => {
+        await this.deliveriesService.registerNewGHNDelivery(delivery.id);
+      }),
+    );
+
+    return await this.getOne(newDeposit.id);
   }
 
   async getAllDepositOfUser(userId: string) {
