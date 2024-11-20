@@ -14,6 +14,7 @@ import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
 import { ExchangesService } from '../exchanges/exchanges.service';
+import { DeliveriesService } from '../deliveries/deliveries.service';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {
@@ -24,6 +25,8 @@ export class DepositsService extends BaseService<Deposit> {
     @Inject(AuctionService) private readonly auctionsService: AuctionService,
     @Inject(ExchangesService)
     private readonly exchangesService: ExchangesService,
+    @Inject(DeliveriesService)
+    private readonly deliveriesService: DeliveriesService,
   ) {
     super(depositsRepository);
   }
@@ -57,20 +60,37 @@ export class DepositsService extends BaseService<Deposit> {
       );
 
       if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+      if (!exchange.depositAmount)
+        throw new NotFoundException(
+          'Exchange deposit amount is yet initialized!',
+        );
 
       deposit = this.depositsRepository.create({
         user,
         exchange,
-        amount: createDepositDto.amount,
+        amount: exchange.depositAmount,
         status: 'HOLDING',
       });
+
+      //Auto create 2 GHN deliveries after finishing placing deposits
+      const foundDeposit = await this.depositsRepository.findOne({
+        where: { exchange: { id: createDepositDto.exchange } },
+      });
+      if (!foundDeposit) return;
+
+      const exchangeDeliveries = await this.deliveriesService.getByExchange(
+        createDepositDto.exchange,
+      );
+      await Promise.all(
+        exchangeDeliveries.map(async (delivery) => {
+          await this.deliveriesService.registerNewGHNDelivery(delivery.id);
+        }),
+      );
     }
 
     await this.usersService.updateBalance(userId, -createDepositDto.amount);
 
-    return await this.depositsRepository
-      .save(deposit)
-      .then(() => this.getOne(deposit.id));
+    return await this.depositsRepository.save(deposit);
   }
 
   async getAllDepositOfUser(userId: string) {
@@ -139,22 +159,22 @@ export class DepositsService extends BaseService<Deposit> {
   }
 
   async refundAllDepositsOfAnExchange(exchangeId: string) {
-    // const exchange = await this.exchangeRequestsService.getOne(exchangeId);
-    // if (!exchange) throw new NotFoundException('Exchange cannot be found!');
-    // const depositList = await this.depositsRepository.find({
-    //   where: { exchangeRequest: { id: exchangeId } },
-    // });
-    // return await Promise.all(
-    //   depositList.map(async (deposit) => {
-    //     await this.refundDepositToAUser(deposit.id);
-    //   }),
-    // )
-    //   .catch((err) => console.log(err))
-    //   .finally(() => {
-    //     return {
-    //       message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
-    //     };
-    //   });
+    const exchange = await this.exchangesService.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+    const depositList = await this.depositsRepository.find({
+      where: { exchange: { id: exchangeId } },
+    });
+    return await Promise.all(
+      depositList.map(async (deposit) => {
+        await this.refundDepositToAUser(deposit.id);
+      }),
+    )
+      .catch((err) => console.log(err))
+      .finally(() => {
+        return {
+          message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
+        };
+      });
   }
 
   async seizeADeposit(depositId: string) {

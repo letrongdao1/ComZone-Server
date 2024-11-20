@@ -11,7 +11,10 @@ import {
 import { ExchangeConfirmationService } from './exchange-confirmation.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateConfirmationDTO } from './dto/exc-confirmation.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Exchange Confirmation')
 @Controller('exchange-confirmation')
 export class ExchangeConfirmationController {
   constructor(
@@ -29,7 +32,7 @@ export class ExchangeConfirmationController {
 
   @UseGuards(JwtAuthGuard)
   @Get('user/exchange/:exchange_id')
-  getByUserAndExchange(
+  getByLoggedInUserAndExchange(
     @Req() req: any,
     @Param('exchange_id') exchangeId: string,
   ) {
@@ -39,9 +42,18 @@ export class ExchangeConfirmationController {
     );
   }
 
+  @Get('user/:user_id/exchange/:exchange_id')
+  getByUserAndExchange(
+    @Param('user_id') userId: string,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.exchangeConfirmationService.getByUserAndExchange(
+      userId,
+      exchangeId,
+    );
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch('delivery/:exchange_id')
-  confirmDelivery(@Req() req: any, @Param('exchange_id') exchangeId: string) {
-    
-  }
+  confirmDelivery(@Req() req: any, @Param('exchange_id') exchangeId: string) {}
 }
