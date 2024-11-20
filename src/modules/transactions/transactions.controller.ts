@@ -22,7 +22,7 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.MODERATOR, Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get('all')

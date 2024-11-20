@@ -36,7 +36,7 @@ export class OrdersController {
     return this.ordersService.createNewOrder(req.user.id, createOrderDto);
   }
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.MODERATOR, Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
