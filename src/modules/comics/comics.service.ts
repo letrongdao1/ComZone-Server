@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Repository } from 'typeorm';
+import { FindManyOptions, Not, Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
+import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
+import { ComicsTypeEnum } from './dto/comic-type.enum';
 
 @Injectable()
 export class ComicService {
@@ -19,11 +21,11 @@ export class ComicService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createComicDto: CreateComicDto): Promise<Comic> {
-    const { genreIds, sellerId, ...comicData } = createComicDto;
+  async create(createComicDto: CreateComicDto, id: string): Promise<Comic> {
+    const { genreIds, ...comicData } = createComicDto;
 
     const seller = await this.userRepository.findOne({
-      where: { id: sellerId },
+      where: { id: id },
     });
     if (!seller) {
       throw new Error('Seller not found');
@@ -42,8 +44,9 @@ export class ComicService {
     return await this.comicRepository.save(comic);
   }
 
-  async findAll(): Promise<Comic[]> {
+  async findAllSellComics(): Promise<Comic[]> {
     return await this.comicRepository.find({
+      where: { type: ComicsTypeEnum.SELL },
       relations: ['genres', 'sellerId'],
     });
   }
@@ -57,7 +60,7 @@ export class ComicService {
 
   async findByStatus(status: string): Promise<Comic[]> {
     return await this.comicRepository.find({
-      where: { status },
+      where: { type: ComicsTypeEnum.SELL, status },
       relations: ['genres', 'sellerId'],
     });
   }
@@ -65,27 +68,37 @@ export class ComicService {
   async update(id: string, updateComicDto: UpdateComicDto): Promise<Comic> {
     const { genreIds, sellerId, ...comicData } = updateComicDto;
 
-    let seller;
-    if (sellerId) {
-      seller = await this.userRepository.findOne({
-        where: { id: sellerId },
-      });
-      if (!seller) {
-        throw new Error('Seller not found');
-      }
+    // Fetch the existing comic entity
+    const comic = await this.comicRepository.findOne({
+      where: { id },
+      relations: ['genres'], // Ensure to load the existing genres
+    });
+
+    if (!comic) {
+      throw new Error('Comic not found');
     }
 
-    const genres = genreIds
-      ? await this.genreRepository.find({
-          where: genreIds.map((id) => ({ id })),
-        })
-      : undefined;
+    // Retrieve the seller if sellerId is provided
+    // if (sellerId) {
+    //   const seller = await this.userRepository.findOne({
+    //     where: { id: sellerId },
+    //   });
+    //   if (!seller) {
+    //     throw new Error('Seller not found');
+    //   }
+    //   comic.sellerId = seller; // Assign the seller entity
+    // }
 
-    await this.comicRepository.update(id, {
-      ...comicData,
-      sellerId: seller,
-      genres,
-    });
+    // Retrieve genres based on provided genreIds
+    if (genreIds) {
+      const genres = await this.genreRepository.find({
+        where: genreIds.map((id) => ({ id })),
+      });
+      comic.genres = genres; // Assign the retrieved genres
+    }
+    Object.assign(comic, comicData);
+
+    await this.comicRepository.save(comic);
 
     return this.findOne(id);
   }
@@ -103,11 +116,34 @@ export class ComicService {
       throw new Error('Seller not found');
     }
 
+    // Modify the find query to sort by createdAt in descending order
     const comics = await this.comicRepository.find({
-      where: { sellerId: { id: seller.id } },
+      where: { sellerId: { id: seller.id }, type: ComicsTypeEnum.SELL },
+      order: {
+        createdAt: 'DESC', // Sorting by createdAt in descending order
+      },
     });
 
     return comics;
+  }
+
+  async findAllExceptSeller(
+    sellerId: string | null,
+    status: string,
+  ): Promise<Comic[]> {
+    if (sellerId) {
+      // Exclude comics of the specified seller
+      return this.comicRepository.find({
+        where: { sellerId: Not(sellerId), type: ComicsTypeEnum.SELL, status },
+        relations: ['genres', 'sellerId'],
+      });
+    } else {
+      // Return all comics with the specified status
+      return this.comicRepository.find({
+        where: { status, type: ComicsTypeEnum.SELL },
+        relations: ['genres', 'sellerId'],
+      });
+    }
   }
 
   async findOneWithGenres(id: string): Promise<Comic> {
@@ -119,6 +155,9 @@ export class ComicService {
 
   async findAllAndSortByPrice(order: 'ASC' | 'DESC' = 'ASC'): Promise<Comic[]> {
     const options: FindManyOptions<Comic> = {
+      where: {
+        type: ComicsTypeEnum.SELL,
+      },
       order: {
         price: order,
       },
@@ -136,6 +175,7 @@ export class ComicService {
       .leftJoin('comic.genres', 'genre')
       .where('genre.id IN (:...genreIds)', { genreIds }) // Filter by genre IDs
       .andWhere('comic.author = :author', { author }) // Filter by author
+      .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .groupBy('comic.id')
       .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Check for at least the provided genres
       .getMany();
@@ -146,6 +186,7 @@ export class ComicService {
       .createQueryBuilder('comic')
       .leftJoin('comic.genres', 'genre')
       .where('genre.id IN (:...genreIds)', { genreIds })
+      .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .groupBy('comic.id')
       .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Match at least the provided genres
       .getMany();
@@ -154,35 +195,32 @@ export class ComicService {
     return this.comicRepository
       .createQueryBuilder('comic')
       .where('comic.author = :author', { author })
+      .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .getMany();
   }
-  // async updateStatus(
-  //   id: string,
-  //   updateComicStatusDto: UpdateComicStatusDto,
-  // ): Promise<Comic> {
-  //   const { status } = updateComicStatusDto;
 
-  //   const comic = await this.comicRepository.findOne({
-  //     where: { id },
-  //   });
+  async updateStatus(
+    comicsId: string,
+    status: ComicsStatusEnum,
+  ): Promise<Comic> {
+    // Check if the comic exists
+    const comic = await this.comicRepository.findOne({
+      where: { id: comicsId },
+    });
 
-  //   if (!comic) {
-  //     throw new Error('Comic not found');
-  //   }
+    if (!comic) {
+      throw new NotFoundException('Comic not found');
+    }
 
-  //   comic.status = status;
-  //   return await this.comicRepository.save(comic);
-  // }
+    if (status === ComicsStatusEnum.AVAILABLE)
+      await this.comicRepository.update(comicsId, {
+        onSaleSince: new Date(),
+      });
 
-  async updateStatus(comicsId: string, status: ComicsStatusEnum) {
-    const comics = await this.findOne(comicsId);
+    // Update the status of the comic
+    comic.status = status;
+    await this.comicRepository.save(comic);
 
-    if (!comics) throw new NotFoundException('Comics cannot be found!');
-
-    return await this.comicRepository
-      .update(comicsId, {
-        status,
-      })
-      .then(() => this.findOne(comicsId));
+    return comic;
   }
 }

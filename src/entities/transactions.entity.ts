@@ -7,8 +7,7 @@ import { Withdrawal } from './withdrawal.entity';
 import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { ExchangeSubscription } from './exchange-subscription.entity';
-import { ExchangeCompensation } from './exchange-compensation.entity';
-import { Commission } from './commission.entity';
+import { Exchange } from './exchange.entity';
 
 @Entity('transactions')
 export class Transaction extends BaseEntity {
@@ -20,28 +19,28 @@ export class Transaction extends BaseEntity {
     eager: true,
   })
   @JoinColumn({ name: 'order' })
-  order: Order;
+  order?: Order;
 
   @OneToOne(() => WalletDeposit, (walletDeposit) => walletDeposit.transaction, {
     nullable: true,
     eager: true,
   })
   @JoinColumn({ name: 'wallet-deposit' })
-  walletDeposit: WalletDeposit;
+  walletDeposit?: WalletDeposit;
 
   @OneToOne(() => Withdrawal, (withdrawal) => withdrawal.transaction, {
     nullable: true,
     eager: true,
   })
   @JoinColumn({ name: 'withdrawal' })
-  withdrawal: Withdrawal;
+  withdrawal?: Withdrawal;
 
   @OneToOne(() => Deposit, (deposit) => deposit.transaction, {
     nullable: true,
     eager: true,
   })
   @JoinColumn({ name: 'deposit' })
-  deposit: Deposit;
+  deposit?: Deposit;
 
   @OneToOne(
     () => SellerSubscription,
@@ -52,7 +51,7 @@ export class Transaction extends BaseEntity {
     },
   )
   @JoinColumn({ name: 'seller-subscription' })
-  sellerSubscription: SellerSubscription;
+  sellerSubscription?: SellerSubscription;
 
   @OneToOne(
     () => ExchangeSubscription,
@@ -60,15 +59,14 @@ export class Transaction extends BaseEntity {
     { nullable: true, eager: true },
   )
   @JoinColumn({ name: 'exchange-subscription' })
-  exchangeSubscription: ExchangeSubscription;
+  exchangeSubscription?: ExchangeSubscription;
 
-  @OneToOne(
-    () => ExchangeCompensation,
-    (exchangeCompensation) => exchangeCompensation.transactions,
-    { nullable: true, eager: true },
-  )
-  @JoinColumn({ name: 'exchange-compensation' })
-  exchangeCompensation: ExchangeCompensation;
+  @OneToOne(() => Exchange, (exchange) => exchange.transactions, {
+    nullable: true,
+    eager: true,
+  })
+  @JoinColumn({ name: 'exchange' })
+  exchange?: Exchange;
 
   @Column({
     type: 'varchar',
@@ -103,16 +101,18 @@ export class Transaction extends BaseEntity {
     type: 'varchar',
     nullable: true,
   })
-  paymentGateway: string;
+  paymentGateway?: string;
+
+  @Column({
+    name: 'profit_amount',
+    type: 'float',
+    nullable: true,
+  })
+  profitAmount?: number;
 
   @Column({
     type: 'varchar',
     nullable: true,
   })
-  note: string;
-
-  @OneToOne(() => Commission, (commission) => commission.transaction, {
-    nullable: true,
-  })
-  commission: Commission;
+  note?: string;
 }

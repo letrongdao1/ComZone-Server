@@ -8,40 +8,79 @@ import {
   Put,
   Query,
   UseGuards,
+  Req,
+  Patch,
 } from '@nestjs/common';
 import { ComicService } from './comics.service';
-import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
+import {
+  CreateComicDto,
+  UpdateComicDto,
+  UpdateComicStatusDto,
+} from './dto/comic.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Comic } from 'src/entities/comics.entity';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
+import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
+import { ComicsStatusEnum } from './dto/comic-status.enum';
+import { ComicsExchangeService } from './comics.exchange.service';
 
 @ApiBearerAuth()
 @ApiTags('Comics')
 @Controller('comics')
 export class ComicController {
-  constructor(private readonly comicService: ComicService) {}
+  constructor(
+    private readonly comicService: ComicService,
+    private readonly comicsExchangeService: ComicsExchangeService,
+  ) {}
+
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Post()
+  create(@Body() createComicDto: CreateComicDto, @Req() req: any) {
+    return this.comicService.create(createComicDto, req.user.id);
+  }
 
   @Roles(Role.MEMBER, Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Post()
-  create(@Body() createComicDto: CreateComicDto) {
-    return this.comicService.create(createComicDto);
+  @Post('exchange')
+  createExchangeOfferComics(
+    @Req() req: any,
+    @Body() dto: CreateExchangeComicsDTO,
+  ) {
+    return this.comicsExchangeService.createExchangeComics(req.user.id, dto);
   }
 
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.comicService.findAll();
+  findAllSellComics() {
+    return this.comicService.findAllSellComics();
   }
 
-  @Get('seller/:sellerId')
-  async findBySeller(@Param('sellerId') sellerId: string): Promise<Comic[]> {
+  @UseGuards(JwtAuthGuard)
+  @Get('seller')
+  async findBySeller(@Req() req: any): Promise<Comic[]> {
+    return this.comicService.findBySeller(req.user.id);
+  }
+
+  @Get('seller/:seller_id')
+  async findBySellerId(@Param('seller_id') sellerId: string): Promise<Comic[]> {
     return this.comicService.findBySeller(sellerId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('except-seller/:status')
+  async findAllExceptSeller(
+    @Req() req: any,
+    @Param('status') status: string,
+  ): Promise<Comic[]> {
+    const sellerId = req.user ? req.user.id : null;
+    return this.comicService.findAllExceptSeller(sellerId, status);
   }
 
   @Get('status/:status')
@@ -78,8 +117,19 @@ export class ComicController {
       return this.comicService.findByAuthor(author);
     } else {
       // Handle case where no filters are provided (e.g., return all comics)
-      return this.comicService.findAll();
+      return this.comicService.findAllSellComics();
     }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/exchange/user')
+  getExchangeComicsOfUser(@Req() req: any) {
+    return this.comicsExchangeService.getExchangeComicsOfUser(req.user.id);
+  }
+
+  @Get('/exchange/:user_id')
+  findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
+    return this.comicsExchangeService.getExchangeComicsOfUser(userId);
   }
 
   @Get(':id')
@@ -98,6 +148,15 @@ export class ComicController {
   @Put(':id')
   update(@Param('id') id: string, @Body() updateComicDto: UpdateComicDto) {
     return this.comicService.update(id, updateComicDto);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() updateComicStatusDto: UpdateComicStatusDto,
+  ) {
+    const { status } = updateComicStatusDto;
+    return await this.comicService.updateStatus(id, status);
   }
 
   @Roles(Role.MODERATOR)

@@ -42,7 +42,7 @@ export class FileUploadController {
   // Upload up to 4 image files
   @Post('upload/multiple-images')
   @UseInterceptors(
-    FilesInterceptor('images', 4), // Use FilesInterceptor to handle multiple files (up to 4)
+    FilesInterceptor('images', 8), // Use FilesInterceptor to handle multiple files (up to 4)
   )
   async uploadMultipleImages(@UploadedFiles() files: Express.Multer.File[]) {
     console.log(files);
@@ -50,7 +50,7 @@ export class FileUploadController {
       throw new BadRequestException('At least one image is required!');
     }
 
-    if (files.length > 4) {
+    if (files.length > 8) {
       throw new BadRequestException('You can upload a maximum of 4 images!');
     }
 

@@ -5,13 +5,15 @@ import { Order } from './orders.entity';
 
 @Entity('order-item')
 export class OrderItem extends BaseEntity {
-  @ManyToOne(() => Order, (order) => order.orderItem, {
+  @ManyToOne(() => Order, (order) => order.orderItems, {
     eager: true,
+    cascade: true,
   })
   order: Order;
 
   @ManyToOne(() => Comic, (comic) => comic.order_item, {
     eager: true,
+    cascade: true,
   })
   comics: Comic;
 

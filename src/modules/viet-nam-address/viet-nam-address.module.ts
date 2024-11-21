@@ -5,5 +5,6 @@ import { VietNamAddressController } from './viet-nam-address.controller';
 @Module({
   controllers: [VietNamAddressController],
   providers: [VietNamAddressService],
+  exports: [VietNamAddressService],
 })
 export class VietNamAddressModule {}

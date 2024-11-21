@@ -5,10 +5,13 @@ import { Auction } from './auction.entity';
 
 @Entity('bid')
 export class Bid extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.bids)
+  @ManyToOne(() => User, (user) => user.bids, { eager: true })
   user: User;
 
-  @ManyToOne(() => Auction)
+  @ManyToOne(() => Auction, (auction) => auction.bids, {
+    cascade: true,
+    eager: true,
+  })
   auction: Auction;
 
   @Column({

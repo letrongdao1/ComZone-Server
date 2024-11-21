@@ -4,6 +4,6 @@ export class CancelOrderDTO {
   @ApiProperty()
   orderId: string;
 
-  @ApiProperty({ nullable: true })
-  cancelReason?: string;
+  @ApiProperty({ example: 'Shipper bị lủng lốp.' })
+  cancelReason: string;
 }

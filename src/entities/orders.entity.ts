@@ -1,10 +1,19 @@
-import { Entity, Column, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { BaseEntity } from 'src/common/entity.base';
 import { User } from './users.entity';
 import { OrderItem } from './order-item.entity';
 import { Transaction } from './transactions.entity';
-import { Notification } from './notification.entity';
-import { OrderDeliveryStatusEnum } from 'src/modules/orders/dto/order-delivery-status.enum';
+import { Announcement } from './announcement.entity';
+import { Delivery } from './delivery.entity';
+import { OrderStatusEnum } from 'src/modules/orders/dto/order-status.enum';
+import { OrderTypeEnum } from 'src/modules/orders/dto/order-type.enum';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -13,13 +22,9 @@ export class Order extends BaseEntity {
   })
   user: User;
 
-  @Column({
-    name: 'delivery_tracking_code',
-    type: 'varchar',
-    nullable: true,
-    unique: true,
-  })
-  deliveryTrackingCode: string;
+  @OneToOne(() => Delivery, (delivery) => delivery.order, { eager: true })
+  @JoinColumn({ name: 'delivery' })
+  delivery: Delivery;
 
   @Column({
     name: 'total_price',
@@ -37,98 +42,6 @@ export class Order extends BaseEntity {
   paymentMethod: 'COD' | 'WALLET';
 
   @Column({
-    name: 'from_name',
-    type: 'varchar',
-  })
-  fromName: string;
-
-  @Column({
-    name: 'from_phone',
-    type: 'varchar',
-  })
-  fromPhone: string;
-
-  @Column({
-    name: 'from_address',
-    type: 'varchar',
-  })
-  fromAddress: string;
-
-  @Column({
-    name: 'from_province_name',
-    type: 'varchar',
-  })
-  fromProvinceName: string;
-
-  @Column({
-    name: 'from_district_id',
-    type: 'int',
-  })
-  fromDistrictId: number;
-
-  @Column({
-    name: 'from_district_name',
-    type: 'varchar',
-  })
-  fromDistrictName: string;
-
-  @Column({
-    name: 'from_ward_id',
-    type: 'varchar',
-  })
-  fromWardId: string;
-
-  @Column({
-    name: 'from_ward_name',
-    type: 'varchar',
-  })
-  fromWardName: string;
-
-  @Column({
-    name: 'to_name',
-    type: 'varchar',
-  })
-  toName: string;
-
-  @Column({
-    name: 'to_phone',
-    type: 'varchar',
-  })
-  toPhone: string;
-
-  @Column({
-    name: 'to_address',
-    type: 'varchar',
-  })
-  toAddress: string;
-
-  @Column({
-    name: 'to_district_id',
-    type: 'int',
-  })
-  toDistrictId: number;
-
-  @Column({
-    name: 'to_ward_id',
-    type: 'varchar',
-  })
-  toWardId: string;
-
-  @Column({
-    name: 'delivery_fee',
-    type: 'float',
-  })
-  deliveryFee: number;
-
-  @Column({
-    name: 'delivery_status',
-    type: 'enum',
-    enum: OrderDeliveryStatusEnum,
-    nullable: true,
-  })
-  deliveryStatus: string;
-
-  @Column({
     name: 'is_paid',
     type: 'boolean',
     default: false,
@@ -137,15 +50,14 @@ export class Order extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: [
-      'PENDING',
-      'PACKAGING',
-      'DELIVERING',
-      'DELIVERED',
-      'COMPLETED',
-      'CANCELED',
-    ],
-    default: 'PENDING',
+    enum: OrderTypeEnum,
+  })
+  type: string;
+
+  @Column({
+    type: 'enum',
+    enum: OrderStatusEnum,
+    default: OrderStatusEnum.PENDING,
   })
   status: string;
 
@@ -157,18 +69,25 @@ export class Order extends BaseEntity {
   cancelReason: string;
 
   @Column({
-    name: 'note',
     type: 'text',
     nullable: true,
   })
   note: string;
 
+  @Column({
+    name: 'is_feedback',
+    type: 'boolean',
+    nullable: true,
+    default: false,
+  })
+  isFeedback: boolean;
+
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
-  orderItem: OrderItem[];
+  orderItems: OrderItem[];
 
   @OneToOne(() => Transaction, (transaction) => transaction.order)
   transaction: Transaction;
 
-  @OneToMany(() => Notification, (notification) => notification.order)
-  notifications: Notification[];
+  @OneToMany(() => Announcement, (announcement) => announcement.order)
+  announcements: Announcement[];
 }

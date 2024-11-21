@@ -1,9 +1,12 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Bid } from './bid.entity';
 import { Deposit } from './deposit.entity';
-import { Notification } from './notification.entity';
+import { Announcement } from './announcement.entity';
+import { User } from './users.entity';
+
+import { BeforeInsert } from 'typeorm';
 
 @Entity('auction')
 export class Auction extends BaseEntity {
@@ -12,24 +15,29 @@ export class Auction extends BaseEntity {
 
   @Column({
     name: 'reserve_price',
-    type: 'float',
-    precision: 2,
     nullable: false,
   })
   reservePrice: number;
 
+  @ManyToOne(() => User, { nullable: true, eager: true })
+  @JoinColumn({ name: 'winner_id' })
+  winner: User;
+
+  @Column({
+    name: 'current_price',
+    nullable: true,
+    default: 0,
+  })
+  currentPrice: number;
+
   @Column({
     name: 'max_price',
-    type: 'float',
-    precision: 2,
     nullable: false,
   })
   maxPrice: number;
 
   @Column({
     name: 'price_step',
-    type: 'float',
-    precision: 2,
     nullable: false,
   })
   priceStep: number;
@@ -42,16 +50,15 @@ export class Auction extends BaseEntity {
   startTime: Date;
 
   @Column({
-    type: 'enum',
-    enum: [1, 2, 3, 4, 5, 6, 7],
+    name: 'end_time',
+    type: 'datetime',
     nullable: false,
   })
-  duration: number;
+  endTime: Date;
 
   @Column({
     type: 'enum',
-    enum: ['ONGOING', 'SUCCESSFUL', 'FAILED'],
-    default: 'ONGOING',
+    enum: ['UPCOMING', 'ONGOING', 'SUCCESSFUL', 'FAILED', 'COMPLETED'],
   })
   status: string;
 
@@ -61,6 +68,14 @@ export class Auction extends BaseEntity {
   @OneToMany(() => Deposit, (deposit) => deposit.auction)
   deposits: Deposit[];
 
-  @OneToMany(() => Notification, (notification) => notification.auction)
-  notifications: Notification[];
+  @OneToMany(() => Announcement, (announcement) => announcement.auction)
+  announcements: Announcement[];
+
+  @BeforeInsert()
+  setDefaultCurrentPrice() {
+    // Set currentPrice to reservePrice before the entity is inserted
+    if (this.currentPrice === 0) {
+      this.currentPrice = this.reservePrice;
+    }
+  }
 }

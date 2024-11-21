@@ -9,7 +9,6 @@ import { FileUploadModule } from './modules/file-upload/file-upload.module';
 import { ComicModule } from './modules/comics/comics.module';
 import { GenreModule } from './modules/genres/genre.module';
 import { PermissionsGuard } from './modules/authorization/permission.guard';
-import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { OrderItemsModule } from './modules/order-items/order-items.module';
 import { ZalopayModule } from './modules/zalopay/zalopay.module';
@@ -25,6 +24,21 @@ import { SourcesOfFundModule } from './modules/sources-of-fund/sources-of-fund.m
 import { SellerSubscriptionsModule } from './modules/seller-subscriptions/seller-subscriptions.module';
 import { SellerSubsPlansModule } from './modules/seller-subs-plans/seller-subs-plans.module';
 import { PlansModule } from './modules/exchange-subs/plans/plans.module';
+import { EventsModule } from './modules/socket/event.module';
+import { AuctionModule } from './modules/auction/auction.module';
+import { DepositsModule } from './modules/deposits/deposits.module';
+import { ExchangesModule } from './modules/exchanges/exchanges.module';
+import { BidModule } from './modules/bid/bid.module';
+import { ChatRoomsModule } from './modules/chat-rooms/chat-rooms.module';
+import { ChatMessagesModule } from './modules/chat-messages/chat-messages.module';
+import { SellerFeedbackModule } from './modules/seller-feedback/seller-feedback.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { AnnouncementModule } from './modules/announcement/announcement.module';
+import { DeliveriesModule } from './modules/deliveries/deliveries.module';
+import { DeliveryInformationModule } from './modules/delivery-information/delivery-information.module';
+import { ExchangeComicsModule } from './modules/exchange-comics/exchange-comics.module';
+import { ExchangeConfirmationModule } from './modules/exchange-confirmation/exchange-confirmation.module';
+import { ExchangePostsModule } from './modules/exchange-posts/exchange-posts.module';
 
 @Module({
   imports: [
@@ -39,32 +53,45 @@ import { PlansModule } from './modules/exchange-subs/plans/plans.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
         entities: [join(process.cwd(), 'dist/entities/**/*.entity.js')],
-        synchronize: true,
+        synchronize: configService.get('DB_SYNCHRONIZE') === 'TRUE',
       }),
       inject: [ConfigService],
     }),
-
+    ScheduleModule.forRoot(),
+    AnnouncementModule,
+    EventsModule,
+    AuctionModule,
+    BidModule,
     AuthModule,
     UsersModule,
     ComicModule,
     GenreModule,
     FileUploadModule,
-    NotificationsModule,
     OrdersModule,
     OrderItemsModule,
     VnpayModule,
     ZalopayModule,
     VietNamAddressModule,
     TransactionsModule,
+    ExchangesModule,
     UserAddressesModule,
     OtpModule,
     SellerDetailsModule,
     WalletDepositModule,
     WithdrawalModule,
     SourcesOfFundModule,
+    SellerFeedbackModule,
     SellerSubscriptionsModule,
     SellerSubsPlansModule,
     PlansModule,
+    DepositsModule,
+    ChatRoomsModule,
+    ChatMessagesModule,
+    DeliveriesModule,
+    DeliveryInformationModule,
+    ExchangeComicsModule,
+    ExchangeConfirmationModule,
+    ExchangePostsModule,
   ],
   controllers: [AppController],
   providers: [

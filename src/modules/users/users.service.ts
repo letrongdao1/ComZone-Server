@@ -10,6 +10,7 @@ import { Order } from 'src/entities/orders.entity';
 import { User } from 'src/entities/users.entity';
 import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { Repository } from 'typeorm';
+import { UserProfileDTO } from './dto/user-profile.dto';
 
 @Injectable()
 export class UsersService extends BaseService<User> {
@@ -42,7 +43,7 @@ export class UsersService extends BaseService<User> {
         'phone',
         'avatar',
         'role',
-        'is_verified',
+        'isActive',
         'balance',
         'nonWithdrawableAmount',
         'createdAt',
@@ -80,12 +81,6 @@ export class UsersService extends BaseService<User> {
       },
     });
     if (!user) throw new NotFoundException('User cannot be found!');
-
-    if (!user.is_verified)
-      throw new ForbiddenException(
-        'Phone number must be verified to get a seller account!',
-        'Unverified phone number!',
-      );
 
     switch (user.role) {
       case 'MEMBER': {
@@ -154,9 +149,19 @@ export class UsersService extends BaseService<User> {
       balance: user.balance - order.totalPrice,
     });
 
-    await this.ordersRepository.update(orderId, { isPaid: true });
+    return await this.ordersRepository
+      .update(orderId, { isPaid: true })
+      .then(() => this.getOne(user.id));
+  }
 
-    return await this.getOne(user.id);
+  async updateBalance(userId: string, amount: number) {
+    const user = await this.getOne(userId);
+
+    return await this.userRepository
+      .update(userId, {
+        balance: user.balance + amount,
+      })
+      .then(() => this.getOne(userId));
   }
 
   async updateBalanceWithNonWithdrawableAmount(userId: string, amount: number) {
@@ -168,5 +173,32 @@ export class UsersService extends BaseService<User> {
         nonWithdrawableAmount: user.nonWithdrawableAmount + amount,
       })
       .then(() => this.getOne(userId));
+  }
+
+  async updateUserIsActive(userId: string, active: boolean) {
+    console.log(`User ${userId} is ${active ? 'now ONLINE' : 'OFFLINE'}!`);
+    if (active === false) this.updateLastActive(userId);
+    return await this.userRepository.update(userId, { isActive: active });
+  }
+
+  async updateUserProfile(userId: string, userProfileDto: UserProfileDTO) {
+    return await this.userRepository
+      .update(userId, userProfileDto)
+      .then(() => this.getOne(userId));
+  }
+
+  async updatePassword(userId: string, password: string) {
+    return await this.userRepository.update(userId, { password });
+  }
+  async banUser(userId: string) {
+    const user = await this.getOne(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.status = 'banned';
+    await this.userRepository.save(user);
+
+    return { message: 'User banned successfully', userId };
   }
 }

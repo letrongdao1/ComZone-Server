@@ -15,6 +15,11 @@ import { OrdersService } from '../orders/orders.service';
 import { WalletDepositService } from '../wallet-deposit/wallet-deposit.service';
 import { WithdrawalService } from '../withdrawal/withdrawal.service';
 import { PaymentGatewayEnum } from './dto/provider.enum';
+import { DepositsService } from '../deposits/deposits.service';
+import { SellerSubscriptionsService } from '../seller-subscriptions/seller-subscriptions.service';
+import { TransactionStatusEnum } from './dto/transaction-status.enum';
+import { ExchangesService } from '../exchanges/exchanges.service';
+import { DeliveriesService } from '../deliveries/deliveries.service';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -25,6 +30,10 @@ export class TransactionsService extends BaseService<Transaction> {
     private readonly ordersService: OrdersService,
     private readonly walletDepositService: WalletDepositService,
     private readonly withdrawalService: WithdrawalService,
+    private readonly depositsService: DepositsService,
+    private readonly sellerSubscriptionsService: SellerSubscriptionsService,
+    private readonly exchangesService: ExchangesService,
+    private readonly deliveriesService: DeliveriesService,
   ) {
     super(transactionsRepository);
   }
@@ -45,29 +54,76 @@ export class TransactionsService extends BaseService<Transaction> {
 
     if (transactionDto.order) {
       const order = await this.ordersService.getOne(transactionDto.order);
+
       if (!order) throw new NotFoundException('Order cannot be found!');
       newTransaction.order = order;
       newTransaction.amount = order.totalPrice;
-    }
-
-    if (transactionDto.walletDeposit) {
+    } else if (transactionDto.walletDeposit) {
       const walletDeposit = await this.walletDepositService.getOne(
         transactionDto.walletDeposit,
       );
+
       if (!walletDeposit)
         throw new NotFoundException('Wallet deposit cannot be found!');
       newTransaction.walletDeposit = walletDeposit;
       newTransaction.amount = walletDeposit.amount;
-    }
-
-    if (transactionDto.withdrawal) {
+    } else if (transactionDto.withdrawal) {
       const withdrawal = await this.withdrawalService.getOne(
         transactionDto.withdrawal,
       );
+
       if (!withdrawal)
         throw new NotFoundException('Withdrawal cannot be found!');
       newTransaction.withdrawal = withdrawal;
       newTransaction.amount = withdrawal.amount;
+    } else if (transactionDto.deposit) {
+      const deposit = await this.depositsService.getOne(transactionDto.deposit);
+
+      if (!deposit) throw new NotFoundException('Deposit cannot be found!');
+      newTransaction.deposit = deposit;
+      newTransaction.amount = deposit.amount;
+      newTransaction.status = TransactionStatusEnum.SUCCESSFUL;
+      newTransaction.isUsed = true;
+    }
+
+    return await this.transactionsRepository.save(newTransaction);
+  }
+
+  async createExchangeTransaction(userId: string, exchangeId: string) {
+    const user = await this.usersService.getOne(userId);
+    if (!user) throw new NotFoundException('User cannot be found!');
+
+    const exchange = await this.exchangesService.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    const deliveries = await this.deliveriesService.getByExchange(exchangeId);
+    const userDelivery = deliveries.find(
+      (delivery) => delivery.from.user.id === userId,
+    );
+
+    if (!userDelivery.deliveryFee || userDelivery.deliveryFee === 0)
+      throw new BadRequestException(
+        'Cannot find delivery fee of this exchange!',
+      );
+
+    let newTransaction = this.transactionsRepository.create({
+      code: generateNumericCode(8),
+      user,
+      exchange,
+      isUsed: true,
+    });
+
+    newTransaction.exchange = exchange;
+    newTransaction.status = TransactionStatusEnum.SUCCESSFUL;
+    newTransaction.isUsed = true;
+
+    if (exchange.post.user.id === userId) {
+      newTransaction.amount =
+        exchange.depositAmount +
+        exchange.compensationAmount +
+        userDelivery.deliveryFee;
+    } else {
+      newTransaction.amount = exchange.depositAmount + userDelivery.deliveryFee;
     }
 
     return await this.transactionsRepository.save(newTransaction);

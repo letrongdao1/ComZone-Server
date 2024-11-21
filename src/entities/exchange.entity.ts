@@ -1,45 +1,66 @@
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { User } from './users.entity';
-import { Comic } from './comics.entity';
-import { ExchangeCompensation } from './exchange-compensation.entity';
-import { Deposit } from './deposit.entity';
-import { ChatRoom } from './chat-room.entity';
-import { Notification } from './notification.entity';
 import { BaseEntity } from 'src/common/entity.base';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { User } from './users.entity';
+import { Delivery } from './delivery.entity';
+import { ExchangeStatusEnum } from 'src/modules/exchanges/dto/exchange-status-enum';
+import { ExchangeConfirmation } from './exchange-confirmation.entity';
+import { ExchangeComics } from './exchange-comics.entity';
+import { Transaction } from './transactions.entity';
+import { Deposit } from './deposit.entity';
+import { Announcement } from './announcement.entity';
+import { ChatRoom } from './chat-room.entity';
+import { ExchangePost } from './exchange-post.entity';
 
-@Entity('exchange')
+@Entity('exchanges')
 export class Exchange extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.exchangeRequests, { nullable: false })
+  @ManyToOne(() => ExchangePost, (post) => post.exchanges, { eager: true })
+  post: ExchangePost;
+
+  @ManyToOne(() => User, (user) => user.exchangeRequests, { eager: true })
   requestUser: User;
 
-  @ManyToOne(() => User, (user) => user.exchangeOffers, { nullable: true })
-  offerUser: User;
+  @Column({
+    name: 'compensation_amount',
+    type: 'float',
+    nullable: true,
+  })
+  compensationAmount: number;
 
-  @ManyToOne(() => Comic, (comics) => comics.requestExchanges)
-  requestComics: Comic;
-
-  @ManyToOne(() => Comic, (comics) => comics.offerExchanges)
-  offerComics: Comic;
+  @Column({
+    name: 'deposit_amount',
+    type: 'float',
+    nullable: true,
+  })
+  depositAmount: number;
 
   @Column({
     type: 'enum',
-    enum: ['REQUESTING', 'DEALING', 'SUCCESSFUL', 'FAILED'],
-    default: 'REQUESTING',
+    enum: ExchangeStatusEnum,
+    default: ExchangeStatusEnum.PENDING,
   })
   status: string;
 
+  @OneToMany(() => ExchangeComics, (comics) => comics.exchange)
+  exchangeComics: ExchangeComics[];
+
   @OneToMany(
-    () => ExchangeCompensation,
-    (exchangeCompensation) => exchangeCompensation.exchange,
+    () => ExchangeConfirmation,
+    (confirmation) => confirmation.exchange,
   )
-  exchangeCompensations: ExchangeCompensation[];
+  confirmations: ExchangeConfirmation[];
+
+  @OneToMany(() => Transaction, (transaction) => transaction.exchange)
+  transactions: Transaction[];
 
   @OneToMany(() => Deposit, (deposit) => deposit.exchange)
   deposits: Deposit[];
 
-  @OneToOne(() => ChatRoom, (chatRoom) => chatRoom.exchange)
-  chatRoom: ChatRoom;
+  @OneToMany(() => Announcement, (ann) => ann.exchange)
+  announcements: Announcement[];
 
-  @OneToMany(() => Notification, (notification) => notification.exchange)
-  notifications: Notification[];
+  @OneToMany(() => ChatRoom, (room) => room.exchange)
+  chatRooms: ChatRoom[];
+
+  @OneToMany(() => Delivery, (delivery) => delivery.exchange)
+  deliveries: Delivery[];
 }

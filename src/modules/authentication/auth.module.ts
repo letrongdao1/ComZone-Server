@@ -33,5 +33,6 @@ dotenv.config();
     GoogleStrategy,
   ],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -14,6 +14,8 @@ import refreshJwtConfig from './config/refresh-jwt.config';
 import { ConfigType } from '@nestjs/config';
 import { RegisterUserDTO } from './dto/register-user.dto';
 import { LoginUserDTO } from './dto/login-user.dto';
+import { PasswordResetDTO } from './dto/password-reset.dto';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable()
 export class AuthService {
@@ -51,6 +53,10 @@ export class AuthService {
       throw new NotFoundException('Email cannot be found!');
     }
 
+    if (user.status === 'banned') {
+      throw new UnauthorizedException('User is banned');
+    }
+
     if (!bcrypt.compareSync(loginUserDto.password, user?.password)) {
       throw new UnauthorizedException('Incorrect password!');
     }
@@ -78,7 +84,6 @@ export class AuthService {
     if (!googleUser || !googleUser.email) {
       throw new Error('Invalid Google user data');
     }
-    console.log(':::::::::::', googleUser);
 
     let user = await this.usersService.getUserByEmail(googleUser.email);
 
@@ -143,11 +148,27 @@ export class AuthService {
     };
   }
 
+  async getUserIdByAccessToken(token: string) {
+    return jwtDecode(token).sub || null;
+  }
+
   async logout(userId: string) {
     await this.usersService.updateRefreshToken(userId, null);
     return {
       message: 'Logout successfully!',
     };
+  }
+
+  async resetPassword(userId: string, passwordResetDto: PasswordResetDTO) {
+    const user = await this.usersService.getOne(userId);
+
+    if (!bcrypt.compareSync(passwordResetDto.oldPassword, user.password)) {
+      throw new UnauthorizedException('Incorrect password!');
+    }
+
+    return await this.usersService
+      .updatePassword(userId, bcrypt.hashSync(passwordResetDto.newPassword, 10))
+      .then(() => this.usersService.getOne(userId));
   }
 
   async registerModeratorOrAdminAccount(

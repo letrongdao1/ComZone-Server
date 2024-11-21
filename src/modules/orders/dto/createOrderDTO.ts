@@ -2,50 +2,20 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderDTO {
   @ApiProperty()
+  deliveryId: string;
+
+  @ApiProperty()
   totalPrice: number;
 
   @ApiProperty()
   paymentMethod: 'WALLET' | 'COD';
 
   @ApiProperty()
-  fromName: string;
+  addressId: string;
 
   @ApiProperty()
-  fromPhone: string;
+  type?: string;
 
-  @ApiProperty()
-  fromAddress: string;
-
-  @ApiProperty()
-  fromProvinceName: string;
-
-  @ApiProperty()
-  fromDistrictId: number;
-
-  @ApiProperty()
-  fromDistrictName: string;
-
-  @ApiProperty()
-  fromWardId: string;
-
-  @ApiProperty()
-  fromWardName: string;
-
-  @ApiProperty()
-  toName: string;
-
-  @ApiProperty()
-  toPhone: string;
-
-  @ApiProperty()
-  toAddress: string;
-
-  @ApiProperty()
-  toDistrictId: number;
-
-  @ApiProperty()
-  toWardId: string;
-
-  @ApiProperty()
-  deliveryFee: number;
+  @ApiProperty({ nullable: true })
+  note?: string;
 }

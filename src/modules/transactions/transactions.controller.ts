@@ -11,13 +11,24 @@ import {
 import { TransactionsService } from './transactions.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { TransactionDTO } from './dto/transactionDto';
+import { ExchangeTransactionDTO, TransactionDTO } from './dto/transactionDto';
+import { Roles } from '../authorization/roles.decorator';
+import { Role } from '../authorization/role.enum';
+import { PermissionsGuard } from '../authorization/permission.guard';
 
 @ApiBearerAuth()
 @ApiTags('Transactions')
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
+
+  @Roles(Role.MODERATOR, Role.ADMIN)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('all')
+  getAllTransactions() {
+    return this.transactionsService.getAllWithDeleted();
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -28,6 +39,18 @@ export class TransactionsController {
     return this.transactionsService.createNewTransaction(
       req.user.id,
       transactionDto,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('exchange')
+  createNewExchangeTransaction(
+    @Req() req: any,
+    @Body() dto: ExchangeTransactionDTO,
+  ) {
+    return this.transactionsService.createExchangeTransaction(
+      req.user.id,
+      dto.exchange,
     );
   }
 

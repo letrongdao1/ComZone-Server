@@ -15,8 +15,11 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateOrderDTO } from './dto/createOrderDTO';
-import { OrderStatusEnum } from './dto/order-status.enum';
-import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
+import { CancelOrderDTO } from './dto/cancel-order.dto';
+import {
+  CompleteOrderFailedDTO,
+  CompleteOrderSuccessfulDTO,
+} from './dto/complete-order.dto';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -32,7 +35,7 @@ export class OrdersController {
     return this.ordersService.createNewOrder(req.user.id, createOrderDto);
   }
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.MODERATOR, Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -66,11 +69,6 @@ export class OrdersController {
     return this.ordersService.getOne(orderId);
   }
 
-  @Post('delivery-details')
-  getDeliveryDetails(@Body() getDeliveryFeeDto: GetDeliveryFeeDTO) {
-    return this.ordersService.getDeliveryDetails(getDeliveryFeeDto);
-  }
-
   @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
@@ -85,5 +83,29 @@ export class OrdersController {
   @Post('status/finish-packaging/:orderId')
   sellerFinishesPackaging(@Param('orderId') orderId: string) {
     return this.ordersService.sellerFinishesPackaging(orderId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('cancel')
+  cancelOrder(@Body() cancelOrderDto: CancelOrderDTO) {
+    return this.ordersService.cancelOrder(cancelOrderDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('status/successful')
+  completeOrderToBeSuccessful(
+    @Req() req: any,
+    @Body() dto: CompleteOrderSuccessfulDTO,
+  ) {
+    return this.ordersService.completeOrderToBeSuccessful(req.user.id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('status/failed')
+  completeOrderToBeFailed(
+    @Req() req: any,
+    @Body() dto: CompleteOrderFailedDTO,
+  ) {
+    return this.ordersService.completeOrderToBeFailed(req.user.id, dto);
   }
 }

@@ -7,6 +7,10 @@ import { UsersModule } from '../users/users.module';
 import { OrdersModule } from '../orders/orders.module';
 import { WalletDepositModule } from '../wallet-deposit/wallet-deposit.module';
 import { WithdrawalModule } from '../withdrawal/withdrawal.module';
+import { DepositsModule } from '../deposits/deposits.module';
+import { SellerSubscriptionsModule } from '../seller-subscriptions/seller-subscriptions.module';
+import { ExchangesModule } from '../exchanges/exchanges.module';
+import { DeliveriesModule } from '../deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -15,6 +19,10 @@ import { WithdrawalModule } from '../withdrawal/withdrawal.module';
     OrdersModule,
     WalletDepositModule,
     WithdrawalModule,
+    DepositsModule,
+    SellerSubscriptionsModule,
+    ExchangesModule,
+    DeliveriesModule,
   ],
   controllers: [TransactionsController],
   providers: [TransactionsService],

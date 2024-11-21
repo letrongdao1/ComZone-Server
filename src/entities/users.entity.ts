@@ -7,16 +7,20 @@ import { Transaction } from './transactions.entity';
 import { Address } from './address.entity';
 import { Follow } from './follow.entity';
 import { Bid } from './bid.entity';
-import { Exchange } from './exchange.entity';
-import { ExchangeCompensation } from './exchange-compensation.entity';
 import { SourceOfFund } from './source-of-fund.entity';
 import { WalletDeposit } from './wallet-deposit.entity';
 import { Deposit } from './deposit.entity';
 import { UserReport } from './user-report.entity';
 import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
-import { Notification } from './notification.entity';
+import { Announcement } from './announcement.entity';
 import { SellerFeedback } from './seller-feedback.entity';
+import { ChatMessage } from './chat-message.entity';
+import { DeliveryInformation } from './delivery-information.entity';
+import { Exchange } from './exchange.entity';
+import { ExchangeConfirmation } from './exchange-confirmation.entity';
+import { ExchangeComics } from './exchange-comics.entity';
+import { ExchangePost } from './exchange-post.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -58,7 +62,8 @@ export class User extends BaseEntity {
   @Column({
     name: 'avatar',
     type: 'varchar',
-    nullable: true,
+    default:
+      'https://firebasestorage.googleapis.com/v0/b/comzone-69b8f.appspot.com/o/images%2F1731059505299?alt=media&token=4aa40ac1-189c-46bb-a7a6-9c10d067ada2',
   })
   avatar: string;
 
@@ -84,11 +89,26 @@ export class User extends BaseEntity {
   status: string;
 
   @Column({
-    name: 'is_verified',
+    name: 'is_active',
     type: 'boolean',
     default: false,
   })
-  is_verified: boolean;
+  isActive: boolean;
+
+  @Column({
+    name: 'follower_count',
+    type: 'int',
+    nullable: true,
+    default: 0,
+  })
+  followerCount: number;
+
+  @Column({
+    name: 'bio',
+    type: 'varchar',
+    nullable: true,
+  })
+  bio: string;
 
   @Column({
     name: 'last_active',
@@ -96,6 +116,13 @@ export class User extends BaseEntity {
     nullable: true,
   })
   last_active: Date;
+
+  @Column({
+    name: 'device_id',
+    type: 'varchar',
+    nullable: true,
+  })
+  deviceId: string;
 
   @Column({
     name: 'refresh_token',
@@ -122,17 +149,17 @@ export class User extends BaseEntity {
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
 
-  @OneToMany(() => Exchange, (exchange) => exchange.requestUser)
+  @OneToMany(() => Exchange, (request) => request.requestUser)
   exchangeRequests: Exchange[];
 
-  @OneToMany(() => Exchange, (exchange) => exchange.offerUser)
-  exchangeOffers: Exchange[];
+  @OneToMany(() => ExchangePost, (post) => post.user)
+  posts: ExchangePost[];
 
-  @OneToMany(
-    () => ExchangeCompensation,
-    (exchangeCompensation) => exchangeCompensation.user,
-  )
-  exchangeCompensations: ExchangeCompensation[];
+  @OneToMany(() => ExchangeComics, (exchangeComics) => exchangeComics.user)
+  exchangeComics: ExchangeComics[];
+
+  @OneToMany(() => ExchangeConfirmation, (confirmation) => confirmation.user)
+  exchangeConfirmations: ExchangeConfirmation[];
 
   @OneToMany(() => Transaction, (transaction) => transaction.user)
   transactions: Transaction[];
@@ -164,12 +191,18 @@ export class User extends BaseEntity {
   @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.secondUser)
   secondChatRooms: ChatRoom[];
 
-  @OneToMany(() => Notification, (notification) => notification.user)
-  notifications: Notification[];
+  @OneToMany(() => Announcement, (announcement) => announcement.user)
+  announcements: Announcement[];
 
   @OneToMany(() => SellerFeedback, (feedback) => feedback.user)
   userSellerFeedbacks: SellerFeedback[];
 
   @OneToMany(() => SellerFeedback, (feedback) => feedback.seller)
   sellerFeedbacks: SellerFeedback[];
+
+  @OneToMany(() => ChatMessage, (message) => message.user)
+  chatMessages: ChatMessage[];
+
+  @OneToMany(() => DeliveryInformation, (info) => info.user)
+  deliveryInformation: DeliveryInformation[];
 }

@@ -4,6 +4,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Req,
   Request,
@@ -26,6 +28,7 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshAuthGuard } from './guards/refresh-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { PasswordResetDTO } from './dto/password-reset.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -61,7 +64,6 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   logout(@Req() req: any) {
-    console.log(':::::::::::', req.user);
     return this.authService.logout(req.user.id);
   }
 
@@ -75,9 +77,16 @@ export class AuthController {
   @Get('google/callback')
   async googleCallback(@Req() req: any, @Res() res: any) {
     const response = await this.authService.login(req.user.id);
-    // Return tokens to the frontend
     res.redirect(
-      `http://localhost:5173?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`,
+      `http://localhost:5173?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}&userId=${response.id}`,
+    );
+  }
+
+  @Patch('password-reset')
+  resetPassword(@Body() passwordResetDto: PasswordResetDTO) {
+    return this.authService.resetPassword(
+      passwordResetDto.userId,
+      passwordResetDto,
     );
   }
 

@@ -5,20 +5,21 @@ import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
 import { Exchange } from './exchange.entity';
 
-@Entity('notification')
-export class Notification extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.notifications, { eager: true })
+@Entity('announcement')
+export class Announcement extends BaseEntity {
+  @ManyToOne(() => User, (user) => user.announcements, { eager: true })
   user: User;
 
-  @ManyToOne(() => Order, (order) => order.notifications, { nullable: true })
+  @ManyToOne(() => Order, (order) => order.announcements, { nullable: true })
   order: Order;
 
-  @ManyToOne(() => Auction, (auction) => auction.notifications, {
+  @ManyToOne(() => Auction, (auction) => auction.announcements, {
     nullable: true,
+    eager: true,
   })
   auction: Auction;
 
-  @ManyToOne(() => Exchange, (exchange) => exchange.notifications, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.announcements, {
     nullable: true,
   })
   exchange: Exchange;
@@ -34,6 +35,18 @@ export class Notification extends BaseEntity {
     nullable: true,
   })
   message: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  status: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  type: string;
 
   @Column({
     name: 'is_read',

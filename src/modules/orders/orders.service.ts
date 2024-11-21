@@ -17,11 +17,16 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicService } from '../comics/comics.service';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
-import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 import * as dotenv from 'dotenv';
 import axios from 'axios';
 import { CancelOrderDTO } from './dto/cancel-order.dto';
 import { OrderDeliveryStatusEnum } from './dto/order-delivery-status.enum';
+import { UserAddressesService } from '../user-addresses/user-addresses.service';
+import {
+  CompleteOrderFailedDTO,
+  CompleteOrderSuccessfulDTO,
+} from './dto/complete-order.dto';
+import { DeliveriesService } from '../deliveries/deliveries.service';
 
 dotenv.config();
 
@@ -30,12 +35,15 @@ export class OrdersService extends BaseService<Order> {
   constructor(
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
-
     @InjectRepository(OrderItem)
     private readonly orderItemsRepository: Repository<OrderItem>,
 
     @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(DeliveriesService)
+    private readonly deliveriesService: DeliveriesService,
     @Inject(ComicService) private readonly comicsService: ComicService,
+    @Inject(UserAddressesService)
+    private readonly addressesService: UserAddressesService,
   ) {
     super(ordersRepository);
   }
@@ -44,7 +52,7 @@ export class OrdersService extends BaseService<Order> {
     const orderList = await this.ordersRepository.find();
     await Promise.all(
       orderList.map(async (order) => {
-        await this.autoUpdateOrderDeliveryStatus(order.id);
+        await this.autoUpdateOrderStatus(order.id);
       }),
     );
     return await this.ordersRepository.find({
@@ -59,19 +67,43 @@ export class OrdersService extends BaseService<Order> {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
+    const delivery = await this.deliveriesService.getOne(
+      createOrderDto.deliveryId,
+    );
+    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    const checkDuplicatedDelivery = await this.ordersRepository.findOne({
+      where: { delivery: { id: createOrderDto.deliveryId } },
+    });
+    if (checkDuplicatedDelivery)
+      throw new ConflictException('Duplicated delivery!');
+
     const newOrder = this.ordersRepository.create({
-      ...createOrderDto,
       user,
+      delivery,
+      totalPrice: createOrderDto.totalPrice,
+      paymentMethod: createOrderDto.paymentMethod,
+      note: createOrderDto.note,
     });
 
-    return await this.ordersRepository.save(newOrder);
+    await this.addressesService.incrementAddressUsedTime(
+      createOrderDto.addressId,
+    );
+
+    return await this.ordersRepository
+      .save(newOrder)
+      .then(() => this.getOne(newOrder.id));
   }
 
-  async autoUpdateOrderDeliveryStatus(orderId: string) {
-    const order = await this.getOne(orderId);
+  async autoUpdateOrderStatus(orderId: string) {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+      relations: ['delivery', 'delivery.from', 'delivery.to'],
+    });
+
     if (!order) throw new NotFoundException('Order cannot be found!');
 
-    if (!order.deliveryTrackingCode) return;
+    if (!order.delivery.deliveryTrackingCode) return;
 
     if (
       [
@@ -82,27 +114,12 @@ export class OrdersService extends BaseService<Order> {
     )
       return;
 
-    const headers = {
-      Token: process.env.GHN_TOKEN,
-      ShopId: process.env.GHN_SHOPID,
-    };
+    const newDeliveryStatus = '';
+    // await this.deliveriesService.autoUpdateGHNDeliveryStatus(
+    //   order.delivery.id,
+    // );
 
-    const fetchedDeliveryStatus = await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/detail',
-        {
-          order_code: order.deliveryTrackingCode,
-        },
-        { headers },
-      )
-      .then(async (res) => {
-        const deliveryStatus = res.data.data.status;
-        await this.ordersRepository.update(orderId, {
-          deliveryStatus: deliveryStatus,
-        });
-        return deliveryStatus;
-      })
-      .catch((err) => console.log('Error getting order delivery info: ', err));
+    if (!newDeliveryStatus) return;
 
     const packagingGroup = [
       OrderDeliveryStatusEnum.READY_TO_PICK,
@@ -129,21 +146,20 @@ export class OrdersService extends BaseService<Order> {
       OrderDeliveryStatusEnum.RETURNING,
       OrderDeliveryStatusEnum.RETURN_FAIL,
       OrderDeliveryStatusEnum.RETURNED,
+      OrderDeliveryStatusEnum.EXCEPTION,
+      OrderDeliveryStatusEnum.DAMAGE,
+      OrderDeliveryStatusEnum.LOST,
     ];
 
-    if (packagingGroup.some((status) => status === fetchedDeliveryStatus)) {
+    if (packagingGroup.some((status) => status === newDeliveryStatus)) {
       await this.updateOrderStatus(orderId, OrderStatusEnum.PACKAGING);
-    } else if (
-      deliveringGroup.some((status) => status === fetchedDeliveryStatus)
-    ) {
+    } else if (deliveringGroup.some((status) => status === newDeliveryStatus)) {
       await this.updateOrderStatus(orderId, OrderStatusEnum.DELIVERING);
-    } else if (
-      deliveredGroup.some((status) => status === fetchedDeliveryStatus)
-    ) {
+    } else if (deliveredGroup.some((status) => status === newDeliveryStatus)) {
       await this.updateOrderStatus(orderId, OrderStatusEnum.DELIVERED);
-    } else if (failedGroup.some((status) => status === fetchedDeliveryStatus)) {
+    } else if (failedGroup.some((status) => status === newDeliveryStatus)) {
       await this.updateOrderStatus(orderId, OrderStatusEnum.FAILED);
-    } else if (fetchedDeliveryStatus === OrderDeliveryStatusEnum.CANCEL) {
+    } else if (newDeliveryStatus === OrderDeliveryStatusEnum.CANCEL) {
       await this.updateOrderStatus(orderId, OrderStatusEnum.CANCELED);
     }
   }
@@ -151,6 +167,10 @@ export class OrdersService extends BaseService<Order> {
   async getSellerIdOfAnOrder(orderId: string): Promise<User> {
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: orderId } },
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+      },
     });
 
     if (!orderItemList || orderItemList.length === 0)
@@ -169,11 +189,15 @@ export class OrdersService extends BaseService<Order> {
           id: userId,
         },
       },
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+      },
     });
 
     await Promise.all(
       orderList.map(async (order) => {
-        await this.autoUpdateOrderDeliveryStatus(order.id);
+        await this.autoUpdateOrderStatus(order.id);
       }),
     );
 
@@ -192,7 +216,7 @@ export class OrdersService extends BaseService<Order> {
   async getAllOrdersByListOfIDs(orderIds: string[]) {
     return await Promise.all(
       orderIds.map(async (id) => {
-        await this.autoUpdateOrderDeliveryStatus(id);
+        await this.autoUpdateOrderStatus(id);
         return await this.getOne(id);
       }),
     );
@@ -207,6 +231,9 @@ export class OrdersService extends BaseService<Order> {
       .leftJoinAndSelect('order_item.comics', 'comics')
       .leftJoinAndSelect('order_item.order', 'order')
       .leftJoinAndSelect('comics.sellerId', 'seller')
+      .leftJoinAndSelect('order.delivery', 'delivery')
+      .leftJoinAndSelect('delivery.from', 'from')
+      .leftJoinAndSelect('delivery.to', 'to')
       .where('seller.id = :sellerId', { sellerId })
       .select('order.id')
       .distinct(true)
@@ -218,7 +245,7 @@ export class OrdersService extends BaseService<Order> {
 
     return await Promise.all(
       orderList.map(async (id) => {
-        await this.autoUpdateOrderDeliveryStatus(id);
+        await this.autoUpdateOrderStatus(id);
         return await this.getOne(id);
       }),
     );
@@ -226,76 +253,11 @@ export class OrdersService extends BaseService<Order> {
 
   async getOrderByDeliveryTrackingCode(code: string): Promise<Order> {
     const order = await this.ordersRepository.findOne({
-      where: { deliveryTrackingCode: code },
+      where: { delivery: { deliveryTrackingCode: code } },
     });
 
-    await this.autoUpdateOrderDeliveryStatus(order.id);
+    await this.autoUpdateOrderStatus(order.id);
     return await this.getOne(order.id);
-  }
-
-  async getDeliveryDetails(getDeliveryFeeDto: GetDeliveryFeeDTO) {
-    const headers = {
-      Token: process.env.GHN_TOKEN,
-      ShopId: process.env.GHN_SHOPID,
-    };
-
-    const availableServices: any[] = await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services',
-        {
-          shop_id: parseInt(process.env.GHN_SHOPID),
-          from_district: getDeliveryFeeDto.fromDistrict,
-          to_district: getDeliveryFeeDto.toDistrict,
-        },
-        { headers },
-      )
-      .then((res) => {
-        return res.data.data;
-      })
-      .catch((err) => console.log('Error getting available services: ', err));
-
-    const deliveryFee = await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee',
-        {
-          from_district_id: getDeliveryFeeDto.fromDistrict,
-          from_ward_code: getDeliveryFeeDto.fromWard,
-          to_district_id: getDeliveryFeeDto.toDistrict,
-          to_ward_code: getDeliveryFeeDto.toWard,
-          weight: 100 * getDeliveryFeeDto.comicsQuantity,
-          service_id: availableServices[0].service_id,
-          service_type_id: availableServices[0].service_type_id,
-        },
-        { headers },
-      )
-      .then((res) => {
-        return res.data.data.total;
-      })
-      .catch((err) => console.log('Error getting delivery fee: ', err));
-
-    const estDeliveryTime = await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/leadtime',
-        {
-          from_district_id: getDeliveryFeeDto.fromDistrict,
-          from_ward_code: getDeliveryFeeDto.fromWard,
-          to_district_id: getDeliveryFeeDto.toDistrict,
-          to_ward_code: getDeliveryFeeDto.toWard,
-          service_id: availableServices[0].service_id,
-        },
-        { headers },
-      )
-      .then((res) => {
-        return res.data.data.leadtime;
-      })
-      .catch((err) =>
-        console.log('Error getting estimated delivery time: ', err),
-      );
-
-    return {
-      deliveryFee,
-      estDeliveryTime: new Date(estDeliveryTime * 1000),
-    };
   }
 
   async cancelDeliveryOrder(cancelOrderDto: CancelOrderDTO) {
@@ -303,7 +265,7 @@ export class OrdersService extends BaseService<Order> {
     if (!order) throw new NotFoundException('Order cannot be found!');
 
     let deliveryCancel: any;
-    if (order.deliveryTrackingCode) {
+    if (order.delivery.deliveryTrackingCode) {
       const headers = {
         Token: process.env.GHN_TOKEN,
         ShopId: process.env.GHN_SHOPID,
@@ -313,21 +275,24 @@ export class OrdersService extends BaseService<Order> {
         .post(
           'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/switch-status/cancel',
           {
-            order_codes: [order.deliveryTrackingCode],
+            order_codes: [order.delivery.deliveryTrackingCode],
           },
           { headers },
         )
         .then((res) => {
           return res.data;
         })
-        .catch((err) => console.log('Error canceling order delivery: ', err));
+        .catch((err) => {
+          console.log('Error canceling order delivery: ', err);
+          throw new BadRequestException(err.response.data);
+        });
     }
 
     await this.ordersRepository.update(cancelOrderDto.orderId, {
       status: OrderStatusEnum.CANCELED,
-      deliveryStatus: order.deliveryStatus
-        ? OrderDeliveryStatusEnum.CANCEL
-        : null,
+      delivery: {
+        status: order.delivery.status ? OrderDeliveryStatusEnum.CANCEL : null,
+      },
       cancelReason: cancelOrderDto.cancelReason,
     });
 
@@ -374,90 +339,14 @@ export class OrdersService extends BaseService<Order> {
     if (orderItemList.length === 0)
       throw new NotFoundException('No order item of the order can be found!');
 
-    const headers = {
-      Token: process.env.GHN_TOKEN,
-      ShopId: process.env.GHN_SHOPID,
-    };
+    const comicsList = orderItemList.map((item) => {
+      return item.comics;
+    });
 
-    const services = await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/available-services',
-        {
-          shop_id: parseInt(process.env.GHN_SHOPID),
-          from_district: order.fromDistrictId,
-          to_district: order.toDistrictId,
-        },
-        { headers },
-      )
-      .then((res) => {
-        return res.data.data;
-      })
-      .catch((err) => console.log('Error getting available services: ', err));
-
-    await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create',
-        {
-          payment_type_id: order.paymentMethod === 'WALLET' ? 1 : 2,
-          required_note: 'CHOXEMHANGKHONGTHU',
-          from_name: order.fromName,
-          from_phone: order.fromPhone,
-          from_address: order.fromAddress,
-          from_ward_name: order.fromWardName,
-          from_district_name: order.fromDistrictName,
-          from_province_name: order.fromProvinceName,
-          return_phone: order.fromPhone,
-          return_address: order.fromAddress,
-          return_district_id: order.fromDistrictId,
-          return_ward_code: order.fromWardId,
-          to_name: order.toName,
-          to_phone: order.toPhone,
-          to_address: order.toAddress,
-          to_ward_code: order.toWardId,
-          to_district_id: order.toDistrictId,
-          cod_amount: order.paymentMethod === 'WALLET' ? 0 : order.totalPrice,
-          content: 'Truyện tranh',
-          weight: orderItemList.length * 100,
-          length: 30,
-          width: 15,
-          height: orderItemList.length * 2,
-          quantity: orderItemList.length,
-          // pick_station_id: 1444,
-          // deliver_station_id: null,
-          insurance_value: 0,
-          service_id: services[0].service_id,
-          service_type_id: services[0].service_type_id,
-          coupon: null,
-          // pick_shift: [2],
-          items: orderItemList.map((item) => {
-            return {
-              code: item.order.id + '-' + item.comics.id,
-              name: item.comics.title,
-              quantity: item.comics.quantity,
-              price: item.price,
-              length: 30,
-              width: 15,
-              height: item.comics.quantity * 2,
-              weight: item.comics.quantity * 100,
-              category: {
-                level1: 'Truyện',
-              },
-            };
-          }),
-        },
-        { headers },
-      )
-      .then(async (res) => {
-        const data = res.data.data;
-        await this.ordersRepository.update(orderId, {
-          deliveryTrackingCode: data.order_code,
-          deliveryStatus: OrderDeliveryStatusEnum.READY_TO_PICK,
-        });
-      })
-      .catch((err) => {
-        console.log('Error creating order delivery: ', err);
-        throw new BadRequestException();
-      });
+    await this.deliveriesService.registerNewGHNDelivery(
+      order.delivery.id,
+      comicsList,
+    );
 
     return await this.getOne(orderId);
   }
@@ -490,5 +379,62 @@ export class OrdersService extends BaseService<Order> {
     return {
       message: 'Comics are all successfully updated to SOLD!',
     };
+  }
+
+  async cancelOrder(cancelOrderDto: CancelOrderDTO) {
+    const orderItemList = await this.orderItemsRepository.find({
+      where: { order: { id: cancelOrderDto.orderId } },
+    });
+
+    await Promise.all(
+      orderItemList.map(async (item) => {
+        await this.comicsService.updateStatus(
+          item.comics.id,
+          ComicsStatusEnum.UNAVAILABLE,
+        );
+      }),
+    );
+
+    //Hoàn tiền cho người mua nếu đã thanh toán, thông báo đơn bị hủy
+
+    return await this.ordersRepository
+      .update(cancelOrderDto.orderId, {
+        status: OrderStatusEnum.CANCELED,
+        cancelReason: cancelOrderDto.cancelReason || 'Không có lí do',
+      })
+      .then(() => this.getOne(cancelOrderDto.orderId));
+  }
+
+  async completeOrderToBeSuccessful(
+    userId: string,
+    dto: CompleteOrderSuccessfulDTO,
+  ) {
+    const order = await this.getOne(dto.order);
+    if (!order) throw new NotFoundException('Order cannot be found!');
+
+    if (order.user.id !== userId)
+      throw new ForbiddenException('Order does not belong to this user!');
+
+    return await this.ordersRepository
+      .update(order.id, {
+        status: OrderStatusEnum.SUCCESSFUL,
+        isFeedback: dto.isFeedback,
+      })
+      .then(() => this.getOne(order.id));
+  }
+
+  async completeOrderToBeFailed(userId: string, dto: CompleteOrderFailedDTO) {
+    const order = await this.getOne(dto.order);
+    if (!order) throw new NotFoundException('Order cannot be found!');
+
+    if (order.user.id !== userId)
+      throw new ForbiddenException('Order does not belong to this user!');
+
+    return await this.ordersRepository
+      .update(order.id, {
+        status: OrderStatusEnum.FAILED,
+        note: dto.note || '',
+      })
+      .then(() => this.getOne(order.id));
   }
 }
