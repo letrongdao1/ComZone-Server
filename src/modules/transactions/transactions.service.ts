@@ -156,17 +156,9 @@ export class TransactionsService extends BaseService<Transaction> {
       code: generateNumericCode(8),
       user,
       exchange,
+      amount,
+      status: TransactionStatusEnum.SUCCESSFUL,
     });
-
-    newTransaction.exchange = exchange;
-    newTransaction.status = TransactionStatusEnum.SUCCESSFUL;
-
-    if (exchange.post.user.id === userId) {
-      newTransaction.amount =
-        exchange.depositAmount + exchange.compensationAmount + amount;
-    } else {
-      newTransaction.amount = exchange.depositAmount + amount;
-    }
 
     return await this.transactionsRepository.save(newTransaction);
   }

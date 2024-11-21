@@ -308,10 +308,7 @@ export class ExchangesService extends BaseService<Exchange> {
     if (user.balance < fullPrice)
       throw new ForbiddenException('Insufficient balance!');
 
-    const updatedUser = await this.usersService.updateBalance(
-      userId,
-      -fullPrice,
-    );
+    await this.usersService.updateBalance(userId, -fullPrice);
 
     await this.transactionsService.createExchangeTransaction(
       userId,
@@ -319,9 +316,10 @@ export class ExchangesService extends BaseService<Exchange> {
       fullPrice,
     );
 
-    return {
-      message: 'Successfully paid for the exchange!',
-      newUserBalance: updatedUser.balance,
-    };
+    await this.exchangesRepository
+      .update(exchangeId, {
+        status: ExchangeStatusEnum.DELIVERING,
+      })
+      .then(() => this.getOne(exchangeId));
   }
 }

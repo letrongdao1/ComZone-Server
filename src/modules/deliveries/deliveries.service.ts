@@ -444,6 +444,13 @@ export class DeliveriesService extends BaseService<Delivery> {
           'Error getting estimated delivery time: ' + err.response.data,
         );
       });
+
+    if (!delivery.deliveryFee) {
+      await this.deliveriesRepository.update(deliveryId, {
+        deliveryFee,
+      });
+    }
+
     return {
       deliveryFee,
       estDeliveryTime: new Date(estDeliveryTime * 1000),
