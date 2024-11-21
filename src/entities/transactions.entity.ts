@@ -90,20 +90,6 @@ export class Transaction extends BaseEntity {
   status: string;
 
   @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-  })
-  isUsed: boolean;
-
-  @Column({
-    name: 'payment_gateway',
-    type: 'varchar',
-    nullable: true,
-  })
-  paymentGateway?: string;
-
-  @Column({
     name: 'profit_amount',
     type: 'float',
     nullable: true,

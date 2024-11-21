@@ -15,6 +15,7 @@ import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { DeliveriesService } from '../deliveries/deliveries.service';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {
@@ -27,6 +28,8 @@ export class DepositsService extends BaseService<Deposit> {
     private readonly exchangesService: ExchangesService,
     @Inject(DeliveriesService)
     private readonly deliveriesService: DeliveriesService,
+    @Inject(TransactionsService)
+    private readonly transactionsService: TransactionsService,
   ) {
     super(depositsRepository);
   }
@@ -41,22 +44,23 @@ export class DepositsService extends BaseService<Deposit> {
     if (user.balance < createDepositDto.amount)
       throw new ForbiddenException('Insufficient balance!');
 
-    let deposit: Deposit;
+    const deposit = this.depositsRepository.create({
+      user,
+      amount: createDepositDto.amount,
+      status: DepositStatusEnum.HOLDING,
+    });
 
     if (createDepositDto.auction) {
       const auction = await this.auctionsService.findAuctionById(
         createDepositDto.auction,
       );
 
-      deposit = this.depositsRepository.create({
-        user,
-        auction,
-        amount: createDepositDto.amount,
-        status: DepositStatusEnum.HOLDING,
-      });
+      deposit.auction = auction;
     }
 
     await this.usersService.updateBalance(userId, -createDepositDto.amount);
+
+    await this.transactionsService.createDepositTransaction(userId, deposit.id);
 
     return await this.depositsRepository.save(deposit);
   }
@@ -83,6 +87,11 @@ export class DepositsService extends BaseService<Deposit> {
     });
 
     await this.usersService.updateBalance(userId, -exchange.depositAmount);
+
+    await this.transactionsService.createDepositTransaction(
+      userId,
+      newDeposit.id,
+    );
 
     await this.depositsRepository.save(newDeposit);
 

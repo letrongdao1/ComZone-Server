@@ -7,6 +7,7 @@ import { UsersModule } from '../users/users.module';
 import { AuctionModule } from '../auction/auction.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { DeliveriesModule } from '../deliveries/deliveries.module';
+import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DeliveriesModule } from '../deliveries/deliveries.module';
     AuctionModule,
     ExchangesModule,
     DeliveriesModule,
+    TransactionsModule,
   ],
   controllers: [DepositsController],
   providers: [DepositsService],

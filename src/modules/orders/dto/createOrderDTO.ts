@@ -2,6 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateOrderDTO {
   @ApiProperty()
+  sellerId: string;
+
+  @ApiProperty()
   deliveryId: string;
 
   @ApiProperty()

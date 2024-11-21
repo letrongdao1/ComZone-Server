@@ -27,6 +27,7 @@ import {
   CompleteOrderSuccessfulDTO,
 } from './dto/complete-order.dto';
 import { DeliveriesService } from '../deliveries/deliveries.service';
+import { TransactionsService } from '../transactions/transactions.service';
 
 dotenv.config();
 
@@ -44,6 +45,8 @@ export class OrdersService extends BaseService<Order> {
     @Inject(ComicService) private readonly comicsService: ComicService,
     @Inject(UserAddressesService)
     private readonly addressesService: UserAddressesService,
+    @Inject(TransactionsService)
+    private readonly transactionsService: TransactionsService,
   ) {
     super(ordersRepository);
   }
@@ -85,6 +88,22 @@ export class OrdersService extends BaseService<Order> {
       paymentMethod: createOrderDto.paymentMethod,
       note: createOrderDto.note,
     });
+
+    if (createOrderDto.paymentMethod === 'WALLET') {
+      if (user.balance < createOrderDto.totalPrice)
+        throw new ForbiddenException('Insufficient balance!');
+
+      await this.usersService.updateBalance(userId, -createOrderDto.totalPrice);
+      await this.usersService.updateBalanceWithNonWithdrawableAmount(
+        createOrderDto.sellerId,
+        createOrderDto.totalPrice,
+      );
+
+      await this.transactionsService.createOrderTransaction(
+        userId,
+        newOrder.id,
+      );
+    }
 
     await this.addressesService.incrementAddressUsedTime(
       createOrderDto.addressId,
@@ -359,7 +378,7 @@ export class OrdersService extends BaseService<Order> {
       .then(() => this.getOne(orderId));
   }
 
-  async updateComicsStatusOfAnOrder(orderId: string, status: string) {
+  async updateComicsStatusOfAnOrder(orderId: string) {
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: orderId } },
     });
