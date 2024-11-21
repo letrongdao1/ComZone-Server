@@ -10,10 +10,12 @@ import { Order } from 'src/entities/orders.entity';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module';
 import { DeliveriesScheduleService } from './delivery-schedule.service.';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Delivery, Order]),
+    UsersModule,
     ExchangesModule,
     ExchangeComicsModule,
     DeliveryInformationModule,

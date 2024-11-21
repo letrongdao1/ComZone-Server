@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -23,6 +24,7 @@ import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 import { Order } from 'src/entities/orders.entity';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
+import { UsersService } from '../users/users.service';
 
 dotenv.config();
 
@@ -34,6 +36,7 @@ export class DeliveriesService extends BaseService<Delivery> {
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
 
+    private readonly usersService: UsersService,
     private readonly exchangesService: ExchangesService,
     @Inject(ExchangeComicsService)
     private readonly exchangeComicsService: ExchangeComicsService,
@@ -461,5 +464,32 @@ export class DeliveriesService extends BaseService<Delivery> {
       },
       relations: ['exchange'],
     });
+  }
+
+  async payExchangeDelivery(userId: string, exchangeId: string) {
+    const user = await this.usersService.getOne(userId);
+
+    const exchangeDelivery = await this.deliveriesRepository.findOne({
+      where: {
+        from: { user: { id: userId } },
+        exchange: { id: exchangeId },
+      },
+    });
+
+    if (!exchangeDelivery.deliveryFee)
+      throw new NotFoundException('Delivery fee cannot be found!');
+
+    if (user.balance < exchangeDelivery.deliveryFee)
+      throw new ForbiddenException('Insufficient balance!');
+
+    const updatedUser = await this.usersService.updateBalance(
+      userId,
+      -exchangeDelivery.deliveryFee,
+    );
+
+    return {
+      message: 'Successfully paid for exchange delivery fee',
+      newUserBalance: updatedUser.balance,
+    };
   }
 }

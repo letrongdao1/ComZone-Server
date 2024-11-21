@@ -1,10 +1,8 @@
 import {
-  Body,
   Controller,
   Get,
   Param,
   Patch,
-  Post,
   Query,
   Req,
   UseGuards,
@@ -45,5 +43,11 @@ export class ExchangesController {
   @Patch('reject/:id')
   rejectExchangeRequest(@Req() req: any, @Param('id') id: string) {
     return this.exchangesService.rejectExchangeRequest(req.user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('pay/compensation/:exchange_id')
+  payExchangeCompensation(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.exchangesService.payExchangeCompensation(req.user.id, id);
   }
 }
