@@ -6,6 +6,8 @@ import {
   IsString,
   Max,
   Min,
+  IsBoolean,
+  isBoolean,
 } from 'class-validator';
 
 export class CreateSellerFeedbackDto {
@@ -32,17 +34,6 @@ export class CreateSellerFeedbackDto {
 
 export class UpdateSellerFeedbackDto {
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  rating?: number;
-
-  @IsOptional()
-  @IsString()
-  comment?: string;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  attachedImages?: string[];
+  @IsBoolean()
+  isApprove?: boolean;
 }

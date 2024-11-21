@@ -54,7 +54,10 @@ export class SellerFeedbackController {
       updateSellerFeedbackDto,
     );
   }
-
+  @Patch('approve/:id')
+  approveFeedback(@Param('id') id: string) {
+    return this.sellerFeedbackService.approveFeedback(id);
+  }
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.sellerFeedbackService.removeFeedback(id);

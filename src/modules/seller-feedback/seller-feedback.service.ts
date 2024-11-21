@@ -88,6 +88,13 @@ export class SellerFeedbackService {
     await this.sellerFeedbackRepository.update(id, dto);
     return this.findOne(id);
   }
+  async approveFeedback(id: string): Promise<SellerFeedback> {
+    const feedback = await this.findOne(id);
+
+    feedback.isApprove = true;
+
+    return this.sellerFeedbackRepository.save(feedback);
+  }
 
   async removeFeedback(id: string): Promise<void> {
     const feedback = await this.findOne(id);

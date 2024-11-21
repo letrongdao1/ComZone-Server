@@ -28,4 +28,11 @@ export class SellerFeedback extends BaseEntity {
     nullable: true,
   })
   attachedImages: string[];
+
+  @Column({
+    type: 'boolean',
+    default: false,
+    nullable: false,
+  })
+  isApprove: boolean;
 }
