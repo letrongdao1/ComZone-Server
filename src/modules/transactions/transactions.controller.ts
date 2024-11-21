@@ -45,6 +45,18 @@ export class TransactionsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('check/exchange/:exchange_id')
+  getSuccessfulByExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.transactionsService.getSuccessfulExchangeTransaction(
+      req.user.id,
+      exchangeId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('status/:transactionId')
   updateTransactionStatus(
     @Param('transactionId') transactionId: string,

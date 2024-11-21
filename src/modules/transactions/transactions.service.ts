@@ -190,6 +190,16 @@ export class TransactionsService extends BaseService<Transaction> {
     });
   }
 
+  async getSuccessfulExchangeTransaction(userId: string, exchangeId: string) {
+    return await this.transactionsRepository.findOne({
+      where: {
+        user: { id: userId },
+        exchange: { id: exchangeId },
+        status: TransactionStatusEnum.SUCCESSFUL,
+      },
+    });
+  }
+
   async updateTransactionStatus(
     transactionId: string,
     newStatus: 'PENDING' | 'SUCCESSFUL' | 'FAILED',

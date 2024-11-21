@@ -134,9 +134,7 @@ export class OrdersService extends BaseService<Order> {
       return;
 
     const newDeliveryStatus = '';
-    // await this.deliveriesService.autoUpdateGHNDeliveryStatus(
-    //   order.delivery.id,
-    // );
+    await this.deliveriesService.autoUpdateGHNDeliveryStatus(order.delivery.id);
 
     if (!newDeliveryStatus) return;
 
