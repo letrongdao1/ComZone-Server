@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  Patch,
   Post,
   Req,
   UseGuards,
@@ -60,11 +59,5 @@ export class DeliveriesController {
   @Get('exchange/from-user/:exchange_id')
   getByExchangeAndUser(@Req() req: any, @Param('exchange_id') id: string) {
     return this.deliveriesService.getByExchangeAndUser(req.user.id, id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('exchange/pay/:exchange_id')
-  payExchangeDeliveryFee(@Req() req: any, @Param('exchange_id') id: string) {
-    return this.deliveriesService.payExchangeDelivery(req.user.id, id);
   }
 }

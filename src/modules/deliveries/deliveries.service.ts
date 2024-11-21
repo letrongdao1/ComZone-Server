@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -25,6 +24,7 @@ import { Order } from 'src/entities/orders.entity';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
 import { UsersService } from '../users/users.service';
+import { DeliveryOverallStatusEnum } from './dto/overall-status.enum';
 
 dotenv.config();
 
@@ -297,6 +297,7 @@ export class DeliveriesService extends BaseService<Delivery> {
         await this.deliveriesRepository.update(deliveryId, {
           status: deliveryStatus,
         });
+        await this.updateDeliveryOverallStatus(deliveryId, deliveryStatus);
         return deliveryStatus;
       })
       .catch((err) => console.log('Error getting GHN delivery info: ', err));
@@ -450,6 +451,16 @@ export class DeliveriesService extends BaseService<Delivery> {
   }
 
   async getByExchange(exchangeId: string) {
+    const deliveries = await this.deliveriesRepository.find({
+      where: { exchange: { id: exchangeId } },
+      relations: ['exchange'],
+    });
+
+    if (deliveries.length > 0)
+      await Promise.all(
+        deliveries.map((d) => this.autoUpdateGHNDeliveryStatus(d.id)),
+      );
+
     return await this.deliveriesRepository.find({
       where: { exchange: { id: exchangeId } },
       relations: ['exchange'],
@@ -457,39 +468,85 @@ export class DeliveriesService extends BaseService<Delivery> {
   }
 
   async getByExchangeAndUser(userId: string, exchangeId: string) {
-    return await this.deliveriesRepository.findOne({
+    const delivery = await this.deliveriesRepository.findOne({
       where: {
         exchange: { id: exchangeId },
         from: { user: { id: userId } },
       },
       relations: ['exchange'],
     });
+
+    await this.autoUpdateGHNDeliveryStatus(delivery.id);
+
+    return this.getOne(delivery.id);
   }
 
-  async payExchangeDelivery(userId: string, exchangeId: string) {
-    const user = await this.usersService.getOne(userId);
-
-    const exchangeDelivery = await this.deliveriesRepository.findOne({
-      where: {
-        from: { user: { id: userId } },
-        exchange: { id: exchangeId },
-      },
+  async updateDeliveryOverallStatus(
+    deliveryId: string,
+    checkStatus: OrderDeliveryStatusEnum,
+  ) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: { id: deliveryId },
     });
 
-    if (!exchangeDelivery.deliveryFee)
-      throw new NotFoundException('Delivery fee cannot be found!');
+    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
 
-    if (user.balance < exchangeDelivery.deliveryFee)
-      throw new ForbiddenException('Insufficient balance!');
+    if (!delivery.deliveryTrackingCode) return;
 
-    const updatedUser = await this.usersService.updateBalance(
-      userId,
-      -exchangeDelivery.deliveryFee,
-    );
+    if (
+      [
+        DeliveryOverallStatusEnum.DELIVERED,
+        DeliveryOverallStatusEnum.FAILED,
+      ].find((status) => status === delivery.overallStatus)
+    )
+      return;
 
-    return {
-      message: 'Successfully paid for exchange delivery fee',
-      newUserBalance: updatedUser.balance,
-    };
+    const pickingGroup = [
+      OrderDeliveryStatusEnum.READY_TO_PICK,
+      OrderDeliveryStatusEnum.PICKING,
+      OrderDeliveryStatusEnum.PICKED,
+      OrderDeliveryStatusEnum.MONEY_COLLECT_PICKING,
+    ];
+    const deliveringGroup = [
+      OrderDeliveryStatusEnum.STORING,
+      OrderDeliveryStatusEnum.TRANSPORTING,
+      OrderDeliveryStatusEnum.SORTING,
+      OrderDeliveryStatusEnum.DELIVERING,
+      OrderDeliveryStatusEnum.MONEY_COLLECT_DELIVERING,
+    ];
+    const deliveredGroup = [
+      OrderDeliveryStatusEnum.DELIVERY_FAIL,
+      OrderDeliveryStatusEnum.DELIVERED,
+    ];
+    const failedGroup = [
+      OrderDeliveryStatusEnum.WAITING_TO_RETURN,
+      OrderDeliveryStatusEnum.RETURN,
+      OrderDeliveryStatusEnum.RETURN_SORTING,
+      OrderDeliveryStatusEnum.RETURN_TRANSPORTING,
+      OrderDeliveryStatusEnum.RETURNING,
+      OrderDeliveryStatusEnum.RETURN_FAIL,
+      OrderDeliveryStatusEnum.RETURNED,
+      OrderDeliveryStatusEnum.EXCEPTION,
+      OrderDeliveryStatusEnum.DAMAGE,
+      OrderDeliveryStatusEnum.LOST,
+    ];
+
+    if (pickingGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.PICKING,
+      });
+    } else if (deliveringGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.DELIVERING,
+      });
+    } else if (deliveredGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.DELIVERED,
+      });
+    } else if (failedGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.FAILED,
+      });
+    }
   }
 }
