@@ -88,12 +88,12 @@ export class DepositsService extends BaseService<Deposit> {
 
     await this.usersService.updateBalance(userId, -exchange.depositAmount);
 
+    await this.depositsRepository.save(newDeposit);
+
     await this.transactionsService.createDepositTransaction(
       userId,
       newDeposit.id,
     );
-
-    await this.depositsRepository.save(newDeposit);
 
     //Auto create 2 GHN deliveries after finishing placing deposits
     const foundDeposit = await this.depositsRepository.find({

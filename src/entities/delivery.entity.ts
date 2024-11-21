@@ -61,7 +61,7 @@ export class Delivery extends BaseEntity {
     name: 'overall_status',
     type: 'enum',
     enum: DeliveryOverallStatusEnum,
-    default: DeliveryOverallStatusEnum.PICKING,
+    nullable: true,
   })
   overallStatus: string;
 
