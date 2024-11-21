@@ -204,7 +204,7 @@ export class TransactionsService extends BaseService<Transaction> {
         : exchange.post.user;
 
     const other =
-      exchange.requestUser.id !== userId
+      exchange.requestUser.id === userId
         ? exchange.post.user
         : exchange.requestUser;
 
