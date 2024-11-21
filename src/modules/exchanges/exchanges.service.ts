@@ -281,4 +281,34 @@ export class ExchangesService extends BaseService<Exchange> {
       })
       .then(() => this.getOne(exchangeId));
   }
+
+  async payExchangeCompensation(userId: string, exchangeId: string) {
+    const user = await this.usersService.getOne(userId);
+
+    const exchange = await this.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    if (!exchange.compensationAmount)
+      throw new NotFoundException(
+        'Exchange deposit amount is yet initialized!',
+      );
+
+    if (userId === exchange.requestUser.id)
+      throw new ForbiddenException(
+        'Only the post user can pay the compensation amount!',
+      );
+
+    if (user.balance < exchange.compensationAmount)
+      throw new ForbiddenException('Insufficient balance!');
+
+    const updatedUser = await this.usersService.updateBalance(
+      userId,
+      -exchange.compensationAmount,
+    );
+
+    return {
+      message: 'Successfully paid for exchange compensation',
+      newUserBalance: updatedUser.balance,
+    };
+  }
 }
