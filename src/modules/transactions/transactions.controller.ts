@@ -45,14 +45,28 @@ export class TransactionsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('check/exchange/:exchange_id')
-  getSuccessfulByExchange(
+  @Get('exchange/self/:exchange_id')
+  getSelfSuccessfulByExchange(
     @Req() req: any,
     @Param('exchange_id') exchangeId: string,
   ) {
     return this.transactionsService.getSuccessfulExchangeTransaction(
       req.user.id,
       exchangeId,
+      'self',
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange/other/:exchange_id')
+  getOtherSuccessfulByExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.transactionsService.getSuccessfulExchangeTransaction(
+      req.user.id,
+      exchangeId,
+      'other',
     );
   }
 

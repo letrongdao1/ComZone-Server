@@ -190,10 +190,27 @@ export class TransactionsService extends BaseService<Transaction> {
     });
   }
 
-  async getSuccessfulExchangeTransaction(userId: string, exchangeId: string) {
+  async getSuccessfulExchangeTransaction(
+    userId: string,
+    exchangeId: string,
+    belongTo: 'self' | 'other',
+  ) {
+    const exchange = await this.exchangesRepository.findOneBy({
+      id: exchangeId,
+    });
+    const self =
+      exchange.requestUser.id === userId
+        ? exchange.requestUser
+        : exchange.post.user;
+
+    const other =
+      exchange.requestUser.id !== userId
+        ? exchange.post.user
+        : exchange.requestUser;
+
     return await this.transactionsRepository.findOne({
       where: {
-        user: { id: userId },
+        user: { id: belongTo === 'self' ? self.id : other.id },
         exchange: { id: exchangeId },
         status: TransactionStatusEnum.SUCCESSFUL,
       },
