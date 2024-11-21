@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ZalopayService } from './zalopay.service';
 import { ZalopayController } from './zalopay.controller';
-import { TransactionsModule } from '../transactions/transactions.module';
+import { WalletDepositModule } from '../wallet-deposit/wallet-deposit.module';
 
 @Module({
-  imports: [TransactionsModule],
+  imports: [WalletDepositModule],
   controllers: [ZalopayController],
   providers: [ZalopayService],
 })

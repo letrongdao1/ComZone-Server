@@ -46,8 +46,8 @@ export class ExchangesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('pay/compensation/:exchange_id')
-  payExchangeCompensation(@Req() req: any, @Param('exchange_id') id: string) {
-    return this.exchangesService.payExchangeCompensation(req.user.id, id);
+  @Patch('pay/:exchange_id')
+  payExchangeAmount(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.exchangesService.payExchangeAmount(req.user.id, id);
   }
 }

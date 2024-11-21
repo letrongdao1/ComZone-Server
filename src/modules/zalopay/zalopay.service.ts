@@ -1,14 +1,17 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { createHmac, randomInt } from 'crypto';
+/* eslint-disable no-var */
+import { Injectable } from '@nestjs/common';
+import { createHmac } from 'crypto';
 import axios from 'axios';
 import dateFormat from 'src/utils/date-format/date.format';
 import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
-import { TransactionsService } from '../transactions/transactions.service';
-import { PaymentGatewayEnum } from '../transactions/dto/provider.enum';
+import { WalletDepositService } from '../wallet-deposit/wallet-deposit.service';
+import { generateNumericCode } from 'src/utils/generator/generators';
+import { PaymentGatewayEnum } from '../wallet-deposit/dto/provider.enum';
+import { WalletDepositStatusEnum } from '../wallet-deposit/dto/status.enum';
 
 @Injectable()
 export class ZalopayService {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(private readonly walletDepositsService: WalletDepositService) {}
 
   private readonly config = {
     appid: '554',
@@ -24,15 +27,15 @@ export class ZalopayService {
     zaloPayRequest: ZaloPayRequest,
     context: 'WALLET' | 'CHECKOUT',
   ) {
-    const transaction = await this.transactionsService.getOne(
-      zaloPayRequest.transaction,
+    const walletDeposit = await this.walletDepositsService.getOne(
+      zaloPayRequest.walletDeposit,
     );
 
     const embeddata = {
       redirecturl:
         context === 'WALLET'
-          ? `http://localhost:3000/zalopay/status/${transaction.id}`
-          : `http://localhost:3000/zalopay/checkout/status/${transaction.id}`,
+          ? `http://localhost:3000/zalopay/status/${walletDeposit.id}`
+          : `http://localhost:3000/zalopay/checkout/status/${walletDeposit.id}`,
       merchantinfo: 'ComZoneZaloPay',
     };
 
@@ -42,13 +45,13 @@ export class ZalopayService {
 
     const order = {
       appid: this.config.appid,
-      apptransid: `${createDate}_${transaction.code}`,
+      apptransid: `${createDate}_${generateNumericCode(16)}`,
       appuser: 'demo',
       apptime: Date.now(),
       item: JSON.stringify(items),
       embeddata: JSON.stringify(embeddata),
-      amount: transaction.amount,
-      description: `ComZone ZaloPay Order ${transaction.code}`,
+      amount: walletDeposit.amount,
+      description: `ComZone ZaloPay`,
       bankcode: '',
       mac: '',
     };
@@ -88,7 +91,7 @@ export class ZalopayService {
   async getPaymentStatus(
     req: any,
     response: any,
-    transactionId: string,
+    walletDepositId: string,
     context: 'WALLET' | 'CHECKOUT',
   ) {
     const appTransId = req.query.apptransid;
@@ -115,18 +118,16 @@ export class ZalopayService {
       .then(async (res) => {
         console.log('LOG: ', res.data);
 
-        await this.transactionsService.updateTransactionProvider(
-          transactionId,
+        await this.walletDepositsService.updateProvider(
+          walletDepositId,
           PaymentGatewayEnum.ZALOPAY,
         );
 
         if (res.data.returncode === 1) {
-          await this.transactionsService.updateTransactionStatus(
-            transactionId,
-            'SUCCESSFUL',
+          await this.walletDepositsService.updateWalletDepositStatus(
+            walletDepositId,
+            WalletDepositStatusEnum.SUCCESSFUL,
           );
-
-          await this.transactionsService.updatePostTransaction(transactionId);
 
           response.redirect(
             context === 'WALLET'
@@ -134,12 +135,10 @@ export class ZalopayService {
               : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
           );
         } else {
-          await this.transactionsService.updateTransactionStatus(
-            transactionId,
-            'FAILED',
+          await this.walletDepositsService.updateWalletDepositStatus(
+            walletDepositId,
+            WalletDepositStatusEnum.FAILED,
           );
-
-          await this.transactionsService.updatePostTransaction(transactionId);
 
           response.redirect(
             context === 'WALLET'

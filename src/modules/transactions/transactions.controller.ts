@@ -4,14 +4,12 @@ import {
   Get,
   Param,
   Patch,
-  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { ExchangeTransactionDTO, TransactionDTO } from './dto/transactionDto';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
@@ -28,30 +26,6 @@ export class TransactionsController {
   @Get('all')
   getAllTransactions() {
     return this.transactionsService.getAllWithDeleted();
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post()
-  createNewTransaction(
-    @Req() req: any,
-    @Body() transactionDto: TransactionDTO,
-  ) {
-    return this.transactionsService.createNewTransaction(
-      req.user.id,
-      transactionDto,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('exchange')
-  createNewExchangeTransaction(
-    @Req() req: any,
-    @Body() dto: ExchangeTransactionDTO,
-  ) {
-    return this.transactionsService.createExchangeTransaction(
-      req.user.id,
-      dto.exchange,
-    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -80,11 +54,5 @@ export class TransactionsController {
       transactionId,
       newStatus.status,
     );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('post/:transactionId')
-  updatePostTransaction(@Param('transactionId') transactionId: string) {
-    return this.transactionsService.updatePostTransaction(transactionId);
   }
 }

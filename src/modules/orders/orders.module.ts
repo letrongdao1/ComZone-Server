@@ -8,6 +8,7 @@ import { ComicModule } from '../comics/comics.module';
 import { UserAddressesModule } from '../user-addresses/user-addresses.module';
 import { DeliveriesModule } from '../deliveries/deliveries.module';
 import { OrdersScheduleService } from './order-schedule.service.';
+import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { OrdersScheduleService } from './order-schedule.service.';
     ComicModule,
     UserAddressesModule,
     DeliveriesModule,
+    TransactionsModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService, OrdersScheduleService],

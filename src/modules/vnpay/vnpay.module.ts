@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { VnpayService } from './vnpay.service';
 import { VnpayController } from './vnpay.controller';
-import { TransactionsModule } from '../transactions/transactions.module';
+import { WalletDepositModule } from '../wallet-deposit/wallet-deposit.module';
 
 @Module({
-  imports: [TransactionsModule],
+  imports: [WalletDepositModule],
   controllers: [VnpayController],
   providers: [VnpayService],
 })

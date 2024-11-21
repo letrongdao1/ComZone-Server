@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { WalletDepositService } from './wallet-deposit.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
@@ -35,16 +26,5 @@ export class WalletDepositController {
   @Get('user')
   getWalletDepositsByUser(@Req() req: any) {
     return this.walletDepositService.getWalletDepositsByUser(req.user.id);
-  }
-
-  @Patch('status/:wallet_deposit_id/:transaction_id')
-  updateWalletDepositStatus(
-    @Param('wallet_deposit_id') walletDepositId: string,
-    @Param('transaction_id') transactionId: string,
-  ) {
-    return this.walletDepositService.updateWalletDepositStatus(
-      walletDepositId,
-      transactionId,
-    );
   }
 }
