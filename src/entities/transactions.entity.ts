@@ -61,7 +61,7 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'exchange-subscription' })
   exchangeSubscription?: ExchangeSubscription;
 
-  @OneToOne(() => Exchange, (exchange) => exchange.transactions, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.transactions, {
     nullable: true,
     eager: true,
   })
