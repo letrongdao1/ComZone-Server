@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
 import { Auction } from './auction.entity';
 import { Transaction } from './transactions.entity';
@@ -43,6 +43,6 @@ export class Deposit extends BaseEntity {
   })
   seizedReason: string;
 
-  @OneToOne(() => Transaction, (transaction) => transaction.deposit)
-  transaction: Transaction;
+  @OneToMany(() => Transaction, (transaction) => transaction.deposit)
+  transactions: Transaction[];
 }
