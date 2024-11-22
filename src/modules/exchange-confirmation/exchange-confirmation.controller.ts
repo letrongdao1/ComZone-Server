@@ -55,5 +55,10 @@ export class ExchangeConfirmationController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('delivery/:exchange_id')
-  confirmDelivery(@Req() req: any, @Param('exchange_id') exchangeId: string) {}
+  confirmDelivery(@Req() req: any, @Param('exchange_id') exchangeId: string) {
+    return this.exchangeConfirmationService.updateDeliveryConfirmation(
+      req.user.id,
+      exchangeId,
+    );
+  }
 }
