@@ -51,6 +51,7 @@ export class Order extends BaseEntity {
   @Column({
     type: 'enum',
     enum: OrderTypeEnum,
+    default: OrderTypeEnum.TRADITIONAL,
   })
   type: string;
 

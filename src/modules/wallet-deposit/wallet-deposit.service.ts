@@ -67,9 +67,19 @@ export class WalletDepositService extends BaseService<WalletDeposit> {
     walletDepositId: string,
     status: WalletDepositStatusEnum,
   ) {
+    const walletDeposit = await this.walletDepositRepository.findOneBy({
+      id: walletDepositId,
+    });
+
     await this.walletDepositRepository.update(walletDepositId, {
       status,
     });
+
+    if (status === WalletDepositStatusEnum.SUCCESSFUL)
+      await this.usersService.updateBalance(
+        walletDeposit.user.id,
+        walletDeposit.amount,
+      );
 
     return await this.getOne(walletDepositId);
   }
