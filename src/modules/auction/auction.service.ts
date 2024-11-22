@@ -226,12 +226,6 @@ export class AuctionService {
       throw new NotFoundException(`Auction with ID ${id} not found`);
     }
 
-    // Check if the current price matches the highest bid and if the user is placing the max bid
-    if (auction.maxPrice !== currentPrice) {
-      throw new ConflictException(
-        'The current price must match the highest bid to complete the auction.',
-      );
-    }
     // Update auction status and winner
     auction.status = 'COMPLETED';
     auction.winner = user;
