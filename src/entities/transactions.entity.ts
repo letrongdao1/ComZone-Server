@@ -35,7 +35,7 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'withdrawal' })
   withdrawal?: Withdrawal;
 
-  @OneToOne(() => Deposit, (deposit) => deposit.transaction, {
+  @ManyToOne(() => Deposit, (deposit) => deposit.transactions, {
     nullable: true,
     eager: true,
   })
