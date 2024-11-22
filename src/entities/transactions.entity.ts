@@ -61,7 +61,7 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'exchange-subscription' })
   exchangeSubscription?: ExchangeSubscription;
 
-  @OneToOne(() => Exchange, (exchange) => exchange.transactions, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.transactions, {
     nullable: true,
     eager: true,
   })
@@ -88,20 +88,6 @@ export class Transaction extends BaseEntity {
     default: 'PENDING',
   })
   status: string;
-
-  @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-  })
-  isUsed: boolean;
-
-  @Column({
-    name: 'payment_gateway',
-    type: 'varchar',
-    nullable: true,
-  })
-  paymentGateway?: string;
 
   @Column({
     name: 'profit_amount',

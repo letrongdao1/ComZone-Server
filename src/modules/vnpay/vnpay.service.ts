@@ -1,21 +1,22 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+/* eslint-disable prefer-const */
+/* eslint-disable no-var */
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import * as dotenv from 'dotenv';
 import dateFormat from '../../utils/date-format/date.format';
 import { VNPayRequestDTO } from './dto/vnp-payment-url-request';
-import { TransactionsService } from '../transactions/transactions.service';
-import { PaymentGatewayEnum } from '../transactions/dto/provider.enum';
+import { WalletDepositService } from '../wallet-deposit/wallet-deposit.service';
+import { generateNumericCode } from 'src/utils/generator/generators';
+import { PaymentGatewayEnum } from '../wallet-deposit/dto/provider.enum';
+import { WalletDepositStatusEnum } from '../wallet-deposit/dto/status.enum';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 var querystring = require('qs');
 dotenv.config();
 
 @Injectable()
 export class VnpayService {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(private readonly walletDepositsService: WalletDepositService) {}
 
   sortObject(obj: any) {
     let sorted = {};
@@ -43,18 +44,18 @@ export class VnpayService {
     var secretKey = process.env.VNPAY_SECRET_KEY;
     var vnpUrl = process.env.VNPAY_PAYMENT_URL;
 
-    const transaction = await this.transactionsService.getOne(
-      vnpayRequest.transaction,
+    const walletDeposit = await this.walletDepositsService.getOne(
+      vnpayRequest.walletDeposit,
     );
 
-    if (!transaction)
-      throw new NotFoundException('Transaction cannot be found!');
+    if (!walletDeposit)
+      throw new NotFoundException('Wallet deposit cannot be found!');
 
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
     var returnUrl =
       context === 'WALLET'
-        ? `http://localhost:3000/vnpay/return/${transaction.id}`
-        : `http://localhost:3000/vnpay/checkout/return/${transaction.id}`;
+        ? `http://localhost:3000/vnpay/return/${walletDeposit.id}`
+        : `http://localhost:3000/vnpay/checkout/return/${walletDeposit.id}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -62,10 +63,10 @@ export class VnpayService {
       vnp_TmnCode: tmnCode,
       vnp_Locale: 'vn',
       vnp_CurrCode: 'VND',
-      vnp_TxnRef: transaction.code,
-      vnp_OrderInfo: `${transaction.id}`,
+      vnp_TxnRef: generateNumericCode(16),
+      vnp_OrderInfo: `${walletDeposit.id}`,
       vnp_OrderType: 'ComZone purchase',
-      vnp_Amount: transaction.amount * 100,
+      vnp_Amount: walletDeposit.amount * 100,
       vnp_ReturnUrl: returnUrl,
       vnp_IpAddr: ipAddress,
       vnp_CreateDate: createDate,
@@ -84,14 +85,14 @@ export class VnpayService {
     return {
       message: 'A new payment link was created successfully.',
       url: vnpUrl,
-      transaction,
+      walletDeposit,
     };
   }
 
   async handlePaymentReturn(
     req: any,
     response: any,
-    transactionId: string,
+    walletDepositId: string,
     context: 'WALLET' | 'CHECKOUT',
   ) {
     let vnp_Params = req.query;
@@ -111,17 +112,17 @@ export class VnpayService {
     let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest('hex');
 
     if (secureHash === signed) {
-      await this.transactionsService.updateTransactionProvider(
-        transactionId,
+      await this.walletDepositsService.updateProvider(
+        walletDepositId,
         PaymentGatewayEnum.VNPAY,
       );
 
-      await this.transactionsService.updateTransactionStatus(
-        transactionId,
-        vnp_Params['vnp_ResponseCode'] === '00' ? 'SUCCESSFUL' : 'FAILED',
+      await this.walletDepositsService.updateWalletDepositStatus(
+        walletDepositId,
+        vnp_Params['vnp_ResponseCode'] === '00'
+          ? WalletDepositStatusEnum.SUCCESSFUL
+          : WalletDepositStatusEnum.FAILED,
       );
-
-      await this.transactionsService.updatePostTransaction(transactionId);
 
       if (vnp_Params['vnp_ResponseCode'] === '00') {
         response.redirect(

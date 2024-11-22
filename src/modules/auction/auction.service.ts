@@ -16,6 +16,7 @@ import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
 import { BidService } from '../bid/bid.service';
+import { DepositsService } from '../deposits/deposits.service';
 
 @Injectable()
 export class AuctionService {
@@ -30,6 +31,8 @@ export class AuctionService {
     private readonly bidService: BidService,
     @Inject(forwardRef(() => EventsGateway))
     private readonly eventsGateway: EventsGateway, // Use forwardRef to resolve circular dependency
+    @Inject(forwardRef(() => DepositsService))
+    private depositsService: DepositsService,
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
@@ -92,7 +95,6 @@ export class AuctionService {
     if (!auction) throw new NotFoundException('Auction not found');
 
     const now = new Date();
-    console.log(now);
     if (auction.endTime > now) {
       return; // Auction hasn't ended yet
     }
@@ -125,7 +127,10 @@ export class AuctionService {
             .map((bid) => bid.user.id),
         ),
       );
-
+      await this.depositsService.refundAllDepositsExceptWinner(
+        auctionId,
+        latestBid.user.id,
+      );
       // Create Announcements for Losing Bidders and Notify Them
       await this.eventsGateway.notifyUsers(
         losingUserIds,

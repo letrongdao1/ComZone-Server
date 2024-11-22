@@ -2,6 +2,7 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Transaction } from './transactions.entity';
+import { WalletDepositStatusEnum } from 'src/modules/wallet-deposit/dto/status.enum';
 
 @Entity('wallet-deposit')
 export class WalletDeposit extends BaseEntity {
@@ -16,9 +17,16 @@ export class WalletDeposit extends BaseEntity {
   amount: number;
 
   @Column({
+    name: 'payment_gateway',
+    type: 'varchar',
+    nullable: true,
+  })
+  paymentGateway?: string;
+
+  @Column({
     type: 'enum',
-    enum: ['PENDING', 'SUCCESSFUL', 'FAILED'],
-    default: 'PENDING',
+    enum: WalletDepositStatusEnum,
+    default: WalletDepositStatusEnum.PENDING,
   })
   status: string;
 

@@ -1,16 +1,10 @@
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
 import { Order } from './orders.entity';
 import { OrderDeliveryStatusEnum } from 'src/modules/orders/dto/order-delivery-status.enum';
 import { BaseEntity } from 'src/common/entity.base';
 import { DeliveryInformation } from './delivery-information.entity';
 import { Exchange } from './exchange.entity';
+import { DeliveryOverallStatusEnum } from 'src/modules/deliveries/dto/overall-status.enum';
 
 @Entity('delivery')
 export class Delivery extends BaseEntity {
@@ -62,6 +56,14 @@ export class Delivery extends BaseEntity {
     nullable: true,
   })
   status: string;
+
+  @Column({
+    name: 'overall_status',
+    type: 'enum',
+    enum: DeliveryOverallStatusEnum,
+    nullable: true,
+  })
+  overallStatus: string;
 
   @Column({
     type: 'text',

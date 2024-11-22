@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -45,6 +46,14 @@ export class DepositsController {
   @Get('auction/user/:id')
   checkUserDepositsOfAnAuction(@Req() req: any, @Param('id') id: string) {
     return this.depositsService.getUserDepositOfAnAuction(req.user.id, id);
+  }
+  // @Patch('auction/:auctionId/refund')
+  // async refundAllDepositsOfAnAuction(@Param('auctionId') auctionId: string) {
+  //   return await this.depositsService.refundAllDepositsExceptWinner(auctionId);
+  // }
+  @Patch('/auction/:auctionId/refund-winner')
+  async refundWinner(@Param('auctionId') auctionId: string) {
+    return await this.depositsService.refundDepositToWinner(auctionId);
   }
 
   @UseGuards(JwtAuthGuard)

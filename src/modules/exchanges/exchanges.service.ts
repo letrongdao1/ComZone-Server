@@ -15,6 +15,8 @@ import { ExchangeStatusEnum } from './dto/exchange-status-enum';
 import { StatusQueryEnum } from './dto/status-query.enum';
 import { ExchangePostsService } from '../exchange-posts/exchange-posts.service';
 import { ExchangeComics } from 'src/entities/exchange-comics.entity';
+import { TransactionsService } from '../transactions/transactions.service';
+import { Delivery } from 'src/entities/delivery.entity';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -23,10 +25,14 @@ export class ExchangesService extends BaseService<Exchange> {
     private readonly exchangesRepository: Repository<Exchange>,
     @InjectRepository(ExchangeComics)
     private readonly comicsRepository: Repository<ExchangeComics>,
+    @InjectRepository(Delivery)
+    private readonly deliveriesRepository: Repository<Delivery>,
     @Inject(UsersService)
     private readonly usersService: UsersService,
     @Inject(ExchangePostsService)
     private readonly postsService: ExchangePostsService,
+    @Inject(TransactionsService)
+    private readonly transactionsService: TransactionsService,
   ) {
     super(exchangesRepository);
   }
@@ -278,6 +284,41 @@ export class ExchangesService extends BaseService<Exchange> {
     return await this.exchangesRepository
       .update(exchangeId, {
         requestUser,
+      })
+      .then(() => this.getOne(exchangeId));
+  }
+
+  async payExchangeAmount(userId: string, exchangeId: string) {
+    const user = await this.usersService.getOne(userId);
+
+    const exchange = await this.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    const userDelivery = await this.deliveriesRepository.findOne({
+      where: { exchange: { id: exchangeId }, from: { user: { id: userId } } },
+    });
+
+    if (!userDelivery.deliveryFee)
+      throw new NotFoundException('Delivery fee cannot be found!');
+
+    const fullPrice =
+      userDelivery.deliveryFee +
+      (exchange.requestUser.id === userId ? 0 : exchange.compensationAmount);
+
+    if (user.balance < fullPrice)
+      throw new ForbiddenException('Insufficient balance!');
+
+    await this.usersService.updateBalance(userId, -fullPrice);
+
+    await this.transactionsService.createExchangeTransaction(
+      userId,
+      exchangeId,
+      fullPrice,
+    );
+
+    await this.exchangesRepository
+      .update(exchangeId, {
+        status: ExchangeStatusEnum.DELIVERING,
       })
       .then(() => this.getOne(exchangeId));
   }

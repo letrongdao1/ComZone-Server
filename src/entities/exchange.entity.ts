@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
 import { Delivery } from './delivery.entity';
 import { ExchangeStatusEnum } from 'src/modules/exchanges/dto/exchange-status-enum';

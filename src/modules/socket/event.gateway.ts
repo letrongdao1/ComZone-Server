@@ -91,16 +91,18 @@ export class EventsGateway implements OnModuleInit {
       auctionId: string;
       currentPrice: number;
       user: User;
+      type: string;
     },
   ) {
-    const { auctionId, currentPrice, user } = data;
-    const bid = await this.bidService.create({
-      userId: user.id,
-      auctionId,
-      price: currentPrice,
-    });
-    console.log('11111', bid);
-
+    const { auctionId, currentPrice, user, type } = data;
+    if (type === 'maxPrice') {
+      const bid = await this.bidService.create({
+        userId: user.id,
+        auctionId,
+        price: currentPrice,
+      });
+      console.log('11111', bid);
+    }
     const updatedAuction =
       await this.auctionService.updateAuctionStatusToCompleted(
         auctionId,

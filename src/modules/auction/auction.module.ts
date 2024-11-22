@@ -11,9 +11,11 @@ import { AuctionSchedulerService } from './auctionSchedule.service';
 import { Announcement } from 'src/entities/announcement.entity';
 import { EventsModule } from '../socket/event.module';
 import { BidModule } from '../bid/bid.module';
+import { DepositsModule } from '../deposits/deposits.module';
 
 @Module({
   imports: [
+    forwardRef(() => DepositsModule),
     TypeOrmModule.forFeature([Auction, Comic, Bid, Announcement]),
     forwardRef(() => EventsModule),
     BidModule,
