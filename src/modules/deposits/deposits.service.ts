@@ -243,6 +243,7 @@ export class DepositsService extends BaseService<Deposit> {
   async refundAllDepositsOfAnExchange(exchangeId: string) {
     const exchange = await this.exchangesService.getOne(exchangeId);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
     const depositList = await this.depositsRepository.find({
       where: { exchange: { id: exchangeId } },
     });
@@ -250,13 +251,11 @@ export class DepositsService extends BaseService<Deposit> {
       depositList.map(async (deposit) => {
         await this.refundDepositToAUser(deposit.id);
       }),
-    )
-      .catch((err) => console.log(err))
-      .finally(() => {
-        return {
-          message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
-        };
-      });
+    ).then(() => {
+      return {
+        message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
+      };
+    });
   }
 
   async seizeADeposit(depositId: string) {
