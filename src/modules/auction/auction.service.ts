@@ -275,6 +275,44 @@ export class AuctionService {
     );
   }
 
+  async startAuctionsThatShouldBeginNow(): Promise<{
+    success: boolean;
+    startedAuctions: string[];
+    errors?: any[];
+  }> {
+    const now = new Date();
+    const startedAuctionIds: string[] = [];
+    const errors: any[] = [];
+
+    const auctionsToStart = await this.auctionRepository.find({
+      where: {
+        startTime: LessThanOrEqual(now),
+        status: 'UPCOMING',
+      },
+    });
+
+    if (auctionsToStart.length > 0) {
+      await Promise.all(
+        auctionsToStart.map(async (auction) => {
+          try {
+            auction.status = 'ONGOING';
+            await this.auctionRepository.save(auction);
+            startedAuctionIds.push(auction.id);
+            console.log(`Auction ${auction.id} started.`);
+          } catch (error) {
+            errors.push({ auctionId: auction.id, error });
+          }
+        }),
+      );
+    }
+
+    return {
+      success: errors.length === 0,
+      startedAuctions: startedAuctionIds,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  }
+
   async findUpcomingAuctions(): Promise<Auction[]> {
     const now = new Date();
     return this.auctionRepository.find({

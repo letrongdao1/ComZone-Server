@@ -55,6 +55,13 @@ export class AuctionController {
   async getUpcomingAuctions(): Promise<Auction[]> {
     return this.auctionService.findUpcomingAuctions();
   }
+  @Get('upcoming/123')
+  async startAuction(): Promise<{
+    success: boolean;
+    startedAuctions: string[];
+  }> {
+    return await this.auctionService.startAuctionsThatShouldBeginNow();
+  }
 
   @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
