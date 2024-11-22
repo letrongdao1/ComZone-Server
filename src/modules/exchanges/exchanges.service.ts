@@ -322,4 +322,33 @@ export class ExchangesService extends BaseService<Exchange> {
       })
       .then(() => this.getOne(exchangeId));
   }
+
+  async transferCompensationAmount(exchangeId: string) {
+    const exchange = await this.exchangesRepository.findOneBy({
+      id: exchangeId,
+    });
+
+    if (!exchange.compensationAmount || exchange.compensationAmount === 0)
+      return;
+
+    await this.usersService.updateBalance(
+      exchange.requestUser.id,
+      exchange.compensationAmount,
+    );
+
+    await this.transactionsService.createExchangeTransaction(
+      exchange.requestUser.id,
+      exchangeId,
+      exchange.compensationAmount,
+      'ADD',
+    );
+  }
+
+  async updateExchangeStatus(exchangeId: string, status: ExchangeStatusEnum) {
+    return await this.exchangesRepository
+      .update(exchangeId, {
+        status,
+      })
+      .then(() => this.getOne(exchangeId));
+  }
 }

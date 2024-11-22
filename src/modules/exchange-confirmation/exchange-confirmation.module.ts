@@ -5,12 +5,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { UsersModule } from '../users/users.module';
+import { DepositsModule } from '../deposits/deposits.module';
+import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ExchangeConfirmation]),
-    ExchangesModule,
     UsersModule,
+    ExchangesModule,
+    ExchangeComicsModule,
+    DepositsModule,
   ],
   controllers: [ExchangeConfirmationController],
   providers: [ExchangeConfirmationService],

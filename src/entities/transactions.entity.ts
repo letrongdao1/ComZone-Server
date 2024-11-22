@@ -83,6 +83,14 @@ export class Transaction extends BaseEntity {
 
   @Column({
     type: 'enum',
+    enum: ['ADD', 'SUBTRACT'],
+    nullable: false,
+    default: 'SUBTRACT',
+  })
+  type: string;
+
+  @Column({
+    type: 'enum',
     enum: ['PENDING', 'SUCCESSFUL', 'FAILED'],
     nullable: false,
     default: 'PENDING',

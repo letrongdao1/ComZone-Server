@@ -96,7 +96,11 @@ export class TransactionsService extends BaseService<Transaction> {
     return await this.transactionsRepository.save(newTransaction);
   }
 
-  async createDepositTransaction(userId: string, depositId: string) {
+  async createDepositTransaction(
+    userId: string,
+    depositId: string,
+    type?: 'ADD' | 'SUBTRACT',
+  ) {
     const user = await this.usersService.getOne(userId);
     const deposit = await this.depositsRepository.findOneBy({
       id: depositId,
@@ -108,6 +112,7 @@ export class TransactionsService extends BaseService<Transaction> {
       code: generateNumericCode(8),
       deposit,
       amount: deposit.amount,
+      type: type || 'SUBTRACT',
       status: TransactionStatusEnum.SUCCESSFUL,
     });
 
@@ -141,6 +146,7 @@ export class TransactionsService extends BaseService<Transaction> {
     userId: string,
     exchangeId: string,
     amount: number,
+    type?: 'ADD' | 'SUBTRACT',
   ) {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
@@ -157,6 +163,7 @@ export class TransactionsService extends BaseService<Transaction> {
       user,
       exchange,
       amount,
+      type: type || 'SUBTRACT',
       status: TransactionStatusEnum.SUCCESSFUL,
     });
 
