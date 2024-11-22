@@ -4,12 +4,14 @@ import { EventsGateway } from './event.gateway';
 import { BidModule } from '../bid/bid.module';
 import { AnnouncementModule } from '../announcement/announcement.module';
 import { AuctionModule } from '../auction/auction.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     forwardRef(() => AuctionModule),
-    BidModule, // Ensure BidService is provided here
-    AnnouncementModule, // Ensure AnnouncementService is provided here
+    BidModule,
+    AnnouncementModule,
+    UsersModule,
   ],
   providers: [EventsGateway],
   exports: [EventsGateway],

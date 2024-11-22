@@ -13,6 +13,7 @@ import { CreateAnnouncementDto } from '../announcement/dto/announcement.dto';
 import { AnnouncementService } from '../announcement/announcement.service';
 import { User } from 'src/entities/users.entity';
 import { AuctionService } from '../auction/auction.service';
+import { UsersService } from '../users/users.service';
 
 @WebSocketGateway({
   cors: {
@@ -28,6 +29,7 @@ export class EventsGateway implements OnModuleInit {
     private readonly announcementService: AnnouncementService,
     @Inject(forwardRef(() => AuctionService))
     private readonly auctionService: AuctionService, // AuctionService should be correctly injected here
+    private readonly userService: UsersService,
   ) {}
 
   private userSockets = new Map<string, Set<string>>();
@@ -42,16 +44,18 @@ export class EventsGateway implements OnModuleInit {
         socket.join(userId);
         console.log(`User ${userId} joined room:`, socket.rooms);
       });
-      // socket.io.on('reconnect', () => {
-      //   console.log('Reconnected to the server');
-      // });
-      // Listen for any events sent by clients
       socket.onAny((event, data) => {
         console.log(`Event received: ${event}`, data); // Logs every event received from any client
       });
+      console.log('123123', socket.handshake.query.user);
 
       // Handle socket disconnection
       socket.on('disconnect', (reason) => {
+        if (typeof socket.handshake.query.user === 'string')
+          this.userService.updateUserIsActive(
+            socket.handshake.query.user,
+            false,
+          );
         console.log(`Socket ${socket.id} disconnected: ${reason}`);
       });
     });

@@ -31,32 +31,31 @@ export class DepositsService extends BaseService<Deposit> {
     super(depositsRepository);
   }
 
-  async placeDeposit(userId: string, createDepositDto: CreateDepositDTO) {
+  async placeDeposit(userId: string, auctionId: string) {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    if (createDepositDto.amount <= 0 || createDepositDto.amount > 999999999)
+    let auction;
+    if (auctionId) {
+      auction = await this.auctionsService.findAuctionById(auctionId);
+      if (!auction) throw new NotFoundException('Auction not found!');
+    }
+    const amount = auction.depositAmount;
+
+    const deposit = this.depositsRepository.create({
+      user,
+      auction,
+      amount,
+      status: DepositStatusEnum.HOLDING,
+    });
+
+    if (amount <= 0 || amount > 999999999)
       throw new BadRequestException('Invalid amount!');
 
-    if (user.balance < createDepositDto.amount)
+    if (user.balance < amount)
       throw new ForbiddenException('Insufficient balance!');
 
-    let deposit: Deposit;
-
-    if (createDepositDto.auction) {
-      const auction = await this.auctionsService.findAuctionById(
-        createDepositDto.auction,
-      );
-
-      deposit = this.depositsRepository.create({
-        user,
-        auction,
-        amount: createDepositDto.amount,
-        status: DepositStatusEnum.HOLDING,
-      });
-    }
-
-    await this.usersService.updateBalance(userId, -createDepositDto.amount);
+    await this.usersService.updateBalance(userId, -amount);
 
     return await this.depositsRepository.save(deposit);
   }
@@ -107,6 +106,14 @@ export class DepositsService extends BaseService<Deposit> {
   async getAllDepositOfUser(userId: string) {
     return await this.depositsRepository.find({
       where: { user: { id: userId } },
+    });
+  }
+  async getUserDepositOfAnAuction(userId: string, auctionId: string) {
+    return await this.depositsRepository.findOne({
+      where: {
+        user: { id: userId }, // Match the user by ID
+        auction: { id: auctionId }, // Match the auction by ID
+      },
     });
   }
 
