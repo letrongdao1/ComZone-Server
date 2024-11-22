@@ -150,6 +150,12 @@ export class DepositsService extends BaseService<Deposit> {
 
     await this.usersService.updateBalance(deposit.user.id, deposit.amount);
 
+    await this.transactionsService.createDepositTransaction(
+      deposit.user.id,
+      deposit.id,
+      'ADD',
+    );
+
     return await this.depositsRepository
       .update(depositId, {
         status: DepositStatusEnum.REFUNDED,
