@@ -8,5 +8,4 @@ export enum StatusQueryEnum {
   SUCCESSFUL = 'SUCCESSFUL',
   FAILED = 'FAILED',
   REJECTED = 'REJECTED',
-  CANCELED = 'CANCELED',
 }

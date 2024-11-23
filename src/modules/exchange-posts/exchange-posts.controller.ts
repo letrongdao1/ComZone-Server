@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -43,5 +45,14 @@ export class ExchangePostsController {
   @Get('short/some')
   getSomeShortPosts() {
     return this.exchangePostsService.getSomeShortPosts();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('repost/:post_id')
+  updateStatusToAvailable(
+    @Param('post_id') id: string,
+    @Body() dto: CreateExchangePostDTO,
+  ) {
+    return this.exchangePostsService.updatePostStatusToAvailable(id, dto);
   }
 }

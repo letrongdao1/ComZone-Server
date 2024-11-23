@@ -25,6 +25,7 @@ import { ExchangesService } from '../exchanges/exchanges.service';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
 import { UsersService } from '../users/users.service';
 import { DeliveryOverallStatusEnum } from './dto/overall-status.enum';
+import { DeliveryInformation } from 'src/entities/delivery-information.entity';
 
 dotenv.config();
 
@@ -468,10 +469,44 @@ export class DeliveriesService extends BaseService<Delivery> {
         deliveries.map((d) => this.autoUpdateGHNDeliveryStatus(d.id)),
       );
 
-    return await this.deliveriesRepository.find({
+    const getFullAddress = async (info: DeliveryInformation) => {
+      return (
+        info.address +
+        ', ' +
+        (await this.vnAddressService.getWardById(info.districtId, info.wardId))
+          .name +
+        ', ' +
+        (
+          await this.vnAddressService.getDistrictById(
+            info.provinceId,
+            info.districtId,
+          )
+        ).name +
+        ', ' +
+        (await this.vnAddressService.getProvinceById(info.provinceId)).name
+      );
+    };
+
+    const newList = await this.deliveriesRepository.find({
       where: { exchange: { id: exchangeId } },
       relations: ['exchange'],
     });
+
+    return await Promise.all(
+      newList.map(async (delivery) => {
+        return {
+          ...delivery,
+          from: {
+            ...delivery.from,
+            fullAddress: await getFullAddress(delivery.from),
+          },
+          to: {
+            ...delivery.to,
+            fullAddress: await getFullAddress(delivery.to),
+          },
+        };
+      }),
+    );
   }
 
   async getByExchangeAndUser(userId: string, exchangeId: string) {
@@ -521,11 +556,16 @@ export class DeliveriesService extends BaseService<Delivery> {
       OrderDeliveryStatusEnum.DELIVERING,
       OrderDeliveryStatusEnum.MONEY_COLLECT_DELIVERING,
     ];
-    const deliveredGroup = [
-      OrderDeliveryStatusEnum.DELIVERY_FAIL,
-      OrderDeliveryStatusEnum.DELIVERED,
-    ];
+    const deliveredGroup = [OrderDeliveryStatusEnum.DELIVERED];
+
     const failedGroup = [
+      OrderDeliveryStatusEnum.DELIVERY_FAIL,
+      OrderDeliveryStatusEnum.EXCEPTION,
+      OrderDeliveryStatusEnum.DAMAGE,
+      OrderDeliveryStatusEnum.LOST,
+    ];
+
+    const returnGroup = [
       OrderDeliveryStatusEnum.WAITING_TO_RETURN,
       OrderDeliveryStatusEnum.RETURN,
       OrderDeliveryStatusEnum.RETURN_SORTING,
@@ -533,9 +573,6 @@ export class DeliveriesService extends BaseService<Delivery> {
       OrderDeliveryStatusEnum.RETURNING,
       OrderDeliveryStatusEnum.RETURN_FAIL,
       OrderDeliveryStatusEnum.RETURNED,
-      OrderDeliveryStatusEnum.EXCEPTION,
-      OrderDeliveryStatusEnum.DAMAGE,
-      OrderDeliveryStatusEnum.LOST,
     ];
 
     if (pickingGroup.some((status) => status === checkStatus)) {
@@ -553,6 +590,10 @@ export class DeliveriesService extends BaseService<Delivery> {
     } else if (failedGroup.some((status) => status === checkStatus)) {
       await this.deliveriesRepository.update(delivery.id, {
         overallStatus: DeliveryOverallStatusEnum.FAILED,
+      });
+    } else if (returnGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.RETURN,
       });
     }
   }

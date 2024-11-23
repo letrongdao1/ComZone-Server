@@ -271,7 +271,7 @@ export class UserAddressesService extends BaseService<Address> {
         );
 
         if (filteredList.length === 2) {
-          var newSelectedDefaultAddress: Address = null;
+          let newSelectedDefaultAddress: Address = null;
           if (filteredList[0].usedTime === filteredList[1].usedTime) {
             newSelectedDefaultAddress = filteredList.reduce((prev, current) => {
               return prev &&
