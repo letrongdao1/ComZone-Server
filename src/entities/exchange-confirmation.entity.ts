@@ -14,14 +14,14 @@ export class ExchangeConfirmation extends BaseEntity {
   @Column({
     name: 'dealing_confirm',
     type: 'boolean',
-    default: false,
+    nullable: true,
   })
   dealingConfirm: boolean;
 
   @Column({
     name: 'delivery_confirm',
     type: 'boolean',
-    default: false,
+    nullable: true,
   })
   deliveryConfirm: boolean;
 }

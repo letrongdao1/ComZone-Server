@@ -17,6 +17,7 @@ import { ExchangePostsService } from '../exchange-posts/exchange-posts.service';
 import { ExchangeComics } from 'src/entities/exchange-comics.entity';
 import { TransactionsService } from '../transactions/transactions.service';
 import { Delivery } from 'src/entities/delivery.entity';
+import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -25,8 +26,11 @@ export class ExchangesService extends BaseService<Exchange> {
     private readonly exchangesRepository: Repository<Exchange>,
     @InjectRepository(ExchangeComics)
     private readonly comicsRepository: Repository<ExchangeComics>,
+    @InjectRepository(ExchangeConfirmation)
+    private readonly excConfirmationRepository: Repository<ExchangeConfirmation>,
     @InjectRepository(Delivery)
     private readonly deliveriesRepository: Repository<Delivery>,
+
     @Inject(UsersService)
     private readonly usersService: UsersService,
     @Inject(ExchangePostsService)
@@ -173,22 +177,6 @@ export class ExchangesService extends BaseService<Exchange> {
             order: { updatedAt: 'DESC' },
           });
         }
-
-        case StatusQueryEnum.CANCELED: {
-          return await this.exchangesRepository.find({
-            where: [
-              {
-                post: { user: { id: userId } },
-                status: ExchangeStatusEnum.CANCELED,
-              },
-              {
-                requestUser: { id: userId },
-                status: ExchangeStatusEnum.CANCELED,
-              },
-            ],
-            order: { updatedAt: 'DESC' },
-          });
-        }
       }
     };
 
@@ -240,37 +228,21 @@ export class ExchangesService extends BaseService<Exchange> {
     return await this.getOne(exchangeId);
   }
 
-  async rejectExchangeRequest(userId: string, exchangeId: string) {
-    const exchange = await this.getOne(exchangeId);
-    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
-
-    if (exchange.post.user.id !== userId)
-      throw new ForbiddenException(
-        'Only post user can reject requests on this post!',
-      );
-
-    await this.exchangesRepository
-      .update(exchangeId, {
-        status: ExchangeStatusEnum.REJECTED,
-      })
-      .then(() => this.getOne(exchangeId));
-  }
-
-  async updateDeals(userId: string, exchangeId: string, dto: ExchangeDealsDTO) {
+  async updateDeals(exchangeId: string, dto: ExchangeDealsDTO) {
     const exchange = await this.getOne(exchangeId);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
     if (exchange.status !== ExchangeStatusEnum.DEALING)
       throw new BadRequestException('Only DEALING exchanges can be updated!');
 
-    if (!exchange.requestUser || exchange.requestUser.id !== userId)
-      throw new ForbiddenException(
-        'Only the request user can propose new deals!',
-      );
+    const compensateUser = dto.compensateUser
+      ? await this.usersService.getOne(dto.compensateUser)
+      : null;
 
     return await this.exchangesRepository.update(exchangeId, {
-      compensationAmount: dto.compensationAmount || 0,
-      depositAmount: dto.depositAmount || 0,
+      compensateUser,
+      compensationAmount: dto.compensationAmount,
+      depositAmount: dto.depositAmount,
     });
   }
 
@@ -303,7 +275,7 @@ export class ExchangesService extends BaseService<Exchange> {
 
     const fullPrice =
       userDelivery.deliveryFee +
-      (exchange.requestUser.id === userId ? 0 : exchange.compensationAmount);
+      (exchange.compensateUser.id === userId ? exchange.compensationAmount : 0);
 
     if (user.balance < fullPrice)
       throw new ForbiddenException('Insufficient balance!');
@@ -331,13 +303,39 @@ export class ExchangesService extends BaseService<Exchange> {
     if (!exchange.compensationAmount || exchange.compensationAmount === 0)
       return;
 
+    const compensatedUserId =
+      exchange.requestUser.id === exchange.compensateUser.id
+        ? exchange.post.user.id
+        : exchange.requestUser.id;
+
     await this.usersService.updateBalance(
-      exchange.requestUser.id,
+      compensatedUserId,
       exchange.compensationAmount,
     );
 
     await this.transactionsService.createExchangeTransaction(
-      exchange.requestUser.id,
+      compensatedUserId,
+      exchangeId,
+      exchange.compensationAmount,
+      'ADD',
+    );
+  }
+
+  async revertCompensationAmount(exchangeId: string) {
+    const exchange = await this.exchangesRepository.findOneBy({
+      id: exchangeId,
+    });
+
+    if (!exchange.compensationAmount || exchange.compensationAmount === 0)
+      return;
+
+    await this.usersService.updateBalance(
+      exchange.compensateUser.id,
+      exchange.compensationAmount,
+    );
+
+    await this.transactionsService.createExchangeTransaction(
+      exchange.compensateUser.id,
       exchangeId,
       exchange.compensationAmount,
       'ADD',
@@ -350,5 +348,27 @@ export class ExchangesService extends BaseService<Exchange> {
         status,
       })
       .then(() => this.getOne(exchangeId));
+  }
+
+  async rejectExchangeRequest(userId: string, exchangeId: string) {
+    const exchange = await this.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    if (exchange.post.user.id !== userId)
+      throw new ForbiddenException(
+        'Only post user can reject requests on this post!',
+      );
+
+    await this.exchangesRepository
+      .update(exchangeId, {
+        status: ExchangeStatusEnum.REJECTED,
+      })
+      .then(() => this.getOne(exchangeId));
+  }
+
+  async deleteExchange(exchangeId: string) {
+    const exchange = await this.getOne(exchangeId);
+
+    return await this.exchangesRepository.remove(exchange);
   }
 }
