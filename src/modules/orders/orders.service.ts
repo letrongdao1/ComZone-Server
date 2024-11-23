@@ -87,6 +87,7 @@ export class OrdersService extends BaseService<Order> {
       totalPrice: createOrderDto.totalPrice,
       paymentMethod: createOrderDto.paymentMethod,
       note: createOrderDto.note,
+      type: createOrderDto.type,
     });
 
     if (createOrderDto.paymentMethod === 'WALLET') {

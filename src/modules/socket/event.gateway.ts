@@ -110,9 +110,7 @@ export class EventsGateway implements OnModuleInit {
         user,
       );
     console.log('12312', updatedAuction);
-
-    // Emit the updated auction data (including winner and status) to the clients
-    this.server.emit('auctionUpdated', updatedAuction); // 'auctionUpdated' is the event name
+    this.server.emit('auctionUpdated', updatedAuction);
   }
 
   async notifyUser(
