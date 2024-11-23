@@ -9,10 +9,16 @@ import { ExchangePostsModule } from '../exchange-posts/exchange-posts.module';
 import { ExchangeComics } from 'src/entities/exchange-comics.entity';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { Delivery } from 'src/entities/delivery.entity';
+import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Exchange, ExchangeComics, Delivery]),
+    TypeOrmModule.forFeature([
+      Exchange,
+      ExchangeComics,
+      Delivery,
+      ExchangeConfirmation,
+    ]),
     UsersModule,
     ComicModule,
     ExchangePostsModule,

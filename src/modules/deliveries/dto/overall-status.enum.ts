@@ -3,4 +3,5 @@ export enum DeliveryOverallStatusEnum {
   DELIVERING = 'DELIVERING',
   DELIVERED = 'DELIVERED',
   FAILED = 'FAILED',
+  RETURN = 'RETURN',
 }

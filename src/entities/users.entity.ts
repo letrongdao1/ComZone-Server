@@ -149,8 +149,11 @@ export class User extends BaseEntity {
   @OneToMany(() => Otp, (otp) => otp.user)
   otps: Otp[];
 
-  @OneToMany(() => Exchange, (request) => request.requestUser)
-  exchangeRequests: Exchange[];
+  @OneToMany(() => Exchange, (exchange) => exchange.requestUser)
+  exchanges: Exchange[];
+
+  @OneToMany(() => Exchange, (exchange) => exchange.compensateUser)
+  compensateExchanges: Exchange[];
 
   @OneToMany(() => ExchangePost, (post) => post.user)
   posts: ExchangePost[];

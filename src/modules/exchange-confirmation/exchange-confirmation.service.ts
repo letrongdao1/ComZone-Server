@@ -31,7 +31,8 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     if (!user) throw new NotFoundException();
 
     if (!exchange.compensationAmount && !exchange.depositAmount)
-      await this.exchangesService.updateDeals(userId, dto.exchangeId, {
+      await this.exchangesService.updateDeals(dto.exchangeId, {
+        compensateUser: dto.compensateUser,
         compensationAmount: dto.compensationAmount,
         depositAmount: dto.depositAmount,
       });
@@ -43,6 +44,19 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     });
 
     return await this.excConfirmationRepository.save(newConfimation);
+  }
+
+  async rejectDeals(exchangeId: string) {
+    const exchangeConfirmation = await this.excConfirmationRepository.findBy({
+      exchange: { id: exchangeId },
+    });
+    await this.exchangesService.updateDeals(exchangeId, {
+      compensationAmount: null,
+      depositAmount: null,
+      compensateUser: null,
+    });
+
+    return await this.excConfirmationRepository.remove(exchangeConfirmation);
   }
 
   async getByUserAndExchange(userId: string, exchangeId: string) {
@@ -89,5 +103,42 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     }
 
     return await this.getOne(exchangeConfirmation.id);
+  }
+
+  async failedDeliveryMark(userId: string, exchangeId: string) {
+    const exchange = await this.exchangesService.getOne(exchangeId);
+
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    const exchangeConfirmation = await this.excConfirmationRepository.findOneBy(
+      {
+        exchange: { id: exchangeId },
+        user: { id: userId },
+      },
+    );
+
+    return await this.excConfirmationRepository
+      .update(exchangeConfirmation.id, {
+        deliveryConfirm: false,
+      })
+      .then(() => this.getOne(exchangeConfirmation.id));
+  }
+
+  async cancelExchange(exchangeId: string) {
+    const exchange = await this.exchangesService.getOne(exchangeId);
+
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
+    const exchangeConfirmations = await this.excConfirmationRepository.findBy({
+      exchange: { id: exchangeId },
+    });
+
+    await this.excConfirmationRepository.remove(exchangeConfirmations);
+
+    await this.comicsService.updateComicsToInitStatus(exchangeId);
+
+    return await this.exchangesService
+      .updateExchangeStatus(exchangeId, ExchangeStatusEnum.FAILED)
+      .then(() => this.exchangesService.getOne(exchangeId));
   }
 }

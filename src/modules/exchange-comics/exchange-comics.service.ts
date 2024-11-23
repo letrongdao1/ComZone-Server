@@ -168,7 +168,13 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
 
   async rejectAndUpdateStatusByExchange(userId: string, exchangeId: string) {
     await this.exchangesService.rejectExchangeRequest(userId, exchangeId);
+    await this.updateComicsToInitStatus(exchangeId);
+    return {
+      message: 'Exchange rejected!',
+    };
+  }
 
+  async updateComicsToInitStatus(exchangeId: string) {
     const exchangeComicsList = await this.exchangeComicsRepository.find({
       where: {
         exchange: { id: exchangeId },
@@ -184,9 +190,5 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
         );
       }),
     );
-
-    return {
-      message: 'Exchange rejected!',
-    };
   }
 }
