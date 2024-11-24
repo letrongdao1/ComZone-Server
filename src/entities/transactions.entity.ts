@@ -35,7 +35,7 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'withdrawal' })
   withdrawal?: Withdrawal;
 
-  @OneToOne(() => Deposit, (deposit) => deposit.transaction, {
+  @ManyToOne(() => Deposit, (deposit) => deposit.transactions, {
     nullable: true,
     eager: true,
   })
@@ -61,7 +61,7 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'exchange-subscription' })
   exchangeSubscription?: ExchangeSubscription;
 
-  @OneToOne(() => Exchange, (exchange) => exchange.transactions, {
+  @ManyToOne(() => Exchange, (exchange) => exchange.transactions, {
     nullable: true,
     eager: true,
   })
@@ -83,25 +83,19 @@ export class Transaction extends BaseEntity {
 
   @Column({
     type: 'enum',
+    enum: ['ADD', 'SUBTRACT'],
+    nullable: false,
+    default: 'SUBTRACT',
+  })
+  type: string;
+
+  @Column({
+    type: 'enum',
     enum: ['PENDING', 'SUCCESSFUL', 'FAILED'],
     nullable: false,
     default: 'PENDING',
   })
   status: string;
-
-  @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-  })
-  isUsed: boolean;
-
-  @Column({
-    name: 'payment_gateway',
-    type: 'varchar',
-    nullable: true,
-  })
-  paymentGateway?: string;
 
   @Column({
     name: 'profit_amount',

@@ -62,13 +62,22 @@ export class ComicsExchangeService extends BaseService<Comic> {
       .createQueryBuilder('comics')
       .leftJoinAndSelect('comics.sellerId', 'seller')
       .where(
-        'LOWER(comics.title) LIKE :key OR LOWER(comics.author) LIKE :key AND comics.type = :type',
+        'LOWER(comics.title) LIKE :key OR LOWER(comics.author) LIKE :key AND comics.type = :type AND comics.status = :status',
         {
           key: `%${key.toLowerCase()}%`,
           type: ComicsTypeEnum.EXCHANGE,
+          status: ComicsStatusEnum.AVAILABLE,
         },
       )
       .orderBy('comics.sellerId')
       .getMany();
+  }
+
+  async updateStatus(comicsId: string, status: ComicsStatusEnum) {
+    return await this.comicsRepository
+      .update(comicsId, {
+        status,
+      })
+      .then(() => this.getOne(comicsId));
   }
 }

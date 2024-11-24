@@ -62,6 +62,12 @@ export class Auction extends BaseEntity {
   })
   status: string;
 
+  @Column({
+    name: 'deposit_amount',
+    nullable: false,
+  })
+  depositAmount: number;
+
   @OneToMany(() => Bid, (bid) => bid.auction)
   bids: Bid[];
 

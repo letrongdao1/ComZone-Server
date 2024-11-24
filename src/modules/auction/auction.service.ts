@@ -16,6 +16,7 @@ import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
 import { BidService } from '../bid/bid.service';
+import { DepositsService } from '../deposits/deposits.service';
 
 @Injectable()
 export class AuctionService {
@@ -30,6 +31,8 @@ export class AuctionService {
     private readonly bidService: BidService,
     @Inject(forwardRef(() => EventsGateway))
     private readonly eventsGateway: EventsGateway, // Use forwardRef to resolve circular dependency
+    @Inject(forwardRef(() => DepositsService))
+    private depositsService: DepositsService,
   ) {}
 
   async createAuction(data: CreateAuctionDto): Promise<Auction> {
@@ -92,7 +95,6 @@ export class AuctionService {
     if (!auction) throw new NotFoundException('Auction not found');
 
     const now = new Date();
-    console.log(now);
     if (auction.endTime > now) {
       return; // Auction hasn't ended yet
     }
@@ -125,7 +127,10 @@ export class AuctionService {
             .map((bid) => bid.user.id),
         ),
       );
-
+      await this.depositsService.refundAllDepositsExceptWinner(
+        auctionId,
+        latestBid.user.id,
+      );
       // Create Announcements for Losing Bidders and Notify Them
       await this.eventsGateway.notifyUsers(
         losingUserIds,
@@ -221,12 +226,6 @@ export class AuctionService {
       throw new NotFoundException(`Auction with ID ${id} not found`);
     }
 
-    // Check if the current price matches the highest bid and if the user is placing the max bid
-    if (auction.maxPrice !== currentPrice) {
-      throw new ConflictException(
-        'The current price must match the highest bid to complete the auction.',
-      );
-    }
     // Update auction status and winner
     auction.status = 'COMPLETED';
     auction.winner = user;
@@ -274,6 +273,44 @@ export class AuctionService {
       'AUCTION',
       'FAILED',
     );
+  }
+
+  async startAuctionsThatShouldBeginNow(): Promise<{
+    success: boolean;
+    startedAuctions: string[];
+    errors?: any[];
+  }> {
+    const now = new Date();
+    const startedAuctionIds: string[] = [];
+    const errors: any[] = [];
+
+    const auctionsToStart = await this.auctionRepository.find({
+      where: {
+        startTime: LessThanOrEqual(now),
+        status: 'UPCOMING',
+      },
+    });
+
+    if (auctionsToStart.length > 0) {
+      await Promise.all(
+        auctionsToStart.map(async (auction) => {
+          try {
+            auction.status = 'ONGOING';
+            await this.auctionRepository.save(auction);
+            startedAuctionIds.push(auction.id);
+            console.log(`Auction ${auction.id} started.`);
+          } catch (error) {
+            errors.push({ auctionId: auction.id, error });
+          }
+        }),
+      );
+    }
+
+    return {
+      success: errors.length === 0,
+      startedAuctions: startedAuctionIds,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }
 
   async findUpcomingAuctions(): Promise<Auction[]> {

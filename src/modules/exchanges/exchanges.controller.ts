@@ -1,10 +1,9 @@
 import {
-  Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
-  Post,
   Query,
   Req,
   UseGuards,
@@ -13,6 +12,9 @@ import { ExchangesService } from './exchanges.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { StatusQueryEnum } from './dto/status-query.enum';
+import { Roles } from '../authorization/roles.decorator';
+import { Role } from '../authorization/role.enum';
+import { PermissionsGuard } from '../authorization/permission.guard';
 
 @ApiBearerAuth()
 @ApiTags('Exchanges')
@@ -45,5 +47,19 @@ export class ExchangesController {
   @Patch('reject/:id')
   rejectExchangeRequest(@Req() req: any, @Param('id') id: string) {
     return this.exchangesService.rejectExchangeRequest(req.user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('pay/:exchange_id')
+  payExchangeAmount(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.exchangesService.payExchangeAmount(req.user.id, id);
+  }
+
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete('permanent/:id')
+  deleteExchange(@Param('id') id: string) {
+    return this.exchangesService.deleteExchange(id);
   }
 }

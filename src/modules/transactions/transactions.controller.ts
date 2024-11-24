@@ -4,14 +4,12 @@ import {
   Get,
   Param,
   Patch,
-  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { ExchangeTransactionDTO, TransactionDTO } from './dto/transactionDto';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
@@ -31,30 +29,6 @@ export class TransactionsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post()
-  createNewTransaction(
-    @Req() req: any,
-    @Body() transactionDto: TransactionDTO,
-  ) {
-    return this.transactionsService.createNewTransaction(
-      req.user.id,
-      transactionDto,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('exchange')
-  createNewExchangeTransaction(
-    @Req() req: any,
-    @Body() dto: ExchangeTransactionDTO,
-  ) {
-    return this.transactionsService.createExchangeTransaction(
-      req.user.id,
-      dto.exchange,
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Get('user')
   getAllTransactionsOfUser(@Req() req: any) {
     return this.transactionsService.getAllTransactionsOfUser(req.user.id);
@@ -71,6 +45,32 @@ export class TransactionsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('exchange/self/:exchange_id')
+  getSelfSuccessfulByExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.transactionsService.getSuccessfulExchangeTransaction(
+      req.user.id,
+      exchangeId,
+      'self',
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange/other/:exchange_id')
+  getOtherSuccessfulByExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.transactionsService.getSuccessfulExchangeTransaction(
+      req.user.id,
+      exchangeId,
+      'other',
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('status/:transactionId')
   updateTransactionStatus(
     @Param('transactionId') transactionId: string,
@@ -80,11 +80,5 @@ export class TransactionsController {
       transactionId,
       newStatus.status,
     );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Patch('post/:transactionId')
-  updatePostTransaction(@Param('transactionId') transactionId: string) {
-    return this.transactionsService.updatePostTransaction(transactionId);
   }
 }

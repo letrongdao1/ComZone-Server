@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
 import { Delivery } from './delivery.entity';
 import { ExchangeStatusEnum } from 'src/modules/exchanges/dto/exchange-status-enum';
@@ -16,7 +16,7 @@ export class Exchange extends BaseEntity {
   @ManyToOne(() => ExchangePost, (post) => post.exchanges, { eager: true })
   post: ExchangePost;
 
-  @ManyToOne(() => User, (user) => user.exchangeRequests, { eager: true })
+  @ManyToOne(() => User, (user) => user.exchanges, { eager: true })
   requestUser: User;
 
   @Column({
@@ -25,6 +25,12 @@ export class Exchange extends BaseEntity {
     nullable: true,
   })
   compensationAmount: number;
+
+  @ManyToOne(() => User, (user) => user.compensateExchanges, {
+    nullable: true,
+    eager: true,
+  })
+  compensateUser: User;
 
   @Column({
     name: 'deposit_amount',

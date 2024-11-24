@@ -4,25 +4,25 @@ import { TransactionsController } from './transactions.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Transaction } from 'src/entities/transactions.entity';
 import { UsersModule } from '../users/users.module';
-import { OrdersModule } from '../orders/orders.module';
-import { WalletDepositModule } from '../wallet-deposit/wallet-deposit.module';
-import { WithdrawalModule } from '../withdrawal/withdrawal.module';
-import { DepositsModule } from '../deposits/deposits.module';
-import { SellerSubscriptionsModule } from '../seller-subscriptions/seller-subscriptions.module';
-import { ExchangesModule } from '../exchanges/exchanges.module';
-import { DeliveriesModule } from '../deliveries/deliveries.module';
+import { Order } from 'src/entities/orders.entity';
+import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
+import { Withdrawal } from 'src/entities/withdrawal.entity';
+import { Deposit } from 'src/entities/deposit.entity';
+import { SellerSubscription } from 'src/entities/seller-subscription.entity';
+import { Exchange } from 'src/entities/exchange.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Transaction]),
+    TypeOrmModule.forFeature([
+      Transaction,
+      Order,
+      WalletDeposit,
+      Withdrawal,
+      Deposit,
+      SellerSubscription,
+      Exchange,
+    ]),
     UsersModule,
-    OrdersModule,
-    WalletDepositModule,
-    WithdrawalModule,
-    DepositsModule,
-    SellerSubscriptionsModule,
-    ExchangesModule,
-    DeliveriesModule,
   ],
   controllers: [TransactionsController],
   providers: [TransactionsService],

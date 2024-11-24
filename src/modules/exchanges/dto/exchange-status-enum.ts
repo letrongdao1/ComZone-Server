@@ -5,6 +5,5 @@ export enum ExchangeStatusEnum {
   DELIVERED = 'DELIVERED',
   SUCCESSFUL = 'SUCCESSFUL',
   FAILED = 'FAILED',
-  CANCELED = 'CANCELED',
   REJECTED = 'REJECTED',
 }

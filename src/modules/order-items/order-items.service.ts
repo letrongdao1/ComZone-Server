@@ -38,19 +38,22 @@ export class OrderItemsService extends BaseService<OrderItem> {
   }
 
   async create(orderItem: CreateOrderItemDTO): Promise<any> {
-    const { order: orderId, comics: comicsId } = orderItem;
+    const { order: orderId, comics: comicsId, price } = orderItem;
     console.log(comicsId);
 
+    // Validate order ID
     if (!orderId) throw new BadRequestException('Invalid order id!');
 
     const fetchedOrder = await this.ordersService.getOne(orderId);
     if (!fetchedOrder) throw new NotFoundException('Order cannot be found!');
 
+    // Validate comics ID
     if (!comicsId) throw new BadRequestException('Invalid comics id!');
 
     const fetchedComics = await this.comicsService.findOne(comicsId);
     if (!fetchedComics) throw new NotFoundException('Comics cannot be found!');
 
+    // Check for duplicate order items
     const checkOrderItem = await this.orderItemsRepository.findOne({
       where: {
         order: {
@@ -63,10 +66,17 @@ export class OrderItemsService extends BaseService<OrderItem> {
     });
     if (checkOrderItem) throw new ConflictException('Duplicated order item!');
 
+    // Resolve price: use provided price if available, otherwise default to comic's price
+    const resolvedPrice = price ?? fetchedComics.price;
+    if (resolvedPrice == null) {
+      throw new BadRequestException('Price cannot be null!');
+    }
+
+    // Save order item
     return await this.orderItemsRepository.save({
       order: fetchedOrder,
       comics: fetchedComics,
-      price: fetchedComics.price,
+      price: resolvedPrice,
     });
   }
 }

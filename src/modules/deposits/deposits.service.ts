@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -15,6 +16,7 @@ import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { DeliveriesService } from '../deliveries/deliveries.service';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {
@@ -22,43 +24,59 @@ export class DepositsService extends BaseService<Deposit> {
     @InjectRepository(Deposit)
     private readonly depositsRepository: Repository<Deposit>,
     @Inject(UsersService) private readonly usersService: UsersService,
-    @Inject(AuctionService) private readonly auctionsService: AuctionService,
+    @Inject(forwardRef(() => AuctionService))
+    private auctionService: AuctionService,
     @Inject(ExchangesService)
     private readonly exchangesService: ExchangesService,
     @Inject(DeliveriesService)
     private readonly deliveriesService: DeliveriesService,
+    @Inject(TransactionsService)
+    private readonly transactionsService: TransactionsService,
   ) {
     super(depositsRepository);
   }
 
-  async placeDeposit(userId: string, createDepositDto: CreateDepositDTO) {
+  async placeDeposit(userId: string, auctionId: string) {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    if (createDepositDto.amount <= 0 || createDepositDto.amount > 999999999)
+    let auction;
+    if (auctionId) {
+      auction = await this.auctionService.findAuctionById(auctionId);
+      if (!auction) throw new NotFoundException('Auction not found!');
+    }
+    const amount = auction.depositAmount;
+
+    if (amount <= 0 || amount > 999999999) {
       throw new BadRequestException('Invalid amount!');
-
-    if (user.balance < createDepositDto.amount)
-      throw new ForbiddenException('Insufficient balance!');
-
-    let deposit: Deposit;
-
-    if (createDepositDto.auction) {
-      const auction = await this.auctionsService.findAuctionById(
-        createDepositDto.auction,
-      );
-
-      deposit = this.depositsRepository.create({
-        user,
-        auction,
-        amount: createDepositDto.amount,
-        status: DepositStatusEnum.HOLDING,
-      });
     }
 
-    await this.usersService.updateBalance(userId, -createDepositDto.amount);
+    if (user.balance < amount) {
+      throw new ForbiddenException('Insufficient balance!');
+    }
 
-    return await this.depositsRepository.save(deposit);
+    // Create the deposit object
+    const deposit = this.depositsRepository.create({
+      user,
+      auction,
+      amount,
+      status: DepositStatusEnum.HOLDING,
+    });
+
+    // Save the deposit to get the ID
+    const savedDeposit = await this.depositsRepository.save(deposit);
+
+    // Deduct balance from the user
+    await this.usersService.updateBalance(userId, -amount);
+    // Create a transaction with the deposit ID
+    const transaction = await this.transactionsService.createDepositTransaction(
+      userId,
+      savedDeposit.id,
+    );
+
+    console.log('Transaction:', transaction);
+
+    return savedDeposit;
   }
 
   async placeExchangeDeposit(userId: string, dto: ExchangeDepositDTO) {
@@ -86,6 +104,11 @@ export class DepositsService extends BaseService<Deposit> {
 
     await this.depositsRepository.save(newDeposit);
 
+    await this.transactionsService.createDepositTransaction(
+      userId,
+      newDeposit.id,
+    );
+
     //Auto create 2 GHN deliveries after finishing placing deposits
     const foundDeposit = await this.depositsRepository.find({
       where: { exchange: { id: dto.exchange } },
@@ -107,6 +130,14 @@ export class DepositsService extends BaseService<Deposit> {
   async getAllDepositOfUser(userId: string) {
     return await this.depositsRepository.find({
       where: { user: { id: userId } },
+    });
+  }
+  async getUserDepositOfAnAuction(userId: string, auctionId: string) {
+    return await this.depositsRepository.findOne({
+      where: {
+        user: { id: userId }, // Match the user by ID
+        auction: { id: auctionId }, // Match the auction by ID
+      },
     });
   }
 
@@ -141,6 +172,12 @@ export class DepositsService extends BaseService<Deposit> {
 
     await this.usersService.updateBalance(deposit.user.id, deposit.amount);
 
+    await this.transactionsService.createDepositTransaction(
+      deposit.user.id,
+      deposit.id,
+      'ADD',
+    );
+
     return await this.depositsRepository
       .update(depositId, {
         status: DepositStatusEnum.REFUNDED,
@@ -148,30 +185,65 @@ export class DepositsService extends BaseService<Deposit> {
       .then(() => this.getOne(depositId));
   }
 
-  async refundAllDepositsOfAnAuction(auctionId: string) {
-    const auction = await this.auctionsService.findAuctionById(auctionId);
-    if (!auction) throw new NotFoundException('Auction cannot be found!');
-
-    const depositList = await this.depositsRepository.find({
+  async refundAllDepositsExceptWinner(auctionId: string, winnerId: string) {
+    const deposits = await this.depositsRepository.find({
       where: { auction: { id: auctionId } },
+      relations: ['user'],
     });
 
-    return await Promise.all(
-      depositList.map(async (deposit) => {
-        await this.refundDepositToAUser(deposit.id);
-      }),
-    )
-      .catch((err) => console.log(err))
-      .finally(() => {
-        return {
-          message: `Deposits of the auction are successfully refunded to ${depositList.length} user(s).`,
-        };
-      });
+    const depositsToRefund = deposits.filter(
+      (deposit) =>
+        deposit.user.id !== winnerId &&
+        deposit.status === DepositStatusEnum.HOLDING,
+    );
+
+    await Promise.all(
+      depositsToRefund.map((deposit) => this.refundDepositToAUser(deposit.id)),
+    );
+
+    return {
+      message: `Refunded deposits to ${depositsToRefund.length} losing bidders.`,
+    };
+  }
+
+  async refundDepositToWinner(auctionId: string) {
+    const auction = await this.auctionService.findAuctionById(auctionId);
+    if (!auction) throw new NotFoundException('Auction cannot be found!');
+
+    if (!auction.winner)
+      throw new BadRequestException('Auction has no winner!');
+
+    const winnerDeposit = await this.depositsRepository.findOne({
+      where: {
+        auction: { id: auctionId },
+        user: { id: auction.winner.id },
+      },
+    });
+
+    if (!winnerDeposit)
+      throw new NotFoundException('Winner deposit cannot be found!');
+
+    if (winnerDeposit.status !== DepositStatusEnum.HOLDING)
+      throw new BadRequestException(
+        'The winner deposit is not being held by the system!',
+      );
+
+    await this.usersService.updateBalance(
+      winnerDeposit.user.id,
+      winnerDeposit.amount,
+    );
+
+    await this.depositsRepository.update(winnerDeposit.id, {
+      status: DepositStatusEnum.REFUNDED,
+    });
+
+    return this.getOne(winnerDeposit.id);
   }
 
   async refundAllDepositsOfAnExchange(exchangeId: string) {
     const exchange = await this.exchangesService.getOne(exchangeId);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
     const depositList = await this.depositsRepository.find({
       where: { exchange: { id: exchangeId } },
     });
@@ -179,13 +251,11 @@ export class DepositsService extends BaseService<Deposit> {
       depositList.map(async (deposit) => {
         await this.refundDepositToAUser(deposit.id);
       }),
-    )
-      .catch((err) => console.log(err))
-      .finally(() => {
-        return {
-          message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
-        };
-      });
+    ).then(() => {
+      return {
+        message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
+      };
+    });
   }
 
   async seizeADeposit(depositId: string) {

@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { ComicsExchangeService } from '../comics/comics.exchange.service';
 import { CreateExchangeDTO } from './dto/exchange-comics.dto';
 import { Comic } from 'src/entities/comics.entity';
+import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 
 @Injectable()
 export class ExchangeComicsService extends BaseService<ExchangeComics> {
@@ -41,14 +42,18 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
       }),
     );
 
-    const createdExchangeComicsForRequestUser = requestUserComicsList.map(
-      (comics: Comic) => {
+    const createdExchangeComicsForRequestUser = await Promise.all(
+      requestUserComicsList.map(async (comics: Comic) => {
+        await this.comicsService.updateStatus(
+          comics.id,
+          ComicsStatusEnum.UNAVAILABLE,
+        );
         return this.exchangeComicsRepository.create({
           exchange,
           user,
           comics,
         });
-      },
+      }),
     );
 
     const postUserComicsList = await Promise.all(
@@ -60,14 +65,18 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
       }),
     );
 
-    const createdExchangeComicsForPostUser = postUserComicsList.map(
-      (comics: Comic) => {
+    const createdExchangeComicsForPostUser = await Promise.all(
+      postUserComicsList.map(async (comics: Comic) => {
+        await this.comicsService.updateStatus(
+          comics.id,
+          ComicsStatusEnum.UNAVAILABLE,
+        );
         return this.exchangeComicsRepository.create({
           exchange,
           user: exchange.post.user,
           comics,
         });
-      },
+      }),
     );
 
     const newRequestUserList = await Promise.all(
@@ -133,5 +142,53 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
     return exchangeComics.map((item) => {
       return item.comics;
     });
+  }
+
+  async completeExchangeComics(exchangeId: string) {
+    const exchangeComicsList = await this.exchangeComicsRepository.find({
+      where: {
+        exchange: { id: exchangeId },
+      },
+      relations: ['comics'],
+    });
+
+    await Promise.all(
+      exchangeComicsList.map(async (items) => {
+        await this.comicsService.updateStatus(
+          items.comics.id,
+          ComicsStatusEnum.SOLD,
+        );
+      }),
+    );
+
+    return {
+      message: `Updated ${exchangeComicsList.length} exchange comics to SUCCESSFULLY EXCHANGED!`,
+    };
+  }
+
+  async rejectAndUpdateStatusByExchange(userId: string, exchangeId: string) {
+    await this.exchangesService.rejectExchangeRequest(userId, exchangeId);
+    await this.updateComicsToInitStatus(exchangeId);
+    return {
+      message: 'Exchange rejected!',
+    };
+  }
+
+  async updateComicsToInitStatus(exchangeId: string) {
+    const exchangeComicsList = await this.exchangeComicsRepository.find({
+      where: {
+        exchange: { id: exchangeId },
+      },
+      relations: ['comics'],
+    });
+
+    await Promise.all(
+      exchangeComicsList.map(async (items) => {
+        await this.comicsService.updateStatus(
+          items.comics.id,
+          ComicsStatusEnum.AVAILABLE,
+        );
+      }),
+    );
   }
 }

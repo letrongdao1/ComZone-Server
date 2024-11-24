@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -25,5 +26,17 @@ export class ExchangeComicsController {
   @Get('exchange/:exchange_id')
   getByExchange(@Req() req: any, @Param('exchange_id') id: string) {
     return this.exchangeComicsService.getByExchange(req.user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('rejected/:exchange_id')
+  rejectAndUpdateStatusByExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.exchangeComicsService.rejectAndUpdateStatusByExchange(
+      req.user.id,
+      exchangeId,
+    );
   }
 }

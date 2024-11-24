@@ -54,6 +54,35 @@ export class ExchangeConfirmationController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch('reject/deals/:exchange_id')
+  rejectExchangeDeals(@Param('exchange_id') exchangeId: string) {
+    return this.exchangeConfirmationService.rejectDeals(exchangeId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('delivery/:exchange_id')
-  confirmDelivery(@Req() req: any, @Param('exchange_id') exchangeId: string) {}
+  confirmDelivery(@Req() req: any, @Param('exchange_id') exchangeId: string) {
+    return this.exchangeConfirmationService.updateDeliveryConfirmation(
+      req.user.id,
+      exchangeId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('delivery/failed/:exchange_id')
+  failedDeliveryMark(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.exchangeConfirmationService.failedDeliveryMark(
+      req.user.id,
+      exchangeId,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('cancel/:exchange_id')
+  cancelExchange(@Param('exchange_id') id: string) {
+    return this.exchangeConfirmationService.cancelExchange(id);
+  }
 }

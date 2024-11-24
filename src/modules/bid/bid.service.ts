@@ -30,9 +30,6 @@ export class BidService {
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-    if (price > user.balance) {
-      throw new Error('Insufficient wallet balance');
-    }
 
     // Check if the auction exists
     const auction = await this.auctionRepository.findOne({

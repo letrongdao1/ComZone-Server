@@ -3,13 +3,14 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { DepositsService } from './deposits.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { CreateDepositDTO, ExchangeDepositDTO } from './dto/create-deposit.dto';
+import { ExchangeDepositDTO } from './dto/create-deposit.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
@@ -19,9 +20,9 @@ export class DepositsController {
   constructor(private readonly depositsService: DepositsService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post()
-  placeDeposit(@Req() req: any, @Body() createDepositDto: CreateDepositDTO) {
-    return this.depositsService.placeDeposit(req.user.id, createDepositDto);
+  @Post('auction/:id')
+  placeDeposit(@Req() req: any, @Param('id') id: string) {
+    return this.depositsService.placeDeposit(req.user.id, id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -41,11 +42,24 @@ export class DepositsController {
   getDepositsByUserId(@Param('id') id: string) {
     return this.depositsService.getAllDepositOfUser(id);
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('auction/user/:id')
+  checkUserDepositsOfAnAuction(@Req() req: any, @Param('id') id: string) {
+    return this.depositsService.getUserDepositOfAnAuction(req.user.id, id);
+  }
+  // @Patch('auction/:auctionId/refund')
+  // async refundAllDepositsOfAnAuction(@Param('auctionId') auctionId: string) {
+  //   return await this.depositsService.refundAllDepositsExceptWinner(auctionId);
+  // }
+  @Patch('/auction/:auctionId/refund-winner')
+  async refundWinner(@Param('auctionId') auctionId: string) {
+    return await this.depositsService.refundDepositToWinner(auctionId);
+  }
 
   @UseGuards(JwtAuthGuard)
-  @Get('auction/:auction_id')
-  getDepositsOfAnAuction(@Param('auction_id') auctionId: string) {
-    return this.depositsService.getAllDepositOfAnAuction(auctionId);
+  @Get('auction/:id')
+  getDepositsOfAnAuction(@Param('id') id: string) {
+    return this.depositsService.getAllDepositOfAnAuction(id);
   }
 
   @UseGuards(JwtAuthGuard)

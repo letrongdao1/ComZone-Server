@@ -11,6 +11,8 @@ import { UsersService } from '../users/users.service';
 import { WalletDepositDTO } from './dto/wallet-deposit.dto';
 import { BaseService } from 'src/common/service.base';
 import { Transaction } from 'src/entities/transactions.entity';
+import { PaymentGatewayEnum } from './dto/provider.enum';
+import { WalletDepositStatusEnum } from './dto/status.enum';
 
 @Injectable()
 export class WalletDepositService extends BaseService<WalletDeposit> {
@@ -50,19 +52,34 @@ export class WalletDepositService extends BaseService<WalletDeposit> {
     });
   }
 
+  async updateProvider(
+    walletDepositId: string,
+    paymentGateway: PaymentGatewayEnum,
+  ) {
+    return await this.walletDepositRepository
+      .update(walletDepositId, {
+        paymentGateway,
+      })
+      .then(() => this.getOne(walletDepositId));
+  }
+
   async updateWalletDepositStatus(
     walletDepositId: string,
-    transactionId: string,
+    status: WalletDepositStatusEnum,
   ) {
-    const transaction = await this.transactionsRepository.findOne({
-      where: { id: transactionId },
+    const walletDeposit = await this.walletDepositRepository.findOneBy({
+      id: walletDepositId,
     });
-    if (!transaction)
-      throw new NotFoundException('Transaction cannot be found!');
 
     await this.walletDepositRepository.update(walletDepositId, {
-      status: transaction.status === 'SUCCESSFUL' ? 'SUCCESSFUL' : 'FAILED',
+      status,
     });
+
+    if (status === WalletDepositStatusEnum.SUCCESSFUL)
+      await this.usersService.updateBalance(
+        walletDeposit.user.id,
+        walletDeposit.amount,
+      );
 
     return await this.getOne(walletDepositId);
   }
