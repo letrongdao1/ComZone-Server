@@ -43,7 +43,8 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       user,
       order,
       reason: dto.reason,
-      attachedImages: dto.attachedImages,
+      description: dto.description,
+      attachedImages: dto.attachedImages || null,
     });
 
     return await this.refundRequestsRepository.save(newRequest);
@@ -66,7 +67,8 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       user,
       exchange,
       reason: dto.reason,
-      attachedImages: dto.attachedImages,
+      description: dto.description,
+      attachedImages: dto.attachedImages || null,
     });
 
     return await this.refundRequestsRepository.save(newRequest);

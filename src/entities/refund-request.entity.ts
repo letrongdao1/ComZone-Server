@@ -20,13 +20,20 @@ export class RefundRequest extends BaseEntity {
 
   @Column({
     name: 'reason',
-    type: 'text',
+    type: 'varchar',
   })
   reason: string;
 
   @Column({
+    name: 'reason',
+    type: 'text',
+  })
+  description: string;
+
+  @Column({
     name: 'attached_images',
     type: 'simple-json',
+    nullable: true,
   })
   attachedImages: string[];
 

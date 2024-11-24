@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 
 export class CreateOrderRefundDTO {
   @ApiProperty()
@@ -9,10 +9,12 @@ export class CreateOrderRefundDTO {
   reason: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  description: string;
+
+  @ApiProperty({ nullable: true })
   @IsArray()
   @IsString({ each: true })
-  attachedImages: string[];
+  attachedImages?: string[];
 }
 
 export class CreateExchangeRefundDTO {
@@ -23,8 +25,10 @@ export class CreateExchangeRefundDTO {
   reason: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  description: string;
+
+  @ApiProperty({ nullable: true })
   @IsArray()
   @IsString({ each: true })
-  attachedImages: string[];
+  attachedImages?: string[];
 }
