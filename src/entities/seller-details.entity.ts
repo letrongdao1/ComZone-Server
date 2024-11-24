@@ -53,4 +53,18 @@ export class SellerDetails extends BaseEntity {
     nullable: false,
   })
   detailedAddress: string;
+
+  @Column({
+    type: 'float',
+    nullable: false,
+    default: 0,
+  })
+  debt: number;
+
+  @Column({
+    type: 'enum',
+    enum: ['ACTIVE', 'DISABLED'],
+    default: 'ACTIVE',
+  })
+  status: 'ACTIVE' | 'DISABLED';
 }

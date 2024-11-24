@@ -10,14 +10,14 @@ export class AuctionSchedulerService {
 
   // Runs cron job every minute to check for ended auctionsa
   @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: process.env.CRON_USED === 'TRUE',
+    disabled: process.env.CRON_USED === 'FALSE',
   })
   async handleAuctionEndCheck() {
     this.logger.debug('Checking for ended auctions every minute...');
     await this.auctionsService.checkAndDeclareWinnersForEndedAuctions();
   }
   @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: process.env.CRON_USED === 'TRUE',
+    disabled: process.env.CRON_USED === 'FALSE',
   })
   async handleAuctionStartCheck() {
     this.logger.debug('Checking for auctions to start every minute...');
@@ -34,7 +34,7 @@ export class AuctionSchedulerService {
     }
   }
   @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: process.env.CRON_USED === 'TRUE',
+    disabled: process.env.CRON_USED === 'FALSE',
   })
   async handleAuctionPayCheck() {
     this.logger.debug('Checking for paid auctions daily...');

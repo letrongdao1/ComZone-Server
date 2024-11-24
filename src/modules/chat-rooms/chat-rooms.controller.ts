@@ -10,7 +10,10 @@ import {
 } from '@nestjs/common';
 import { ChatRoomsService } from './chat-rooms.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { CreateChatRoomDTO } from './create-chat-room.dto';
+import {
+  CreateComicsChatRoomDTO,
+  CreateExchangeChatRoomDTO,
+} from './create-chat-room.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
@@ -20,12 +23,27 @@ export class ChatRoomsController {
   constructor(private readonly chatRoomsService: ChatRoomsService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Post()
-  createNewChatRoom(
+  @Post('comics')
+  createNewChatRoomForComics(
     @Req() req: any,
-    @Body() createChatRoomDto: CreateChatRoomDTO,
+    @Body() createChatRoomDto: CreateComicsChatRoomDTO,
   ) {
-    return this.chatRoomsService.createChatRoom(req.user.id, createChatRoomDto);
+    return this.chatRoomsService.createChatRoomForComics(
+      req.user.id,
+      createChatRoomDto,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('exchange')
+  createNewChatRoomForExchange(
+    @Req() req: any,
+    @Body() createChatRoomDto: CreateExchangeChatRoomDTO,
+  ) {
+    return this.chatRoomsService.createChatRoomForExchange(
+      req.user.id,
+      createChatRoomDto,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

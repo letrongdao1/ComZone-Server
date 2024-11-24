@@ -10,6 +10,7 @@ import { Withdrawal } from 'src/entities/withdrawal.entity';
 import { Deposit } from 'src/entities/deposit.entity';
 import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { Exchange } from 'src/entities/exchange.entity';
+import { RefundRequest } from 'src/entities/refund-request.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { Exchange } from 'src/entities/exchange.entity';
       Deposit,
       SellerSubscription,
       Exchange,
+      RefundRequest,
     ]),
     UsersModule,
   ],

@@ -402,6 +402,9 @@ export class OrdersService extends BaseService<Order> {
   }
 
   async cancelOrder(cancelOrderDto: CancelOrderDTO) {
+    const order = await this.getOne(cancelOrderDto.orderId);
+    if (!order) throw new NotFoundException('Order cannot be found!');
+
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: cancelOrderDto.orderId } },
     });
@@ -416,6 +419,14 @@ export class OrdersService extends BaseService<Order> {
     );
 
     //Hoàn tiền cho người mua nếu đã thanh toán, thông báo đơn bị hủy
+    if (order.paymentMethod === 'WALLET') {
+      const seller = await this.getSellerIdOfAnOrder(order.id);
+      await this.usersService.updateBalance(order.user.id, order.totalPrice);
+      await this.usersService.updateBalanceWithNonWithdrawableAmount(
+        seller.id,
+        -order.totalPrice,
+      );
+    }
 
     return await this.ordersRepository
       .update(cancelOrderDto.orderId, {

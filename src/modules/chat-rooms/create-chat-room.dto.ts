@@ -1,16 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateChatRoomDTO {
+export class CreateComicsChatRoomDTO {
   @ApiProperty()
-  secondUser: string;
+  comics: string;
+}
 
-  @ApiProperty({
-    nullable: true,
-  })
-  comics?: string;
-
-  @ApiProperty({
-    nullable: true,
-  })
-  exchange?: string;
+export class CreateExchangeChatRoomDTO {
+  @ApiProperty()
+  exchange: string;
 }

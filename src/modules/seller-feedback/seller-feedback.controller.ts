@@ -31,7 +31,7 @@ export class SellerFeedbackController {
 
   @Get('seller/some/:id')
   findSomeBySeller(@Param('id') id: string) {
-    return this.sellerFeedbackService.findBySeller(id, 8);
+    return this.sellerFeedbackService.findBySeller(id, 10);
   }
 
   @Get('seller/all/:id')

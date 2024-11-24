@@ -10,6 +10,7 @@ import { Deposit } from './deposit.entity';
 import { Announcement } from './announcement.entity';
 import { ChatRoom } from './chat-room.entity';
 import { ExchangePost } from './exchange-post.entity';
+import { RefundRequest } from './refund-request.entity';
 
 @Entity('exchanges')
 export class Exchange extends BaseEntity {
@@ -69,4 +70,7 @@ export class Exchange extends BaseEntity {
 
   @OneToMany(() => Delivery, (delivery) => delivery.exchange)
   deliveries: Delivery[];
+
+  @OneToMany(() => RefundRequest, (request) => request.exchange)
+  refundRequests: RefundRequest[];
 }

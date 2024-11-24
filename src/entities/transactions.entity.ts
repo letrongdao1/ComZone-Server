@@ -8,6 +8,7 @@ import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { ExchangeSubscription } from './exchange-subscription.entity';
 import { Exchange } from './exchange.entity';
+import { RefundRequest } from './refund-request.entity';
 
 @Entity('transactions')
 export class Transaction extends BaseEntity {
@@ -67,6 +68,13 @@ export class Transaction extends BaseEntity {
   })
   @JoinColumn({ name: 'exchange' })
   exchange?: Exchange;
+
+  @OneToOne(() => RefundRequest, (refundRequest) => refundRequest.transaction, {
+    nullable: true,
+    eager: true,
+  })
+  @JoinColumn({ name: 'refund-request' })
+  refundRequest?: RefundRequest;
 
   @Column({
     type: 'varchar',
