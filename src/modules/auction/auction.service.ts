@@ -17,6 +17,7 @@ import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
 import { BidService } from '../bid/bid.service';
 import { DepositsService } from '../deposits/deposits.service';
+import { log } from 'console';
 
 @Injectable()
 export class AuctionService {
@@ -232,6 +233,7 @@ export class AuctionService {
     auction.status = 'COMPLETED';
     auction.winner = user;
     auction.endTime = new Date();
+    auction.isPaid = true;
     console.log('Today:', new Date().toISOString());
     console.log('Updated endTime:', auction.endTime);
     // Save the updated auction
@@ -345,13 +347,14 @@ export class AuctionService {
           isPaid: false,
           paymentDeadline: LessThanOrEqual(new Date()),
         },
-        relations: ['comics', 'comics.sellerId', 'winner'], // Include related entities
+        relations: ['comics', 'comics.sellerId', 'winner'],
       });
 
       if (!overdueAuctions.length) {
         console.log('No overdue auctions found.');
         return;
       }
+      console.log('OVERDUEAUCTIONS', overdueAuctions);
 
       console.log(`${overdueAuctions.length} overdue auctions found.`);
 
@@ -363,9 +366,11 @@ export class AuctionService {
         if (auction.comics.sellerId) {
           auction.comics.sellerId.balance += auction.depositAmount;
         }
+        console.log(auction.comics.sellerId);
 
         return auction;
       });
+      console.log('zzz', updatedAuctions);
 
       // Save all updated auctions in bulk
       // await this.auctionRepository.save(updatedAuctions);
