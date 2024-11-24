@@ -30,7 +30,7 @@ export class AuctionSchedulerService {
       );
     }
   }
-  @Cron(CronExpression.EVERY_MINUTE, { disabled: false })
+  @Cron(CronExpression.EVERY_MINUTE, { disabled: true })
   async handleAuctionPayCheck() {
     this.logger.debug('Checking for paid auctions daily...');
     await this.auctionsService.checkPaidAuction();
