@@ -5,6 +5,7 @@ import { BidModule } from '../bid/bid.module';
 import { AnnouncementModule } from '../announcement/announcement.module';
 import { AuctionModule } from '../auction/auction.module';
 import { UsersModule } from '../users/users.module';
+import { DepositsModule } from '../deposits/deposits.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { UsersModule } from '../users/users.module';
     BidModule,
     AnnouncementModule,
     UsersModule,
+    DepositsModule,
   ],
   providers: [EventsGateway],
   exports: [EventsGateway],

@@ -29,4 +29,9 @@ export class AuctionSchedulerService {
       );
     }
   }
+  @Cron(CronExpression.EVERY_MINUTE, { disabled: false })
+  async handleAuctionPayCheck() {
+    this.logger.debug('Checking for paid auctions daily...');
+    await this.auctionsService.checkPaidAuction();
+  }
 }

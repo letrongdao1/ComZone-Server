@@ -104,7 +104,9 @@ export class AuctionService {
       const latestBid = auction.bids.reduce((highest, bid) =>
         bid.price > highest.price ? bid : highest,
       );
-
+      auction.paymentDeadline = new Date(
+        new Date().getTime() + 7 * 24 * 60 * 60 * 1000,
+      );
       auction.status = 'SUCCESSFUL';
       auction.winner = latestBid.user;
       await this.auctionRepository.save(auction);
@@ -332,6 +334,58 @@ export class AuctionService {
     const result = await this.auctionRepository.delete(id);
     if (result.affected === 0) {
       throw new NotFoundException(`Auction with ID ${id} not found`);
+    }
+  }
+
+  async checkPaidAuction() {
+    try {
+      const overdueAuctions = await this.auctionRepository.find({
+        where: {
+          status: 'SUCCESSFUL',
+          isPaid: false,
+          paymentDeadline: LessThanOrEqual(new Date()),
+        },
+        relations: ['comics', 'comics.sellerId', 'winner'], // Include related entities
+      });
+
+      if (!overdueAuctions.length) {
+        console.log('No overdue auctions found.');
+        return;
+      }
+
+      console.log(`${overdueAuctions.length} overdue auctions found.`);
+
+      // Update auctions and adjust seller balances
+      const updatedAuctions = overdueAuctions.map((auction) => {
+        auction.status = 'FAILED';
+
+        // Ensure sellerId exists before updating balance
+        if (auction.comics.sellerId) {
+          auction.comics.sellerId.balance += auction.depositAmount;
+        }
+
+        return auction;
+      });
+
+      // Save all updated auctions in bulk
+      // await this.auctionRepository.save(updatedAuctions);
+
+      // Notify winners concurrently
+      // await Promise.all(
+      //   overdueAuctions.map((auction) =>
+      //     this..notify(
+      //       auction.winner.id,
+      //       'Auction Payment Deadline Missed',
+      //       `You have missed the payment deadline for the auction "${auction.comics.title}". Your deposit has been forfeited.`,
+      //     ),
+      //   ),
+      // );
+
+      console.log(
+        `${overdueAuctions.length} auctions updated and winners notified.`,
+      );
+    } catch (error) {
+      console.error('Error handling overdue auctions:', error);
     }
   }
 

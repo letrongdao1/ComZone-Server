@@ -14,6 +14,7 @@ import { AnnouncementService } from '../announcement/announcement.service';
 import { User } from 'src/entities/users.entity';
 import { AuctionService } from '../auction/auction.service';
 import { UsersService } from '../users/users.service';
+import { DepositsService } from '../deposits/deposits.service';
 
 @WebSocketGateway({
   cors: {
@@ -30,6 +31,7 @@ export class EventsGateway implements OnModuleInit {
     @Inject(forwardRef(() => AuctionService))
     private readonly auctionService: AuctionService, // AuctionService should be correctly injected here
     private readonly userService: UsersService,
+    private readonly depositsService: DepositsService,
   ) {}
 
   private userSockets = new Map<string, Set<string>>();
@@ -95,6 +97,7 @@ export class EventsGateway implements OnModuleInit {
     },
   ) {
     const { auctionId, currentPrice, user, type } = data;
+
     if (type === 'maxPrice') {
       const bid = await this.bidService.create({
         userId: user.id,
@@ -103,6 +106,7 @@ export class EventsGateway implements OnModuleInit {
       });
       console.log('11111', bid);
     }
+
     const updatedAuction =
       await this.auctionService.updateAuctionStatusToCompleted(
         auctionId,
@@ -110,6 +114,13 @@ export class EventsGateway implements OnModuleInit {
         user,
       );
     console.log('12312', updatedAuction);
+
+    // Call refund logic
+
+    const refund = await this.depositsService.refundDepositToWinner(auctionId);
+    console.log('Refund', refund);
+
+    // Emit the updated auction to notify clients
     this.server.emit('auctionUpdated', updatedAuction);
   }
 

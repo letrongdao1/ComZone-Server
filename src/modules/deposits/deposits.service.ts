@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Deposit } from 'src/entities/deposit.entity';
 import { Repository } from 'typeorm';
-import { CreateDepositDTO, ExchangeDepositDTO } from './dto/create-deposit.dto';
+import { ExchangeDepositDTO } from './dto/create-deposit.dto';
 import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';

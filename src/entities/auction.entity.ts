@@ -77,6 +77,12 @@ export class Auction extends BaseEntity {
   @OneToMany(() => Announcement, (announcement) => announcement.auction)
   announcements: Announcement[];
 
+  @Column({ default: false })
+  isPaid: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  paymentDeadline: Date;
+
   @BeforeInsert()
   setDefaultCurrentPrice() {
     // Set currentPrice to reservePrice before the entity is inserted
