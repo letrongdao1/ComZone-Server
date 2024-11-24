@@ -17,7 +17,6 @@ import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
 import { BidService } from '../bid/bid.service';
 import { DepositsService } from '../deposits/deposits.service';
-import { log } from 'console';
 
 @Injectable()
 export class AuctionService {
@@ -354,41 +353,33 @@ export class AuctionService {
         console.log('No overdue auctions found.');
         return;
       }
-      console.log('OVERDUEAUCTIONS', overdueAuctions);
 
       console.log(`${overdueAuctions.length} overdue auctions found.`);
 
-      // Update auctions and adjust seller balances
-      const updatedAuctions = overdueAuctions.map((auction) => {
-        auction.status = 'FAILED';
+      await Promise.all(
+        overdueAuctions.map(async (auction) => {
+          // Update auction status to 'FAILED'
+          auction.status = 'FAILED';
 
-        // Ensure sellerId exists before updating balance
-        if (auction.comics.sellerId) {
-          auction.comics.sellerId.balance += auction.depositAmount;
-        }
-        console.log(auction.comics.sellerId);
+          // Seize the deposit from the winner
+          if (auction.winner) {
+            const winnerDeposit =
+              await this.depositsService.getUserDepositOfAnAuction(
+                auction.winner.id,
+                auction.id,
+              );
 
-        return auction;
-      });
-      console.log('zzz', updatedAuctions);
+            if (winnerDeposit) {
+              await this.depositsService.seizeADepositAuction(winnerDeposit.id);
+            }
+          }
 
-      // Save all updated auctions in bulk
-      // await this.auctionRepository.save(updatedAuctions);
-
-      // Notify winners concurrently
-      // await Promise.all(
-      //   overdueAuctions.map((auction) =>
-      //     this..notify(
-      //       auction.winner.id,
-      //       'Auction Payment Deadline Missed',
-      //       `You have missed the payment deadline for the auction "${auction.comics.title}". Your deposit has been forfeited.`,
-      //     ),
-      //   ),
-      // );
-
-      console.log(
-        `${overdueAuctions.length} auctions updated and winners notified.`,
+          // Save the updated auction status
+          await this.auctionRepository.save(auction);
+        }),
       );
+
+      console.log('All overdue auctions have been processed.');
     } catch (error) {
       console.error('Error handling overdue auctions:', error);
     }

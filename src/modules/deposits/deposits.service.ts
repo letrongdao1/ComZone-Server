@@ -268,4 +268,45 @@ export class DepositsService extends BaseService<Deposit> {
       })
       .then(() => this.getOne(depositId));
   }
+  async seizeADepositAuction(depositId: string) {
+    const deposit = await this.getOne(depositId);
+    if (!deposit) throw new NotFoundException('Deposit cannot be found!');
+
+    if (deposit.status !== DepositStatusEnum.HOLDING) {
+      throw new BadRequestException('Only holding deposits can be seized!');
+    }
+
+    let seller;
+    let auction;
+
+    // Check if the deposit is tied to an auction
+    if (deposit.auction) {
+      auction = await this.auctionService.findAuctionById(deposit.auction.id);
+      if (!auction) throw new NotFoundException('Auction cannot be found!');
+      seller = auction.comics?.sellerId; // Ensure the auction has a seller
+    }
+
+    if (!seller) {
+      throw new BadRequestException(
+        'No associated seller found for this deposit!',
+      );
+    }
+
+    // Update seller's balance
+    await this.usersService.updateBalance(seller.id, deposit.amount);
+
+    // Create a transaction for the seized deposit
+    await this.transactionsService.createDepositTransaction(
+      seller.id,
+      deposit.id,
+      'ADD',
+    );
+
+    // Update the deposit status to SEIZED
+    await this.depositsRepository.update(depositId, {
+      status: DepositStatusEnum.SEIZED,
+    });
+
+    return this.getOne(depositId);
+  }
 }
