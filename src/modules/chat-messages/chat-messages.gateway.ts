@@ -67,14 +67,4 @@ export class ChatMessagesGateway {
     );
     client.emit('new-unread-list', unreadList);
   }
-
-  @SubscribeMessage('typing')
-  typing(
-    @MessageBody('isTyping') isTyping: boolean,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const name = this.chatMessagesService.getClientName(client.id);
-
-    client.broadcast.emit('typing', { name, isTyping });
-  }
 }

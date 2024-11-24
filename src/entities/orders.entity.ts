@@ -14,6 +14,7 @@ import { Announcement } from './announcement.entity';
 import { Delivery } from './delivery.entity';
 import { OrderStatusEnum } from 'src/modules/orders/dto/order-status.enum';
 import { OrderTypeEnum } from 'src/modules/orders/dto/order-type.enum';
+import { RefundRequest } from './refund-request.entity';
 
 @Entity('orders')
 export class Order extends BaseEntity {
@@ -87,6 +88,9 @@ export class Order extends BaseEntity {
 
   @OneToOne(() => Transaction, (transaction) => transaction.order)
   transaction: Transaction;
+
+  @OneToOne(() => RefundRequest, (request) => request.order)
+  refundRequest: RefundRequest;
 
   @OneToMany(() => Announcement, (announcement) => announcement.order)
   announcements: Announcement[];

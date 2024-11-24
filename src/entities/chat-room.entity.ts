@@ -22,7 +22,8 @@ export class ChatRoom extends BaseEntity {
   @ManyToOne(() => Comic, (comics) => comics.chatRooms)
   comics: Comic;
 
-  @ManyToOne(() => Exchange, (exchange) => exchange.chatRooms)
+  @OneToOne(() => Exchange, (exchange) => exchange.chatRoom, { nullable: true })
+  @JoinColumn({ name: 'exchange' })
   exchange: Exchange;
 
   @OneToMany(() => ChatMessage, (mess) => mess.chatRoom)

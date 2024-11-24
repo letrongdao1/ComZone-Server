@@ -39,6 +39,7 @@ import { DeliveryInformationModule } from './modules/delivery-information/delive
 import { ExchangeComicsModule } from './modules/exchange-comics/exchange-comics.module';
 import { ExchangeConfirmationModule } from './modules/exchange-confirmation/exchange-confirmation.module';
 import { ExchangePostsModule } from './modules/exchange-posts/exchange-posts.module';
+import { RefundRequestsModule } from './modules/refund-requests/refund-requests.module';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { ExchangePostsModule } from './modules/exchange-posts/exchange-posts.mod
     ExchangeComicsModule,
     ExchangeConfirmationModule,
     ExchangePostsModule,
+    RefundRequestsModule,
   ],
   controllers: [AppController],
   providers: [

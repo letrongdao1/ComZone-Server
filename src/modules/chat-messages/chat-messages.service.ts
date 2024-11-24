@@ -13,7 +13,6 @@ import { CreateMessageDTO } from './dto/create-message.dto';
 import { UsersService } from '../users/users.service';
 import { Socket } from 'socket.io';
 import { ComicService } from '../comics/comics.service';
-import { Comic } from 'src/entities/comics.entity';
 import { ChatMessageTypeEnum } from './dto/chat-message-type.enum';
 
 @Injectable()
@@ -29,17 +28,6 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     private readonly comicsService: ComicService,
   ) {
     super(chatMessagesRepository);
-  }
-
-  clientUser = {};
-
-  async identify(name: string, clientId: string) {
-    this.clientUser[clientId] = name;
-    return Object.values(this.clientUser);
-  }
-
-  async getClientName(clientId: string) {
-    return this.clientUser[clientId];
   }
 
   async joinRoom(userId: string, client: Socket) {
@@ -111,7 +99,7 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     if (list.length === 0) {
       return;
     } else {
-      let groupedList = [
+      const groupedList = [
         {
           date: list[0].createdAt,
           messages: [list[0]],
