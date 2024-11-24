@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Delivery } from './delivery.entity';
 import { ExchangeStatusEnum } from 'src/modules/exchanges/dto/exchange-status-enum';
@@ -10,6 +10,7 @@ import { Deposit } from './deposit.entity';
 import { Announcement } from './announcement.entity';
 import { ChatRoom } from './chat-room.entity';
 import { ExchangePost } from './exchange-post.entity';
+import { RefundRequest } from './refund-request.entity';
 
 @Entity('exchanges')
 export class Exchange extends BaseEntity {
@@ -64,9 +65,12 @@ export class Exchange extends BaseEntity {
   @OneToMany(() => Announcement, (ann) => ann.exchange)
   announcements: Announcement[];
 
-  @OneToMany(() => ChatRoom, (room) => room.exchange)
-  chatRooms: ChatRoom[];
+  @OneToOne(() => ChatRoom, (room) => room.exchange)
+  chatRoom: ChatRoom;
 
   @OneToMany(() => Delivery, (delivery) => delivery.exchange)
   deliveries: Delivery[];
+
+  @OneToMany(() => RefundRequest, (request) => request.exchange)
+  refundRequests: RefundRequest[];
 }

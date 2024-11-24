@@ -21,6 +21,7 @@ import { Exchange } from './exchange.entity';
 import { ExchangeConfirmation } from './exchange-confirmation.entity';
 import { ExchangeComics } from './exchange-comics.entity';
 import { ExchangePost } from './exchange-post.entity';
+import { RefundRequest } from './refund-request.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -208,4 +209,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => DeliveryInformation, (info) => info.user)
   deliveryInformation: DeliveryInformation[];
+
+  @OneToMany(() => RefundRequest, (request) => request.user)
+  refundRequests: RefundRequest[];
 }
