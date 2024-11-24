@@ -25,7 +25,7 @@ export class RefundRequest extends BaseEntity {
   reason: string;
 
   @Column({
-    name: 'reason',
+    name: 'description',
     type: 'text',
   })
   description: string;
