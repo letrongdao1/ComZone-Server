@@ -5,12 +5,12 @@ import { UsersModule } from '../users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { TransactionsModule } from '../transactions/transactions.module';
-import { Transaction } from 'src/entities/transactions.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WalletDeposit, Transaction]),
+    TypeOrmModule.forFeature([WalletDeposit]),
     UsersModule,
+    TransactionsModule,
   ],
   controllers: [WalletDepositController],
   providers: [WalletDepositService],

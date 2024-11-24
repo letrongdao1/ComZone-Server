@@ -16,6 +16,7 @@ import { Deposit } from 'src/entities/deposit.entity';
 import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { Exchange } from 'src/entities/exchange.entity';
+import { RefundRequest } from 'src/entities/refund-request.entity';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -34,6 +35,8 @@ export class TransactionsService extends BaseService<Transaction> {
     private readonly sellerSubscriptionsRepository: Repository<SellerSubscription>,
     @InjectRepository(Exchange)
     private readonly exchangesRepository: Repository<Exchange>,
+    @InjectRepository(RefundRequest)
+    private readonly refundsRepository: Repository<RefundRequest>,
 
     private readonly usersService: UsersService,
   ) {
@@ -164,6 +167,41 @@ export class TransactionsService extends BaseService<Transaction> {
       exchange,
       amount,
       type: type || 'SUBTRACT',
+      status: TransactionStatusEnum.SUCCESSFUL,
+    });
+
+    return await this.transactionsRepository.save(newTransaction);
+  }
+
+  async createRefundTransaction(
+    userId: string,
+    refundRequestId: string,
+    type: 'ADD' | 'SUBTRACT',
+  ) {
+    const user = await this.usersService.getOne(userId);
+    const refundRequest = await this.refundsRepository.findOneBy({
+      id: refundRequestId,
+    });
+
+    if (!refundRequest)
+      throw new NotFoundException('Refund request cannot be found!');
+
+    const orderRefundAmount = refundRequest.order.totalPrice;
+
+    const exchangeRefundAmount = () => {
+      if (!refundRequest.exchange) return;
+      const exchange = refundRequest.exchange;
+      if (exchange.compensateUser && exchange.compensateUser.id === userId) {
+        return exchange.compensationAmount + exchange.depositAmount;
+      } else return exchange.depositAmount;
+    };
+
+    const newTransaction = this.transactionsRepository.create({
+      user,
+      code: generateNumericCode(8),
+      refundRequest,
+      type,
+      amount: refundRequest.order ? orderRefundAmount : exchangeRefundAmount(),
       status: TransactionStatusEnum.SUCCESSFUL,
     });
 

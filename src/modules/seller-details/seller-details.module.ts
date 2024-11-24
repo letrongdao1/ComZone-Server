@@ -14,5 +14,6 @@ import { VietNamAddressModule } from '../viet-nam-address/viet-nam-address.modul
   ],
   controllers: [SellerDetailsController],
   providers: [SellerDetailsService],
+  exports: [SellerDetailsService],
 })
 export class SellerDetailsModule {}

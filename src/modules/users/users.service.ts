@@ -169,7 +169,7 @@ export class UsersService extends BaseService<User> {
 
     return await this.userRepository
       .update(userId, {
-        balance: amount + user.balance,
+        balance: user.balance + amount,
         nonWithdrawableAmount: user.nonWithdrawableAmount + amount,
       })
       .then(() => this.getOne(userId));

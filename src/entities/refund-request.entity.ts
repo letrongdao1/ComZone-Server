@@ -4,6 +4,7 @@ import { User } from './users.entity';
 import { Exchange } from './exchange.entity';
 import { Order } from './orders.entity';
 import { RefundRequestStatusEnum } from 'src/modules/refund-requests/dto/status.enum';
+import { Transaction } from './transactions.entity';
 
 @Entity('refund-requests')
 export class RefundRequest extends BaseEntity {
@@ -51,4 +52,7 @@ export class RefundRequest extends BaseEntity {
     default: RefundRequestStatusEnum.PENDING,
   })
   status: RefundRequestStatusEnum;
+
+  @OneToOne(() => Transaction, (transaction) => transaction.refundRequest)
+  transaction: Transaction;
 }

@@ -87,4 +87,23 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
         foundProvince.name,
     };
   }
+
+  async updateSellerDebt(userId: string, amount: number, type: 'PAY' | 'GAIN') {
+    const sellerDetails = await this.sellerDetailsRepository.findOneBy({
+      user: { id: userId },
+    });
+
+    if (!sellerDetails) throw new NotFoundException();
+
+    return await this.sellerDetailsRepository.update(sellerDetails.id, {
+      debt:
+        type === 'PAY'
+          ? sellerDetails.debt - amount
+          : sellerDetails.debt + amount,
+      status:
+        type === 'PAY' && sellerDetails.debt - amount === 0
+          ? 'ACTIVE'
+          : 'DISABLED',
+    });
+  }
 }
