@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -13,6 +12,7 @@ import { Repository } from 'typeorm';
 import { OrdersService } from '../orders/orders.service';
 import { CreateOrderItemDTO } from './dto/createOrderItemDTO';
 import { ComicService } from '../comics/comics.service';
+import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 
 @Injectable()
 export class OrderItemsService extends BaseService<OrderItem> {
@@ -39,7 +39,6 @@ export class OrderItemsService extends BaseService<OrderItem> {
 
   async create(orderItem: CreateOrderItemDTO): Promise<any> {
     const { order: orderId, comics: comicsId, price } = orderItem;
-    console.log(comicsId);
 
     // Validate order ID
     if (!orderId) throw new BadRequestException('Invalid order id!');
@@ -71,6 +70,11 @@ export class OrderItemsService extends BaseService<OrderItem> {
     if (resolvedPrice == null) {
       throw new BadRequestException('Price cannot be null!');
     }
+
+    await this.comicsService.updateStatus(
+      orderItem.comics,
+      ComicsStatusEnum.SOLD,
+    );
 
     // Save order item
     return await this.orderItemsRepository.save({

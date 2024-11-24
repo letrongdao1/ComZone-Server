@@ -8,6 +8,7 @@ import { OrdersModule } from '../orders/orders.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { SellerDetailsModule } from '../seller-details/seller-details.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { DepositsModule } from '../deposits/deposits.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     ExchangesModule,
     SellerDetailsModule,
     TransactionsModule,
+    DepositsModule,
   ],
   controllers: [RefundRequestsController],
   providers: [RefundRequestsService],

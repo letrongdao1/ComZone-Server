@@ -95,7 +95,7 @@ export class Transaction extends BaseEntity {
     nullable: false,
     default: 'SUBTRACT',
   })
-  type: string;
+  type: 'ADD' | 'SUBTRACT';
 
   @Column({
     type: 'enum',

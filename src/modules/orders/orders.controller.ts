@@ -27,8 +27,6 @@ import {
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Roles(Role.MEMBER, Role.SELLER)
-  @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post()
   createNewOrder(@Req() req: any, @Body() createOrderDto: CreateOrderDTO) {

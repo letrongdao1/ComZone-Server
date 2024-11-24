@@ -76,6 +76,7 @@ export class TransactionsService extends BaseService<Transaction> {
       walletDeposit,
       amount: walletDeposit.amount,
       status: TransactionStatusEnum.SUCCESSFUL,
+      type: 'ADD',
     });
 
     return await this.transactionsRepository.save(newTransaction);
@@ -217,6 +218,9 @@ export class TransactionsService extends BaseService<Transaction> {
         user: {
           id: userId,
         },
+      },
+      order: {
+        createdAt: 'DESC',
       },
     });
   }
