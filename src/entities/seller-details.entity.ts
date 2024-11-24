@@ -64,6 +64,7 @@ export class SellerDetails extends BaseEntity {
   @Column({
     type: 'enum',
     enum: ['ACTIVE', 'DISABLED'],
+    default: 'ACTIVE',
   })
   status: string;
 }

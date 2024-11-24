@@ -168,30 +168,28 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
       order: { updatedAt: 'DESC' },
     });
 
-    return await Promise.all(
-      fetched.map(async (chatRoom) => {
-        const first =
-          chatRoom.firstUser.id === userId
-            ? chatRoom.firstUser
-            : chatRoom.secondUser;
-        const second =
-          chatRoom.firstUser.id !== userId
-            ? chatRoom.firstUser
-            : chatRoom.secondUser;
+    return fetched.map((chatRoom) => {
+      const first =
+        chatRoom.firstUser.id === userId
+          ? chatRoom.firstUser
+          : chatRoom.secondUser;
+      const second =
+        chatRoom.firstUser.id !== userId
+          ? chatRoom.firstUser
+          : chatRoom.secondUser;
 
-        return {
-          ...chatRoom,
-          firstUser: first,
-          secondUser: second,
-          lastMessage: chatRoom.lastMessage
-            ? {
-                ...chatRoom.lastMessage,
-                mine: chatRoom.lastMessage.user.id === userId,
-              }
-            : null,
-        };
-      }),
-    );
+      return {
+        ...chatRoom,
+        firstUser: first,
+        secondUser: second,
+        lastMessage: chatRoom.lastMessage
+          ? {
+              ...chatRoom.lastMessage,
+              mine: chatRoom.lastMessage.user.id === userId,
+            }
+          : null,
+      };
+    });
   }
 
   async getById(userId: string, chatRoomId: string) {
