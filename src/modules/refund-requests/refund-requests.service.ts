@@ -18,6 +18,8 @@ import { ExchangesService } from '../exchanges/exchanges.service';
 import { OrderStatusEnum } from '../orders/dto/order-status.enum';
 import { SellerDetailsService } from '../seller-details/seller-details.service';
 import { TransactionsService } from '../transactions/transactions.service';
+import { DepositsService } from '../deposits/deposits.service';
+import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
 
 @Injectable()
 export class RefundRequestsService extends BaseService<RefundRequest> {
@@ -30,6 +32,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     private readonly exchangesService: ExchangesService,
     private readonly sellerDetailsService: SellerDetailsService,
     private readonly transactionsService: TransactionsService,
+    private readonly depositsService: DepositsService,
   ) {
     super(refundRequestsRepository);
   }
@@ -114,7 +117,26 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       .getMany();
   }
 
-  async approveOrderRefund(orderId: string) {
+  async getByOrder(orderId: string) {
+    return await this.refundRequestsRepository.findOneBy({
+      order: { id: orderId },
+    });
+  }
+
+  async getByExchange(userId: string, exchangeId: string) {
+    const requests = await this.refundRequestsRepository.findBy({
+      exchange: { id: exchangeId },
+    });
+
+    return requests.map((request) => {
+      return {
+        ...request,
+        mine: request.user.id === userId,
+      };
+    });
+  }
+
+  async approveOrderRefundRequest(orderId: string) {
     const refundRequest = await this.refundRequestsRepository.findOneBy({
       order: { id: orderId },
     });
@@ -159,7 +181,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       .then(() => this.getOne(refundRequest.id));
   }
 
-  async rejectOrderRefund(orderId: string, rejectedReason: string) {
+  async rejectOrderRefundRequest(orderId: string, rejectedReason: string) {
     const refundRequest = await this.refundRequestsRepository.findOneBy({
       order: { id: orderId },
     });
@@ -176,17 +198,72 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       .then(() => this.getOne(refundRequest.id));
   }
 
-  async updateStatus(refundRequestId: string, status: RefundRequestStatusEnum) {
+  async approveExchangeRefundRequest(refundRequestId: string) {
     const refundRequest = await this.refundRequestsRepository.findOneBy({
       id: refundRequestId,
     });
+
     if (!refundRequest)
       throw new NotFoundException('Refund request cannot be found!');
 
+    const exchange = refundRequest.exchange;
+    const totalRefundAmount =
+      exchange.compensateUser &&
+      exchange.compensateUser.id === refundRequest.user.id
+        ? exchange.compensationAmount + exchange.depositAmount
+        : exchange.depositAmount;
+
+    await this.usersService.updateBalance(
+      refundRequest.user.id,
+      totalRefundAmount,
+    );
+
+    await this.transactionsService.createRefundTransaction(
+      refundRequest.user.id,
+      refundRequest.id,
+      'ADD',
+    );
+
+    const violateUser =
+      exchange.requestUser.id === refundRequest.user.id
+        ? exchange.post.user
+        : exchange.requestUser;
+
+    const exchangeDeposits = await this.depositsService.getDepositsByExchange(
+      violateUser.id,
+      refundRequest.exchange.id,
+    );
+
+    const violateUserDeposit = exchangeDeposits.find((deposit) => deposit.mine);
+
+    await this.depositsService.seizeADeposit(
+      violateUserDeposit.id,
+      'Bồi thường tiền cho trao đổi',
+    );
+
+    return await this.getOne(refundRequest.id);
+  }
+
+  async rejectExchangeRefundRequest(
+    exchangeId: string,
+    rejectedReason: string,
+  ) {
+    const refundRequest = await this.refundRequestsRepository.findOneBy({
+      exchange: { id: exchangeId },
+    });
+
+    if (!refundRequest) throw new NotFoundException();
+
+    await this.exchangesService.updateExchangeStatus(
+      exchangeId,
+      ExchangeStatusEnum.FAILED,
+    );
+
     return await this.refundRequestsRepository
-      .update(refundRequestId, {
-        status,
+      .update(refundRequest.id, {
+        status: RefundRequestStatusEnum.REJECTED,
+        rejectedReason,
       })
-      .then(() => this.getOne(refundRequestId));
+      .then(() => this.getOne(refundRequest.id));
   }
 }

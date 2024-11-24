@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -39,13 +38,10 @@ export class OrdersService extends BaseService<Order> {
     @InjectRepository(OrderItem)
     private readonly orderItemsRepository: Repository<OrderItem>,
 
-    @Inject(UsersService) private readonly usersService: UsersService,
-    @Inject(DeliveriesService)
+    private readonly usersService: UsersService,
     private readonly deliveriesService: DeliveriesService,
-    @Inject(ComicService) private readonly comicsService: ComicService,
-    @Inject(UserAddressesService)
+    private readonly comicsService: ComicService,
     private readonly addressesService: UserAddressesService,
-    @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
   ) {
     super(ordersRepository);
@@ -78,6 +74,7 @@ export class OrdersService extends BaseService<Order> {
     const checkDuplicatedDelivery = await this.ordersRepository.findOne({
       where: { delivery: { id: createOrderDto.deliveryId } },
     });
+
     if (checkDuplicatedDelivery)
       throw new ConflictException('Duplicated delivery!');
 
