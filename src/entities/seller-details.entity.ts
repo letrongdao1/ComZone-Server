@@ -66,5 +66,5 @@ export class SellerDetails extends BaseEntity {
     enum: ['ACTIVE', 'DISABLED'],
     default: 'ACTIVE',
   })
-  status: string;
+  status: 'ACTIVE' | 'DISABLED';
 }

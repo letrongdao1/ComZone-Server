@@ -5,8 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
-import { Exchange } from 'src/entities/exchange.entity';
-import { Order } from 'src/entities/orders.entity';
 import { RefundRequest } from 'src/entities/refund-request.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
@@ -15,24 +13,29 @@ import {
   CreateOrderRefundDTO,
 } from './dto/create.dto';
 import { RefundRequestStatusEnum } from './dto/status.enum';
+import { OrdersService } from '../orders/orders.service';
+import { ExchangesService } from '../exchanges/exchanges.service';
+import { OrderStatusEnum } from '../orders/dto/order-status.enum';
+import { SellerDetailsService } from '../seller-details/seller-details.service';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class RefundRequestsService extends BaseService<RefundRequest> {
   constructor(
     @InjectRepository(RefundRequest)
     private readonly refundRequestsRepository: Repository<RefundRequest>,
-    @InjectRepository(Order)
-    private readonly ordersRepository: Repository<Order>,
-    @InjectRepository(Exchange)
-    private readonly exchangesRepository: Repository<Exchange>,
 
     private readonly usersService: UsersService,
+    private readonly ordersService: OrdersService,
+    private readonly exchangesService: ExchangesService,
+    private readonly sellerDetailsService: SellerDetailsService,
+    private readonly transactionsService: TransactionsService,
   ) {
     super(refundRequestsRepository);
   }
 
   async createOrderRefundRequest(userId: string, dto: CreateOrderRefundDTO) {
-    const order = await this.ordersRepository.findOneBy({ id: dto.order });
+    const order = await this.ordersService.getOne(dto.order);
     if (!order) throw new NotFoundException('Order cannot be found!');
 
     const user = await this.usersService.getOne(userId);
@@ -54,9 +57,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     userId: string,
     dto: CreateExchangeRefundDTO,
   ) {
-    const exchange = await this.exchangesRepository.findOneBy({
-      id: dto.exchange,
-    });
+    const exchange = await this.exchangesService.getOne(dto.exchange);
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
     const user = await this.usersService.getOne(userId);
@@ -77,6 +78,9 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
   async getAllRefundRequest() {
     return await this.refundRequestsRepository
       .createQueryBuilder('refund')
+      .leftJoinAndSelect('refund.user', 'user')
+      .leftJoinAndSelect('refund.order', 'order')
+      .leftJoinAndSelect('refund.exchange', 'exchange')
       .orderBy(
         `(case when refund.status is "${RefundRequestStatusEnum.PENDING}" then 1 else null end)`,
       )
@@ -87,6 +91,8 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
   async getAllOrderRefundRequest() {
     return await this.refundRequestsRepository
       .createQueryBuilder('refund')
+      .leftJoinAndSelect('refund.user', 'user')
+      .leftJoinAndSelect('refund.order', 'order')
       .where('refund.order IS NOT NULL')
       .orderBy(
         `(case when refund.status is "${RefundRequestStatusEnum.PENDING}" then 1 else null end)`,
@@ -98,6 +104,8 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
   async getAllExchangeRefundRequest() {
     return await this.refundRequestsRepository
       .createQueryBuilder('refund')
+      .leftJoinAndSelect('refund.user', 'user')
+      .leftJoinAndSelect('refund.exchange', 'exchange')
       .where('refund.exchange IS NOT NULL')
       .orderBy(
         `(case when refund.status is "${RefundRequestStatusEnum.PENDING}" then 1 else null end)`,
@@ -112,6 +120,60 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     });
 
     if (!refundRequest) throw new NotFoundException();
+
+    const order = await this.ordersService.getOne(orderId);
+
+    await this.usersService.updateBalance(order.user.id, order.totalPrice);
+
+    await this.transactionsService.createRefundTransaction(
+      order.user.id,
+      refundRequest.id,
+      'ADD',
+    );
+
+    const seller = await this.ordersService.getSellerIdOfAnOrder(order.id);
+
+    await this.usersService.updateBalanceWithNonWithdrawableAmount(
+      seller.id,
+      -order.totalPrice,
+    );
+
+    await this.transactionsService.createRefundTransaction(
+      seller.id,
+      refundRequest.id,
+      'SUBTRACT',
+    );
+
+    await this.sellerDetailsService.updateSellerDebt(
+      seller.id,
+      order.delivery.deliveryFee,
+      'GAIN',
+    );
+
+    await this.ordersService.updateOrderStatus(orderId, OrderStatusEnum.FAILED);
+
+    return await this.refundRequestsRepository
+      .update(refundRequest.id, {
+        status: RefundRequestStatusEnum.APPROVED,
+      })
+      .then(() => this.getOne(refundRequest.id));
+  }
+
+  async rejectOrderRefund(orderId: string, rejectedReason: string) {
+    const refundRequest = await this.refundRequestsRepository.findOneBy({
+      order: { id: orderId },
+    });
+
+    if (!refundRequest) throw new NotFoundException();
+
+    await this.ordersService.updateOrderStatus(orderId, OrderStatusEnum.FAILED);
+
+    return await this.refundRequestsRepository
+      .update(refundRequest.id, {
+        status: RefundRequestStatusEnum.REJECTED,
+        rejectedReason,
+      })
+      .then(() => this.getOne(refundRequest.id));
   }
 
   async updateStatus(refundRequestId: string, status: RefundRequestStatusEnum) {

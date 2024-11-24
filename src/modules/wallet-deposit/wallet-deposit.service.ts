@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,18 +9,18 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { WalletDepositDTO } from './dto/wallet-deposit.dto';
 import { BaseService } from 'src/common/service.base';
-import { Transaction } from 'src/entities/transactions.entity';
 import { PaymentGatewayEnum } from './dto/provider.enum';
 import { WalletDepositStatusEnum } from './dto/status.enum';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class WalletDepositService extends BaseService<WalletDeposit> {
   constructor(
     @InjectRepository(WalletDeposit)
     private readonly walletDepositRepository: Repository<WalletDeposit>,
-    @Inject() private readonly usersService: UsersService,
-    @InjectRepository(Transaction)
-    private readonly transactionsRepository: Repository<Transaction>,
+
+    private readonly usersService: UsersService,
+    private readonly transactionsService: TransactionsService,
   ) {
     super(walletDepositRepository);
   }
@@ -75,11 +74,17 @@ export class WalletDepositService extends BaseService<WalletDeposit> {
       status,
     });
 
-    if (status === WalletDepositStatusEnum.SUCCESSFUL)
+    if (status === WalletDepositStatusEnum.SUCCESSFUL) {
       await this.usersService.updateBalance(
         walletDeposit.user.id,
         walletDeposit.amount,
       );
+
+      await this.transactionsService.createWalletDepositTransaction(
+        walletDeposit.user.id,
+        walletDeposit.id,
+      );
+    }
 
     return await this.getOne(walletDepositId);
   }

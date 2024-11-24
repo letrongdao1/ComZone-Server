@@ -74,18 +74,15 @@ export class RefundRequestsController {
   @Roles(Role.MODERATOR)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Patch('approve/:id')
-  approveRefundRequest(@Param('id') id: string) {
-    return this.refundRequestsService.updateStatus(
-      id,
-      RefundRequestStatusEnum.APPROVED,
-    );
+  @Patch('approve/order/:order_id')
+  approveOrderRefundRequest(@Param('order_id') orderId: string) {
+    return this.refundRequestsService.approveOrderRefund(orderId);
   }
 
   @Roles(Role.MODERATOR)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
-  @Patch('reject/:id')
+  @Patch('reject/order/:id')
   rejectRefundRequest(@Param('id') id: string) {
     return this.refundRequestsService.updateStatus(
       id,

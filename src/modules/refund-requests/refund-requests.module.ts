@@ -3,14 +3,20 @@ import { RefundRequestsService } from './refund-requests.service';
 import { RefundRequestsController } from './refund-requests.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RefundRequest } from 'src/entities/refund-request.entity';
-import { Order } from 'src/entities/orders.entity';
-import { Exchange } from 'src/entities/exchange.entity';
 import { UsersModule } from '../users/users.module';
+import { OrdersModule } from '../orders/orders.module';
+import { ExchangesModule } from '../exchanges/exchanges.module';
+import { SellerDetailsModule } from '../seller-details/seller-details.module';
+import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RefundRequest, Order, Exchange]),
+    TypeOrmModule.forFeature([RefundRequest]),
     UsersModule,
+    OrdersModule,
+    ExchangesModule,
+    SellerDetailsModule,
+    TransactionsModule,
   ],
   controllers: [RefundRequestsController],
   providers: [RefundRequestsService],
