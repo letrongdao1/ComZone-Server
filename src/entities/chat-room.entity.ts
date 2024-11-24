@@ -13,18 +13,17 @@ export class ChatRoom extends BaseEntity {
   @ManyToOne(() => User, (user) => user.secondChatRooms)
   secondUser: User;
 
+  @ManyToOne(() => Comic, (comics) => comics.chatRooms)
+  comics: Comic;
+
+  @ManyToOne(() => Exchange, (exchange) => exchange.chatRooms)
+  exchange: Exchange;
+
   @OneToOne(() => ChatMessage, (message) => message.lastMessageChatRoom, {
     nullable: true,
   })
   @JoinColumn({ name: 'last_message' })
   lastMessage: ChatMessage;
-
-  @ManyToOne(() => Comic, (comics) => comics.chatRooms)
-  comics: Comic;
-
-  @OneToOne(() => Exchange, (exchange) => exchange.chatRoom, { nullable: true })
-  @JoinColumn({ name: 'exchange' })
-  exchange: Exchange;
 
   @OneToMany(() => ChatMessage, (mess) => mess.chatRoom)
   chatMessages: ChatMessage[];

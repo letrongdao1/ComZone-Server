@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
 import { Delivery } from './delivery.entity';
 import { ExchangeStatusEnum } from 'src/modules/exchanges/dto/exchange-status-enum';
@@ -65,8 +65,8 @@ export class Exchange extends BaseEntity {
   @OneToMany(() => Announcement, (ann) => ann.exchange)
   announcements: Announcement[];
 
-  @OneToOne(() => ChatRoom, (room) => room.exchange)
-  chatRoom: ChatRoom;
+  @OneToMany(() => ChatRoom, (room) => room.exchange)
+  chatRooms: ChatRoom[];
 
   @OneToMany(() => Delivery, (delivery) => delivery.exchange)
   deliveries: Delivery[];
