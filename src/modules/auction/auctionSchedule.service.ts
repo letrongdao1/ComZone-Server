@@ -9,7 +9,7 @@ export class AuctionSchedulerService {
   constructor(private readonly auctionsService: AuctionService) {}
 
   // Runs cron job every minute to check for ended auctionsa
-  @Cron(CronExpression.EVERY_MINUTE, { disabled: false })
+  @Cron(CronExpression.EVERY_MINUTE, { disabled: true })
   async handleAuctionEndCheck() {
     this.logger.debug('Checking for ended auctions every minute...');
     await this.auctionsService.checkAndDeclareWinnersForEndedAuctions();

@@ -4,6 +4,9 @@ export class CreateConfirmationDTO {
   @ApiProperty()
   exchangeId: string;
 
+  @ApiProperty({ nullable: true })
+  compensateUser?: string;
+
   @ApiProperty({ default: 0 })
   compensationAmount: number;
 

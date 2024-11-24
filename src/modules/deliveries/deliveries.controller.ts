@@ -38,15 +38,15 @@ export class DeliveriesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('details/:delivery_id')
-  getDeliveryDetailsByDeliveryId(@Param('delivery_id') id: string) {
-    return this.deliveriesService.getDeliveryDetailsByDeliveryId(id);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Post('details')
   getDeliveryDetails(@Body() getDeliveryFeeDto: GetDeliveryFeeDTO) {
     return this.deliveriesService.getDeliveryDetails(getDeliveryFeeDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('details/:delivery_id')
+  getDeliveryDetailsByDeliveryId(@Param('delivery_id') id: string) {
+    return this.deliveriesService.getDeliveryDetailsByDeliveryId(id);
   }
 
   @UseGuards(JwtAuthGuard)

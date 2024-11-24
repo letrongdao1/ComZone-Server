@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ExchangePost } from 'src/entities/exchange-post.entity';
@@ -50,7 +50,7 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
         const alreadyExchange = await this.exchangesRepository.findOne({
           where: { post: { id: post.id }, requestUser: { id: userId } },
         });
-        
+
         return {
           ...post,
           mine,
@@ -90,6 +90,22 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
     return await this.postsRepository
       .update(postId, {
         status: ExchangePostStatusEnum.UNAVAILABLE,
+      })
+      .then(() => this.getOne(postId));
+  }
+
+  async updatePostStatusToAvailable(
+    postId: string,
+    dto: CreateExchangePostDTO,
+  ) {
+    const post = await this.getOne(postId);
+    if (!post) throw new NotFoundException('Exchange post cannot be found!');
+
+    return await this.postsRepository
+      .update(postId, {
+        status: ExchangePostStatusEnum.AVAILABLE,
+        postContent: dto.postContent || post.postContent,
+        images: dto.images || post.images,
       })
       .then(() => this.getOne(postId));
   }

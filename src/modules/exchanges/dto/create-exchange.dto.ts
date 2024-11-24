@@ -1,9 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ExchangeDealsDTO {
-  @ApiProperty({ default: 0 })
+  @ApiProperty({ nullable: true })
+  compensateUser?: string;
+
+  @ApiProperty({ nullable: true })
   compensationAmount: number;
 
-  @ApiProperty({ default: 0 })
+  @ApiProperty({ nullable: true })
   depositAmount: number;
 }

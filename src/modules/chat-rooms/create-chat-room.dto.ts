@@ -7,10 +7,10 @@ export class CreateChatRoomDTO {
   @ApiProperty({
     nullable: true,
   })
-  comics: string;
+  comics?: string;
 
   @ApiProperty({
     nullable: true,
   })
-  exchange: string;
+  exchange?: string;
 }

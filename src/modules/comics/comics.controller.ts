@@ -24,7 +24,6 @@ import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
-import { ComicsStatusEnum } from './dto/comic-status.enum';
 import { ComicsExchangeService } from './comics.exchange.service';
 
 @ApiBearerAuth()
