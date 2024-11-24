@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { User } from './users.entity';
 import { Exchange } from './exchange.entity';
 import { Order } from './orders.entity';
@@ -16,6 +16,7 @@ export class RefundRequest extends BaseEntity {
   exchange: Exchange;
 
   @OneToOne(() => Order, (exchange) => exchange.refundRequest, { eager: true })
+  @JoinColumn({ name: 'order' })
   order: Order;
 
   @Column({

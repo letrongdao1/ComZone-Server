@@ -11,7 +11,10 @@ import {
 import { ExchangeComicsService } from './exchange-comics.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateExchangeDTO } from './dto/exchange-comics.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Exchange Comics')
 @Controller('exchange-comics')
 export class ExchangeComicsController {
   constructor(private readonly exchangeComicsService: ExchangeComicsService) {}
