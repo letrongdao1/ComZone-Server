@@ -20,6 +20,7 @@ import { SellerDetailsService } from '../seller-details/seller-details.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { DepositsService } from '../deposits/deposits.service';
 import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
+import { DepositStatusEnum } from '../deposits/dto/deposit-status.enum';
 
 @Injectable()
 export class RefundRequestsService extends BaseService<RefundRequest> {
@@ -235,6 +236,14 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     );
 
     const violateUserDeposit = exchangeDeposits.find((deposit) => deposit.mine);
+    const compensatedUserDeposit = exchangeDeposits.find(
+      (deposit) => !deposit.mine,
+    );
+
+    await this.depositsService.updateStatus(
+      compensatedUserDeposit.id,
+      DepositStatusEnum.REFUNDED,
+    );
 
     await this.depositsService.seizeADeposit(
       violateUserDeposit.id,

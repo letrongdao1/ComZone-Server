@@ -35,10 +35,10 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
 
     return await this.sellerDetailsRepository
       .save(newSellerInfo)
-      .then(() => this.getSellerDetails(userId));
+      .then(() => this.getByUserId(userId));
   }
 
-  async getSellerDetails(userId: string) {
+  async getByUserId(userId: string) {
     const sellerDetails = await this.sellerDetailsRepository.findOne({
       where: { user: { id: userId } },
     });

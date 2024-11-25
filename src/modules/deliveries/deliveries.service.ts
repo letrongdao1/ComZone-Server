@@ -281,6 +281,7 @@ export class DeliveriesService extends BaseService<Delivery> {
   async autoUpdateGHNDeliveryStatus(deliveryId: string) {
     const delivery = await this.getOne(deliveryId);
     if (!delivery || !delivery.deliveryTrackingCode) return;
+
     const headers = {
       Token: process.env.GHN_TOKEN,
       ShopId: process.env.GHN_SHOPID,
@@ -469,22 +470,27 @@ export class DeliveriesService extends BaseService<Delivery> {
         deliveries.map((d) => this.autoUpdateGHNDeliveryStatus(d.id)),
       );
 
-    const getFullAddress = async (info: DeliveryInformation) => {
-      return (
-        info.address +
-        ', ' +
-        (await this.vnAddressService.getWardById(info.districtId, info.wardId))
-          .name +
-        ', ' +
-        (
-          await this.vnAddressService.getDistrictById(
-            info.provinceId,
-            info.districtId,
-          )
-        ).name +
-        ', ' +
-        (await this.vnAddressService.getProvinceById(info.provinceId)).name
-      );
+    const getFullAddressString = async (info: DeliveryInformation) => {
+      if (info)
+        return (
+          info.address +
+          ', ' +
+          (
+            await this.vnAddressService.getWardById(
+              info.districtId,
+              info.wardId,
+            )
+          ).name +
+          ', ' +
+          (
+            await this.vnAddressService.getDistrictById(
+              info.provinceId,
+              info.districtId,
+            )
+          ).name +
+          ', ' +
+          (await this.vnAddressService.getProvinceById(info.provinceId)).name
+        );
     };
 
     const newList = await this.deliveriesRepository.find({
@@ -496,14 +502,18 @@ export class DeliveriesService extends BaseService<Delivery> {
       newList.map(async (delivery) => {
         return {
           ...delivery,
-          from: {
-            ...delivery.from,
-            fullAddress: await getFullAddress(delivery.from),
-          },
-          to: {
-            ...delivery.to,
-            fullAddress: await getFullAddress(delivery.to),
-          },
+          from: delivery.from
+            ? {
+                ...delivery.from,
+                fullAddress: await getFullAddressString(delivery.from),
+              }
+            : null,
+          to: delivery.to
+            ? {
+                ...delivery.to,
+                fullAddress: await getFullAddressString(delivery.to),
+              }
+            : null,
         };
       }),
     );
