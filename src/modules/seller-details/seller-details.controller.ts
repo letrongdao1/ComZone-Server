@@ -38,11 +38,11 @@ export class SellerDetailsController {
   @UseGuards(JwtAuthGuard)
   @Get()
   getCurrentSellerDetails(@Req() req: any) {
-    return this.sellerDetailsService.getSellerDetails(req.user.id);
+    return this.sellerDetailsService.getByUserId(req.user.id);
   }
 
   @Get('user/:user_id')
   getSellerDetailsByUser(@Param('user_id') userId: string) {
-    return this.sellerDetailsService.getSellerDetails(userId);
+    return this.sellerDetailsService.getByUserId(userId);
   }
 }

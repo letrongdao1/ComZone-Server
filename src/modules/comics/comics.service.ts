@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, Not, Repository } from 'typeorm';
 
@@ -7,8 +11,8 @@ import { Comic } from 'src/entities/comics.entity';
 import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
-import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
 import { ComicsTypeEnum } from './dto/comic-type.enum';
+import { SellerDetailsService } from '../seller-details/seller-details.service';
 
 @Injectable()
 export class ComicService {
@@ -19,7 +23,24 @@ export class ComicService {
     private readonly genreRepository: Repository<Genre>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    private readonly sellerDetailsService: SellerDetailsService,
   ) {}
+
+  async checkSellerAvailability(userId: string) {
+    const sellerDetails = await this.sellerDetailsService.getByUserId(userId);
+    if (!sellerDetails)
+      throw new NotFoundException(
+        'No seller information found on this account!',
+      );
+
+    if (sellerDetails.status === 'DISABLED')
+      throw new ForbiddenException(
+        'This sellers account is currently disabled from creating and selling comics due to remaining debts!',
+      );
+
+    return;
+  }
 
   async create(createComicDto: CreateComicDto, id: string): Promise<Comic> {
     const { genreIds, ...comicData } = createComicDto;
@@ -27,9 +48,12 @@ export class ComicService {
     const seller = await this.userRepository.findOne({
       where: { id: id },
     });
+
     if (!seller) {
       throw new Error('Seller not found');
     }
+
+    await this.checkSellerAvailability(id);
 
     const genres = await this.genreRepository.find({
       where: genreIds.map((id) => ({ id })),
@@ -66,7 +90,7 @@ export class ComicService {
   }
 
   async update(id: string, updateComicDto: UpdateComicDto): Promise<Comic> {
-    const { genreIds, sellerId, ...comicData } = updateComicDto;
+    const { genreIds, ...comicData } = updateComicDto;
 
     // Fetch the existing comic entity
     const comic = await this.comicRepository.findOne({
@@ -212,10 +236,13 @@ export class ComicService {
       throw new NotFoundException('Comic not found');
     }
 
-    if (status === ComicsStatusEnum.AVAILABLE)
+    if (status === ComicsStatusEnum.AVAILABLE) {
+      await this.checkSellerAvailability(comic.sellerId.id);
+
       await this.comicRepository.update(comicsId, {
         onSaleSince: new Date(),
       });
+    }
 
     // Update the status of the comic
     comic.status = status;

@@ -18,6 +18,7 @@ import { ExchangeComics } from 'src/entities/exchange-comics.entity';
 import { TransactionsService } from '../transactions/transactions.service';
 import { Delivery } from 'src/entities/delivery.entity';
 import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity';
+import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enum';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -118,19 +119,32 @@ export class ExchangesService extends BaseService<Exchange> {
           });
         }
         case StatusQueryEnum.FINISHED_DELIVERY: {
-          return await this.exchangesRepository.find({
+          const deliveryList = await this.deliveriesRepository.find({
+            where: {
+              exchange: Not(IsNull),
+              from: { user: { id: userId } },
+              status: OrderDeliveryStatusEnum.DELIVERED,
+            },
+            relations: ['exchange'],
+          });
+
+          const exchangeList = await this.exchangesRepository.find({
             where: [
               {
                 post: { user: { id: userId } },
-                status: ExchangeStatusEnum.DELIVERED,
               },
               {
                 requestUser: { id: userId },
-                status: ExchangeStatusEnum.DELIVERED,
               },
             ],
             order: { updatedAt: 'DESC' },
           });
+
+          return exchangeList.map((exchange) =>
+            deliveryList.some(
+              (delivery) => delivery.exchange.id === exchange.id,
+            ),
+          );
         }
         case StatusQueryEnum.SUCCESSFUL: {
           return await this.exchangesRepository.find({

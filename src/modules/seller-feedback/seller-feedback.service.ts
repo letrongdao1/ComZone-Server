@@ -69,8 +69,8 @@ export class SellerFeedbackService {
           createdAt: 'DESC',
         },
       });
-    else
-      return await this.sellerFeedbackRepository.findAndCount({
+    else {
+      const feedbackList = await this.sellerFeedbackRepository.find({
         where: { seller: { id } },
         relations: ['user', 'seller'],
         take: limit,
@@ -79,6 +79,21 @@ export class SellerFeedbackService {
           createdAt: 'DESC',
         },
       });
+
+      const totalRating = feedbackList.reduce((prev, feedback) => {
+        return prev + feedback.rating;
+      }, 0);
+
+      const totalFeedback = await this.sellerFeedbackRepository.count({
+        where: { seller: { id } },
+      });
+
+      return {
+        feedback: feedbackList,
+        totalFeedback,
+        averageRating: Math.round((totalRating / totalFeedback) * 10) / 2,
+      };
+    }
   }
 
   async updateFeedback(
