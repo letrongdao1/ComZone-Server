@@ -34,8 +34,8 @@ export class ZalopayService {
     const embeddata = {
       redirecturl:
         context === 'WALLET'
-          ? `http://localhost:3000/zalopay/status/${walletDeposit.id}`
-          : `http://localhost:3000/zalopay/checkout/status/${walletDeposit.id}`,
+          ? `${process.env.SERVER_URL}/zalopay/status/${walletDeposit.id}`
+          : `${process.env.SERVER_URL}/zalopay/checkout/status/${walletDeposit.id}`,
       merchantinfo: 'ComZoneZaloPay',
     };
 
@@ -131,8 +131,8 @@ export class ZalopayService {
 
           response.redirect(
             context === 'WALLET'
-              ? 'http://localhost:5173?payment_status=SUCCESSFUL'
-              : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
+              ? `${process.env.CLIENT_URL}?payment_status=SUCCESSFUL`
+              : `${process.env.CLIENT_URL}/checkout?payment_status=SUCCESSFUL`,
           );
         } else {
           await this.walletDepositsService.updateWalletDepositStatus(
@@ -142,8 +142,8 @@ export class ZalopayService {
 
           response.redirect(
             context === 'WALLET'
-              ? 'http://localhost:5173?payment_status=FAILED'
-              : 'http://localhost:5173/checkout?payment_status=FAILED',
+              ? `${process.env.CLIENT_URL}?payment_status=FAILED`
+              : `${process.env.CLIENT_URL}/checkout?payment_status=FAILED`,
           );
         }
       })
