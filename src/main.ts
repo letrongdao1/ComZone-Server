@@ -17,7 +17,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:5173', 'https://com-zone.vercel.app'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
