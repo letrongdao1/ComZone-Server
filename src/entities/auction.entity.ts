@@ -10,7 +10,7 @@ import { BeforeInsert } from 'typeorm';
 
 @Entity('auction')
 export class Auction extends BaseEntity {
-  @ManyToOne(() => Comic, (comic) => comic.auction)
+  @ManyToOne(() => Comic, (comic) => comic.auction, { eager: true })
   comics: Comic;
 
   @Column({

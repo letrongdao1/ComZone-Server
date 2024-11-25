@@ -6,10 +6,13 @@ import {
   Param,
   Patch,
   Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { BidService } from './bid.service';
 import { CreateBidDto, UpdateBidDto } from './dto/bid.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 @ApiTags('bids')
 @Controller('bids')
 export class BidController {
@@ -32,6 +35,17 @@ export class BidController {
   @Get('auction/:auctionId')
   async findAllByAuction(@Param('auctionId') auctionId: string) {
     return this.bidService.findAllByAuction(auctionId);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('highest-bid/:auctionId')
+  async findHighestBidOfUserByAuction(
+    @Param('auctionId') auctionId: string,
+    @Req() req: any,
+  ) {
+    return this.bidService.findHighestBidOfUserByAuction(
+      auctionId,
+      req.user.id,
+    );
   }
 
   @Patch(':id')

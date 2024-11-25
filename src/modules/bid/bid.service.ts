@@ -88,6 +88,27 @@ export class BidService {
       order: { createdAt: 'DESC' }, // Optional: order bids by creation date
     });
   }
+  async findHighestBidOfUserByAuction(
+    auctionId: string,
+    userId: string,
+  ): Promise<Bid | null> {
+    // Kiểm tra nếu auction tồn tại
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+    });
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${auctionId} not found`);
+    }
+
+    // Tìm lượt đấu giá cao nhất của người dùng trong auction
+    const highestBid = await this.bidRepository.findOne({
+      where: { auction: { id: auctionId }, user: { id: userId } },
+      relations: ['user', 'auction'],
+      order: { createdAt: 'DESC' }, // Sắp xếp theo số tiền đấu giá (giảm dần)
+    });
+
+    return highestBid || null; // Nếu không có bid, trả về null
+  }
 
   async update(id: string, updateBidDto: UpdateBidDto): Promise<Bid> {
     const bid = await this.findOne(id);

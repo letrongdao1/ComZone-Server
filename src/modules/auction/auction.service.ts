@@ -210,11 +210,21 @@ export class AuctionService {
       }),
     );
 
-    return auctions.filter(
+    // Loại bỏ các phần tử trùng lặp theo `id`
+    const uniqueAuctions = auctions.filter(
       (value, index, array) =>
         index === array.findIndex((auction) => auction.id === value.id),
     );
+
+    // Sắp xếp theo `updatedAt` giảm dần
+    uniqueAuctions.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    );
+
+    return uniqueAuctions;
   }
+
   async updateAuctionStatusToCompleted(
     id: string,
     currentPrice: number,
