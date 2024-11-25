@@ -187,7 +187,9 @@ export class TransactionsService extends BaseService<Transaction> {
     if (!refundRequest)
       throw new NotFoundException('Refund request cannot be found!');
 
-    const orderRefundAmount = refundRequest.order.totalPrice;
+    const orderRefundAmount = refundRequest.order
+      ? refundRequest.order.totalPrice
+      : 0;
 
     const exchangeRefundAmount = () => {
       if (!refundRequest.exchange) return;

@@ -69,10 +69,14 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'exchange' })
   exchange?: Exchange;
 
-  @OneToOne(() => RefundRequest, (refundRequest) => refundRequest.transaction, {
-    nullable: true,
-    eager: true,
-  })
+  @ManyToOne(
+    () => RefundRequest,
+    (refundRequest) => refundRequest.transactions,
+    {
+      nullable: true,
+      eager: true,
+    },
+  )
   @JoinColumn({ name: 'refund-request' })
   refundRequest?: RefundRequest;
 

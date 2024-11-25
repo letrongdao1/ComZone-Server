@@ -241,7 +241,16 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       'Bồi thường tiền cho trao đổi',
     );
 
-    return await this.getOne(refundRequest.id);
+    await this.exchangesService.updateExchangeStatus(
+      exchange.id,
+      ExchangeStatusEnum.FAILED,
+    );
+
+    return await this.refundRequestsRepository
+      .update(refundRequest.id, {
+        status: RefundRequestStatusEnum.APPROVED,
+      })
+      .then(() => this.getOne(refundRequest.id));
   }
 
   async rejectExchangeRefundRequest(
