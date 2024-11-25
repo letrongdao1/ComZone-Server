@@ -132,7 +132,7 @@ export class ZalopayService {
           response.redirect(
             context === 'WALLET'
               ? `${process.env.CLIENT_URL}?payment_status=SUCCESSFUL`
-              : `${process.env.CLIENT_URL}/checkout?payment_status=SUCCESSFUL`,
+              : `${process.env.CLIENT_URL}/checkout`,
           );
         } else {
           await this.walletDepositsService.updateWalletDepositStatus(
