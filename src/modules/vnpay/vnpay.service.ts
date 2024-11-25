@@ -54,8 +54,8 @@ export class VnpayService {
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
     var returnUrl =
       context === 'WALLET'
-        ? `http://localhost:3000/vnpay/return/${walletDeposit.id}`
-        : `http://localhost:3000/vnpay/checkout/return/${walletDeposit.id}`;
+        ? `${process.env.SERVER_URL}/vnpay/return/${walletDeposit.id}`
+        : `${process.env.SERVER_URL}/vnpay/checkout/return/${walletDeposit.id}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -127,21 +127,21 @@ export class VnpayService {
       if (vnp_Params['vnp_ResponseCode'] === '00') {
         response.redirect(
           context === 'WALLET'
-            ? 'http://localhost:5173?payment_status=SUCCESSFUL'
-            : 'http://localhost:5173/checkout?payment_status=SUCCESSFUL',
+            ? `${process.env.CLIENT_URL}?payment_status=SUCCESSFUL`
+            : `${process.env.CLIENT_URL}/checkout?payment_status=SUCCESSFUL`,
         );
       } else {
         response.redirect(
           context === 'WALLET'
-            ? 'http://localhost:5173?payment_status=FAILED'
-            : 'http://localhost:5173/checkout?payment_status=FAILED',
+            ? `${process.env.CLIENT_URL}?payment_status=FAILED`
+            : `${process.env.CLIENT_URL}/checkout?payment_status=FAILED`,
         );
       }
     } else {
       response.redirect(
         context === 'WALLET'
-          ? 'http://localhost:5173?payment_status=FAILED'
-          : 'http://localhost:5173/checkout?payment_status=FAILED',
+          ? `${process.env.CLIENT_URL}?payment_status=FAILED`
+          : `${process.env.CLIENT_URL}/checkout?payment_status=FAILED`,
       );
     }
   }

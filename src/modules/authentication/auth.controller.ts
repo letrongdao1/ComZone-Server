@@ -78,7 +78,7 @@ export class AuthController {
   async googleCallback(@Req() req: any, @Res() res: any) {
     const response = await this.authService.login(req.user.id);
     res.redirect(
-      `http://localhost:5173?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}&userId=${response.id}`,
+      `${process.env.CLIENT_URL}?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}&userId=${response.id}`,
     );
   }
 
