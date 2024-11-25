@@ -269,6 +269,7 @@ export class DepositsService extends BaseService<Deposit> {
       })
       .then(() => this.getOne(depositId));
   }
+
   async seizeADepositAuction(depositId: string) {
     const deposit = await this.getOne(depositId);
     if (!deposit) throw new NotFoundException('Deposit cannot be found!');
@@ -309,5 +310,11 @@ export class DepositsService extends BaseService<Deposit> {
     });
 
     return this.getOne(depositId);
+  }
+
+  async updateStatus(depositId: string, status: DepositStatusEnum) {
+    return await this.depositsRepository.update(depositId, {
+      status,
+    });
   }
 }
