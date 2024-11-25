@@ -1,5 +1,12 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { User } from './users.entity';
 import { Exchange } from './exchange.entity';
 import { Order } from './orders.entity';
@@ -53,6 +60,6 @@ export class RefundRequest extends BaseEntity {
   })
   status: RefundRequestStatusEnum;
 
-  @OneToOne(() => Transaction, (transaction) => transaction.refundRequest)
-  transaction: Transaction;
+  @OneToMany(() => Transaction, (transaction) => transaction.refundRequest)
+  transactions: Transaction[];
 }
