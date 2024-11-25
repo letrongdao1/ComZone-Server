@@ -263,17 +263,17 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
   }
 
   async rejectExchangeRefundRequest(
-    exchangeId: string,
+    refundRequestId: string,
     rejectedReason: string,
   ) {
     const refundRequest = await this.refundRequestsRepository.findOneBy({
-      exchange: { id: exchangeId },
+      id: refundRequestId,
     });
 
     if (!refundRequest) throw new NotFoundException();
 
     await this.exchangesService.updateExchangeStatus(
-      exchangeId,
+      refundRequest.exchange.id,
       ExchangeStatusEnum.FAILED,
     );
 
