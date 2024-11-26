@@ -72,6 +72,8 @@ export class AuctionService {
   }
   async checkAndDeclareWinnersForEndedAuctions() {
     const now = new Date();
+    console.log('now', now);
+
     const endedAuctions = await this.auctionRepository.find({
       where: { endTime: LessThanOrEqual(now), status: 'ONGOING' },
       relations: ['bids', 'bids.user'], // Include bids with users
