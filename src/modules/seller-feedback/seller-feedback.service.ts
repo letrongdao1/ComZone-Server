@@ -91,7 +91,7 @@ export class SellerFeedbackService {
       return {
         feedback: feedbackList,
         totalFeedback,
-        averageRating: Math.round((totalRating / totalFeedback) * 10) / 2,
+        averageRating: Math.round((totalRating / totalFeedback) * 50) / 10,
       };
     }
   }
