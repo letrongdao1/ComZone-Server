@@ -309,14 +309,17 @@ export class AuctionService {
     if (auctionsToStart.length > 0) {
       await Promise.all(
         auctionsToStart.map(async (auction) => {
-          try {
-            auction.status = 'ONGOING';
-            await this.auctionRepository.save(auction);
-            startedAuctionIds.push(auction.id);
-            console.log(`Auction ${auction.id} started.`);
-          } catch (error) {
-            errors.push({ auctionId: auction.id, error });
-          }
+          if (auction.startTime > now) {
+            return;
+          } else
+            try {
+              auction.status = 'ONGOING';
+              await this.auctionRepository.save(auction);
+              startedAuctionIds.push(auction.id);
+              console.log(`Auction ${auction.id} started.`);
+            } catch (error) {
+              errors.push({ auctionId: auction.id, error });
+            }
         }),
       );
     }
