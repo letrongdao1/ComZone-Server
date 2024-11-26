@@ -233,6 +233,12 @@ export class DepositsService extends BaseService<Deposit> {
       winnerDeposit.amount,
     );
 
+    await this.transactionsService.createDepositTransaction(
+      winnerDeposit.user.id,
+      winnerDeposit.id,
+      'ADD',
+    );
+
     await this.depositsRepository.update(winnerDeposit.id, {
       status: DepositStatusEnum.REFUNDED,
     });
