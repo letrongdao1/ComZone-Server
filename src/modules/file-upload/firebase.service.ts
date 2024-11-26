@@ -14,13 +14,13 @@ export class FirebaseService {
   private storage: FirebaseStorage;
   constructor() {
     const firebaseConfig = {
-      apiKey: process.env.FIREBASE_API_KEY,
-      authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.FIREBASE_APP_ID,
-      measurementId: process.env.FIREBASE_MEASUREMENT_ID,
+      apiKey: 'AIzaSyAxTgM3n5I_wT8Us-PLhUPrtq4LuNz8f2M',
+      authDomain: 'comzone-69b8f.firebaseapp.com',
+      projectId: 'comzone-69b8f',
+      storageBucket: 'comzone-69b8f.appspot.com',
+      messagingSenderId: '962966654659',
+      appId: '1:962966654659:web:6b248b1a3c4551fc0d1c76',
+      measurementId: 'G-QEFDJ93EVW',
     };
     this.firebaseApp = initializeApp(firebaseConfig);
     this.storage = getStorage(this.firebaseApp);
