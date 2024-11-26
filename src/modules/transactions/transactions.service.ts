@@ -46,7 +46,10 @@ export class TransactionsService extends BaseService<Transaction> {
   async createOrderTransaction(userId: string, orderId: string) {
     const user = await this.usersService.getOne(userId);
     const order = await this.ordersRepository.findOneBy({ id: orderId });
-    if (!order) throw new NotFoundException('Order cannot be found!');
+    if (!order)
+      throw new NotFoundException(
+        'Order cannot be found to create transaction!',
+      );
 
     const newTransaction = this.transactionsRepository.create({
       user,

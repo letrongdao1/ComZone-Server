@@ -96,20 +96,17 @@ export class OrdersService extends BaseService<Order> {
         createOrderDto.sellerId,
         createOrderDto.totalPrice,
       );
-
-      await this.transactionsService.createOrderTransaction(
-        userId,
-        newOrder.id,
-      );
     }
 
     await this.addressesService.incrementAddressUsedTime(
       createOrderDto.addressId,
     );
 
-    return await this.ordersRepository
-      .save(newOrder)
-      .then(() => this.getOne(newOrder.id));
+    await this.ordersRepository.save(newOrder);
+
+    await this.transactionsService.createOrderTransaction(userId, newOrder.id);
+
+    return await this.getOne(newOrder.id);
   }
 
   async autoUpdateOrderStatus(orderId: string) {
