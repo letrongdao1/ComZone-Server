@@ -58,7 +58,14 @@ export class Auction extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: ['UPCOMING', 'ONGOING', 'SUCCESSFUL', 'FAILED', 'COMPLETED'],
+    enum: [
+      'UPCOMING',
+      'ONGOING',
+      'SUCCESSFUL',
+      'FAILED',
+      'CANCELED',
+      'COMPLETED',
+    ],
   })
   status: string;
 
@@ -82,6 +89,9 @@ export class Auction extends BaseEntity {
 
   @Column({ type: 'timestamp', nullable: true })
   paymentDeadline: Date;
+
+  @Column({ nullable: true })
+  currentCondition: string;
 
   @BeforeInsert()
   setDefaultCurrentPrice() {

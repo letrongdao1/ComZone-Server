@@ -45,22 +45,9 @@ export class AuctionService {
       throw new NotFoundException(`Comic with ID ${data.comicsId} not found`);
     }
 
-    // Check if an auction already exists for this comic
-    const existingAuction = await this.auctionRepository.findOne({
-      where: { comics: { id: comic.id } },
-    });
-    console.log('zzz', existingAuction);
-
-    if (existingAuction) {
-      throw new ConflictException(
-        `An auction already exists for Comic ID ${data.comicsId}`,
-      );
-    }
-
-    // Change the comic's status to AUCTION
     comic.status = 'AVAILABLE';
     comic.type = ComicsTypeEnum.AUCTION;
-    await this.comicRepository.save(comic); // Save the updated status
+    await this.comicRepository.save(comic);
 
     // Create a new auction and associate it with the comic
     const auction = this.auctionRepository.create({
@@ -138,7 +125,7 @@ export class AuctionService {
       // Create Announcements for Losing Bidders and Notify Them
       await this.eventsGateway.notifyUsers(
         losingUserIds,
-        `Buổi đấu giá đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
+        `Buổi đấu giá ${auction.comics.title} đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
         { id: auction.id },
         'Kết quả đấu giá',
         'AUCTION',
@@ -146,10 +133,9 @@ export class AuctionService {
       );
     } else {
       // No bids, so the auction failed
-      auction.status = 'FAILED';
+      auction.status = 'CANCELED';
+      auction.currentCondition = 'Buổi đấu giá thất bại do không ai đấu giá';
       await this.auctionRepository.save(auction);
-
-      // Optionally create an Announcement for all users if the auction failed
       const failedAnnouncement = new Announcement();
       failedAnnouncement.title = `Auction for ${auction.comics.title} failed.`;
       failedAnnouncement.message = `The auction for ${auction.comics.title} ended without any bids.`;
@@ -245,6 +231,7 @@ export class AuctionService {
     auction.winner = user;
     auction.endTime = new Date();
     auction.isPaid = true;
+
     console.log('Today:', new Date().toISOString());
     console.log('Updated endTime:', auction.endTime);
     // Save the updated auction
@@ -353,6 +340,16 @@ export class AuctionService {
     }
   }
 
+  async cancelAuction(id: string): Promise<Auction> {
+    const auction = await this.auctionRepository.findOne({ where: { id } });
+
+    if (!auction) {
+      throw new Error('Auction not found');
+    }
+    auction.status = 'CANCELED';
+    return await this.auctionRepository.save(auction);
+  }
+
   async checkPaidAuction() {
     try {
       const overdueAuctions = await this.auctionRepository.find({
@@ -374,8 +371,9 @@ export class AuctionService {
       await Promise.all(
         overdueAuctions.map(async (auction) => {
           // Update auction status to 'FAILED'
+          auction.comics.status = 'UNAVAILABLE';
           auction.status = 'FAILED';
-
+          auction.currentCondition = `Người dùng ${auction.winner.name} không thanh toán đúng hẹn`;
           // Seize the deposit from the winner
           if (auction.winner) {
             const winnerDeposit =

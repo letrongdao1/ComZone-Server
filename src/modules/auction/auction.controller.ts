@@ -91,6 +91,12 @@ export class AuctionController {
       user,
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/status/')
+  async cancelAuction(@Param('id') id: string): Promise<Auction> {
+    return this.auctionService.cancelAuction(id);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Auction> {
     return this.auctionService.findAuctionById(id);

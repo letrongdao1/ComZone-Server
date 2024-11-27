@@ -94,7 +94,7 @@ export class Comic extends BaseEntity {
   @Column({
     type: 'enum',
     enum: ComicsTypeEnum,
-    default: ComicsTypeEnum.SELL,
+    default: ComicsTypeEnum.NONE,
   })
   type: string;
 

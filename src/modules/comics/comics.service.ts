@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, Not, Repository } from 'typeorm';
+import { FindManyOptions, In, Not, Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
@@ -143,7 +143,10 @@ export class ComicService {
 
     // Modify the find query to sort by createdAt in descending order
     const comics = await this.comicRepository.find({
-      where: { sellerId: { id: seller.id }, type: ComicsTypeEnum.SELL },
+      where: {
+        sellerId: { id: seller.id },
+        type: In([ComicsTypeEnum.SELL, ComicsTypeEnum.AUCTION]),
+      },
       order: {
         createdAt: 'DESC', // Sorting by createdAt in descending order
       },
@@ -244,9 +247,8 @@ export class ComicService {
         onSaleSince: new Date(),
       });
     }
-
-    // Update the status of the comic
     comic.status = status;
+    comic.type = 'SELL';
     await this.comicRepository.save(comic);
 
     return comic;
