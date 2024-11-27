@@ -145,7 +145,11 @@ export class ComicService {
     const comics = await this.comicRepository.find({
       where: {
         sellerId: { id: seller.id },
-        type: In([ComicsTypeEnum.SELL, ComicsTypeEnum.AUCTION]),
+        type: In([
+          ComicsTypeEnum.SELL,
+          ComicsTypeEnum.AUCTION,
+          ComicsTypeEnum.NONE,
+        ]),
       },
       order: {
         createdAt: 'DESC', // Sorting by createdAt in descending order

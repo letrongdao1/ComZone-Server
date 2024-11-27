@@ -372,6 +372,9 @@ export class AuctionService {
         overdueAuctions.map(async (auction) => {
           // Update auction status to 'FAILED'
           auction.comics.status = 'UNAVAILABLE';
+          auction.comics.type = 'NONE';
+          console.log('z', auction.comics.status);
+
           auction.status = 'FAILED';
           auction.currentCondition = `Người dùng ${auction.winner.name} không thanh toán đúng hẹn`;
           // Seize the deposit from the winner
@@ -389,6 +392,7 @@ export class AuctionService {
 
           // Save the updated auction status
           await this.auctionRepository.save(auction);
+          await this.comicRepository.save(auction.comics);
         }),
       );
 
