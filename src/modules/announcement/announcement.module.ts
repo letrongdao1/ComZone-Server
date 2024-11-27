@@ -7,10 +7,11 @@ import { AnnouncementController } from './announcement.controller';
 import { Order } from 'src/entities/orders.entity';
 import { Auction } from 'src/entities/auction.entity';
 import { User } from 'src/entities/users.entity';
+import { Exchange } from 'src/entities/exchange.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Announcement, Order, Auction, User]),
+    TypeOrmModule.forFeature([Announcement, Order, Auction, User, Exchange]),
     // UsersModule,
   ],
   exports: [AnnouncementService],

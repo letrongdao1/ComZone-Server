@@ -1,5 +1,5 @@
 // src/announcement/announcement.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from '../../entities/announcement.entity';
@@ -10,6 +10,7 @@ import {
 import { Auction } from 'src/entities/auction.entity';
 import { User } from 'src/entities/users.entity';
 import { Order } from 'src/entities/orders.entity';
+import { Exchange } from 'src/entities/exchange.entity';
 
 @Injectable()
 export class AnnouncementService {
@@ -22,6 +23,8 @@ export class AnnouncementService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(Auction)
     private readonly auctionRepository: Repository<Auction>,
+    @InjectRepository(Exchange)
+    private readonly exchangeRepository: Repository<Exchange>,
   ) {}
 
   // Create an announcement
@@ -70,6 +73,9 @@ export class AnnouncementService {
     const auction = auctionId
       ? await this.auctionRepository.findOne({ where: { id: auctionId } })
       : null;
+    const exchange = exchangeId
+      ? await this.exchangeRepository.findOne({ where: { id: exchangeId } })
+      : null;
 
     // Throw error if the entities are not found
     if (userId && !user) {
@@ -80,6 +86,9 @@ export class AnnouncementService {
     }
     if (auctionId && !auction) {
       throw new Error('Auction not found');
+    }
+    if (exchangeId && !exchange) {
+      throw new Error('Exchange not found');
     }
 
     // Create the announcement and set the relationships
@@ -104,7 +113,21 @@ export class AnnouncementService {
       where: { id },
     });
   }
+  async findByUserId(userId: string): Promise<Announcement[]> {
+    return this.announcementRepository.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+    });
+  }
 
+  async countUnreadAnnouncements(userId: string): Promise<number> {
+    return this.announcementRepository.count({
+      where: {
+        user: { id: userId },
+        isRead: false,
+      },
+    });
+  }
   // Cập nhật thông báo theo ID
   async update(
     id: string,

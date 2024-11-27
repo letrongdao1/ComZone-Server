@@ -5,6 +5,10 @@ import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
 import { Exchange } from './exchange.entity';
 
+export enum RecipientType {
+  USER = 'USER',
+  SELLER = 'SELLER',
+}
 @Entity('announcement')
 export class Announcement extends BaseEntity {
   @ManyToOne(() => User, (user) => user.announcements, { eager: true })
@@ -54,4 +58,11 @@ export class Announcement extends BaseEntity {
     default: false,
   })
   isRead: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: RecipientType,
+    default: RecipientType.USER,
+  })
+  recipientType: RecipientType;
 }

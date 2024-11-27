@@ -46,6 +46,20 @@ export class AnnouncementController {
       auctionId,
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('/user')
+  async findAnnouncementsByUser(@Req() req: any) {
+    return this.announcementService.findByUserId(req.user.id);
+  }
+  @UseGuards(JwtAuthGuard)
+  @Get('/user/unread-count')
+  async getUnreadCount(@Req() req: any) {
+    const count = await this.announcementService.countUnreadAnnouncements(
+      req.user.id,
+    );
+    return count;
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Announcement> {
     return this.announcementService.findOne(id);
@@ -66,6 +80,7 @@ export class AnnouncementController {
   ): Promise<void> {
     return this.announcementService.markAsRead(announcementId, req.user.id);
   }
+
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<void> {
     return this.announcementService.remove(id);
