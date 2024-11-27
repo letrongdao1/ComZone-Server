@@ -35,7 +35,7 @@ export class SellerSubsPlansController {
 
   @Get()
   getAllSellerSubsPlan() {
-    return this.sellerSubsPlansService.getAll();
+    return this.sellerSubsPlansService.getAllPlans();
   }
 
   @Roles(Role.ADMIN)

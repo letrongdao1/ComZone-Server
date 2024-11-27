@@ -25,16 +25,23 @@ export class SellerSubscription extends BaseEntity {
   activatedTime: Date;
 
   @Column({
-    name: 'remaining_resource',
+    name: 'remaining_sell_time',
     type: 'int',
     nullable: true,
   })
-  remainingResource: number;
+  remainingSellTime: number;
+
+  @Column({
+    name: 'remaining_auction_time',
+    type: 'int',
+    nullable: true,
+  })
+  remainingAuctionTime: number;
 
   @Column({
     name: 'is_auto_renewed',
     type: 'boolean',
-    default: true,
+    default: false,
   })
   isAutoRenewed: boolean;
 

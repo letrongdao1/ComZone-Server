@@ -82,10 +82,11 @@ export class ComicService {
     });
   }
 
-  async findByStatus(status: string): Promise<Comic[]> {
-    return await this.comicRepository.find({
+  async findByStatus(status: string, load: number): Promise<[Comic[], number]> {
+    return await this.comicRepository.findAndCount({
       where: { type: ComicsTypeEnum.SELL, status },
       relations: ['genres', 'sellerId'],
+      take: load,
     });
   }
 

@@ -18,12 +18,20 @@ export class SellerSubscriptionPlan extends BaseEntity {
   duration: number;
 
   @Column({
-    name: 'offered_resource',
+    name: 'sell_time',
     type: 'int',
     nullable: true,
     default: 0,
   })
-  offeredResource: number;
+  sellTime: number;
+
+  @Column({
+    name: 'auction_time',
+    type: 'int',
+    nullable: true,
+    default: 0,
+  })
+  auctionTime: number;
 
   @OneToMany(() => SellerSubscription, (sellerSub) => sellerSub.plan)
   sellerSubscriptions: SellerSubscription[];
