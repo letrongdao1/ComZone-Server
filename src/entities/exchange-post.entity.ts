@@ -2,7 +2,7 @@ import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { User } from './users.entity';
 import { Exchange } from './exchange.entity';
-import { ExchangePostStatusEnum } from 'src/modules/exchange-posts/dto/post.enum';
+import { ExchangePostStatusEnum } from 'src/modules/exchange-posts/dto/post-status.enum';
 
 @Entity('exchange-posts')
 export class ExchangePost extends BaseEntity {

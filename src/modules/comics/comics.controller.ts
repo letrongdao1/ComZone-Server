@@ -83,8 +83,8 @@ export class ComicController {
   }
 
   @Get('status/:status')
-  findByStatus(@Param('status') status: string) {
-    return this.comicService.findByStatus(status);
+  findByStatus(@Param('status') status: string, @Query('load') load: string) {
+    return this.comicService.findByStatus(status, parseInt(load));
   }
 
   @Get('sort/price')
@@ -97,8 +97,6 @@ export class ComicController {
     @Query('genreIds') genreIds: string,
     @Query('author') author?: string,
   ) {
-    console.log('Genre IDs: ', genreIds);
-    console.log('11111111111111111111111111');
     let genreIdArray: string[] = [];
 
     if (genreIds) {
