@@ -5,7 +5,7 @@ import { ExchangePost } from 'src/entities/exchange-post.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateExchangePostDTO } from './dto/post.dto';
-import { ExchangePostStatusEnum } from './dto/post.enum';
+import { ExchangePostStatusEnum } from './dto/post-status.enum';
 import { Exchange } from 'src/entities/exchange.entity';
 
 @Injectable()
@@ -42,6 +42,7 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
   async getAvailablePosts(userId?: string) {
     const posts = await this.postsRepository.find({
       where: { status: ExchangePostStatusEnum.AVAILABLE },
+      order: { createdAt: 'DESC' },
     });
 
     const newList = await Promise.all(
@@ -60,7 +61,7 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
       }),
     );
 
-    return this.shuffle(newList);
+    return newList;
   }
 
   async getSearchedPosts(key: string) {
@@ -94,10 +95,7 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
       .then(() => this.getOne(postId));
   }
 
-  async updatePostStatusToAvailable(
-    postId: string,
-    dto: CreateExchangePostDTO,
-  ) {
+  async revealPost(postId: string, dto: CreateExchangePostDTO) {
     const post = await this.getOne(postId);
     if (!post) throw new NotFoundException('Exchange post cannot be found!');
 
@@ -106,6 +104,14 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
         status: ExchangePostStatusEnum.AVAILABLE,
         postContent: dto.postContent || post.postContent,
         images: dto.images || post.images,
+      })
+      .then(() => this.getOne(postId));
+  }
+
+  async updatePostStatus(postId: string, status: ExchangePostStatusEnum) {
+    return await this.postsRepository
+      .update(postId, {
+        status,
       })
       .then(() => this.getOne(postId));
   }

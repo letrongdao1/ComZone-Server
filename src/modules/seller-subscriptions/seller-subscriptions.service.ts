@@ -61,11 +61,12 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       user,
       plan: sellerSubsPlan,
       activatedTime: new Date(),
-      remainingResource: sellerSubsPlan.offeredResource,
+      remainingSellTime: sellerSubsPlan.sellTime,
+      remainingAuctionTime: sellerSubsPlan.auctionTime,
     });
 
     const findUserSubs = await this.getSellerSubsOfUser(userId);
-    
+
     if (findUserSubs)
       await this.sellerSubscriptionsRepository.update(
         findUserSubs.id,

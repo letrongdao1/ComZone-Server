@@ -14,7 +14,19 @@ export class SellerSubsPlansService extends BaseService<SellerSubscriptionPlan> 
     super(sellerSubsPlansRepository);
   }
 
-  async createNewSellerSubsPlan(subscriptionPlanDto: SubscriptionPlanDTO) {
-    return await this.sellerSubsPlansRepository.save(subscriptionPlanDto);
+  async getAllPlans() {
+    return await this.sellerSubsPlansRepository.find({
+      order: { price: 'ASC' },
+    });
+  }
+
+  async createNewSellerSubsPlan(dto: SubscriptionPlanDTO) {
+    const plan = this.sellerSubsPlansRepository.create({
+      price: dto.price,
+      duration: dto.duration,
+      sellTime: dto.sellTime,
+      auctionTime: dto.auctionTime,
+    });
+    return await this.sellerSubsPlansRepository.save(plan);
   }
 }

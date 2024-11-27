@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -53,6 +54,18 @@ export class ExchangePostsController {
     @Param('post_id') id: string,
     @Body() dto: CreateExchangePostDTO,
   ) {
-    return this.exchangePostsService.updatePostStatusToAvailable(id, dto);
+    return this.exchangePostsService.revealPost(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('soft/:id')
+  removePost(@Param('id') postId: string) {
+    return this.exchangePostsService.softDelete(postId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('undo/:id')
+  undoRemove(@Param('id') postId: string) {
+    return this.exchangePostsService.restore(postId);
   }
 }

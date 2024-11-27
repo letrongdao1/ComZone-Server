@@ -4,9 +4,12 @@ export class SubscriptionPlanDTO {
   @ApiProperty()
   price: number;
 
-  @ApiProperty({ nullable: true })
-  duration?: number;
+  @ApiProperty()
+  duration: number;
 
-  @ApiProperty({ nullable: true })
-  offeredResource?: number;
+  @ApiProperty()
+  sellTime: number;
+
+  @ApiProperty()
+  auctionTime: number;
 }
