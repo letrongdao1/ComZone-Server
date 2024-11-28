@@ -211,8 +211,8 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     const totalRefundAmount =
       exchange.compensateUser &&
       exchange.compensateUser.id === refundRequest.user.id
-        ? exchange.compensationAmount + exchange.depositAmount
-        : exchange.depositAmount;
+        ? exchange.compensationAmount + exchange.depositAmount * 2
+        : exchange.depositAmount * 2;
 
     await this.usersService.updateBalance(
       refundRequest.user.id,
