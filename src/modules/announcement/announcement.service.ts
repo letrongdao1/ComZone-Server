@@ -2,10 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  Announcement,
-  RecipientType,
-} from '../../entities/announcement.entity';
+import { Announcement } from '../../entities/announcement.entity';
 import {
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
