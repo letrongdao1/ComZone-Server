@@ -1,5 +1,5 @@
 // src/announcement/announcement.service.ts
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from '../../entities/announcement.entity';
@@ -9,8 +9,9 @@ import {
 } from './dto/announcement.dto';
 import { Auction } from 'src/entities/auction.entity';
 import { User } from 'src/entities/users.entity';
-import { Order } from 'src/entities/orders.entity';
 import { Exchange } from 'src/entities/exchange.entity';
+import { Order } from 'src/entities/orders.entity';
+import { OrderItemsService } from '../order-items/order-items.service';
 
 @Injectable()
 export class AnnouncementService {
@@ -21,6 +22,8 @@ export class AnnouncementService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @Inject(forwardRef(() => OrderItemsService))
+    private readonly orderItemService: OrderItemsService,
     @InjectRepository(Auction)
     private readonly auctionRepository: Repository<Auction>,
     @InjectRepository(Exchange)
@@ -77,11 +80,10 @@ export class AnnouncementService {
       ? await this.exchangeRepository.findOne({ where: { id: exchangeId } })
       : null;
 
-    // Throw error if the entities are not found
     if (userId && !user) {
       throw new Error('User not found');
     }
-    if (orderId && !order) {
+    if (order && !orderId) {
       throw new Error('Order not found');
     }
     if (auctionId && !auction) {
@@ -91,7 +93,6 @@ export class AnnouncementService {
       throw new Error('Exchange not found');
     }
 
-    // Create the announcement and set the relationships
     const announcement = this.announcementRepository.create({
       ...rest,
       user: user || undefined,
@@ -114,11 +115,35 @@ export class AnnouncementService {
       where: { id },
     });
   }
-  async findByUserId(userId: string): Promise<Announcement[]> {
-    return this.announcementRepository.find({
+  async findByUserId(userId: string): Promise<any[]> {
+    // Fetch announcements related to the user
+    const announcements = await this.announcementRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
     });
+
+    const enrichedAnnouncements = await Promise.all(
+      announcements.map(async (announcement) => {
+        // Ensure announcement.order contains the order ID
+        if (!announcement.order) return announcement;
+
+        // Fetch all OrderItems for the given orderId
+        const orderItems = await this.orderItemService.getAllItemsOfOrder(
+          announcement.order.id,
+        );
+
+        // Return the announcement with the additional orderItems and comics
+        return {
+          ...announcement,
+          orderItems: orderItems.map((orderItem) => ({
+            ...orderItem,
+            comics: orderItem.comics,
+          })),
+        };
+      }),
+    );
+
+    return enrichedAnnouncements;
   }
 
   async countUnreadAnnouncements(userId: string): Promise<number> {

@@ -11,7 +11,7 @@ import { DepositsModule } from '../deposits/deposits.module';
   imports: [
     forwardRef(() => AuctionModule),
     BidModule,
-    AnnouncementModule,
+    forwardRef(() => AnnouncementModule),
     UsersModule,
     DepositsModule,
   ],

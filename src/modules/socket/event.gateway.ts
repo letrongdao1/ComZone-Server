@@ -28,6 +28,7 @@ export class EventsGateway implements OnModuleInit {
 
   constructor(
     private readonly bidService: BidService,
+    @Inject(forwardRef(() => AnnouncementService))
     private readonly announcementService: AnnouncementService,
     @Inject(forwardRef(() => AuctionService))
     private readonly auctionService: AuctionService, // AuctionService should be correctly injected here

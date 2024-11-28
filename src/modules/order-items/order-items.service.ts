@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -23,7 +24,8 @@ export class OrderItemsService extends BaseService<OrderItem> {
     private orderItemsRepository: Repository<OrderItem>,
     @Inject() private readonly ordersService: OrdersService,
     @Inject() private readonly comicsService: ComicService,
-    @Inject() private readonly eventsGateway: EventsGateway,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(orderItemsRepository);
   }
@@ -80,15 +82,6 @@ export class OrderItemsService extends BaseService<OrderItem> {
     );
     console.log('order', fetchedOrder);
     console.log('comics', fetchedComics);
-
-    this.eventsGateway.notifyUser(
-      fetchedOrder.user.id,
-      `Bạn đã đặt hàng thành công truyện "${fetchedComics.title}" .`,
-      { orderId: fetchedOrder.id },
-      'Đơn hàng',
-      'ORDER',
-      RecipientType.USER,
-    );
 
     this.eventsGateway.notifyUser(
       fetchedComics.sellerId.id,

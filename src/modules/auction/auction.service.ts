@@ -30,7 +30,7 @@ export class AuctionService {
     private announcementRepository: Repository<Announcement>,
     private readonly bidService: BidService,
     @Inject(forwardRef(() => EventsGateway))
-    private readonly eventsGateway: EventsGateway, // Use forwardRef to resolve circular dependency
+    private readonly eventsGateway: EventsGateway,
     @Inject(forwardRef(() => DepositsService))
     private depositsService: DepositsService,
   ) {}
