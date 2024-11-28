@@ -38,7 +38,6 @@ export class VnpayService {
     userId: string,
     vnpayRequest: VNPayRequestDTO,
     ipAddress: string,
-    context: 'WALLET' | 'CHECKOUT',
   ) {
     var tmnCode = process.env.VNPAY_TERMINAL_ID;
     var secretKey = process.env.VNPAY_SECRET_KEY;
@@ -52,10 +51,7 @@ export class VnpayService {
       throw new NotFoundException('Wallet deposit cannot be found!');
 
     var createDate = dateFormat(new Date(), 'yyyymmddHHMMss');
-    var returnUrl =
-      context === 'WALLET'
-        ? `${process.env.SERVER_URL}/vnpay/return/${walletDeposit.id}`
-        : `${process.env.SERVER_URL}/vnpay/checkout/return/${walletDeposit.id}`;
+    var returnUrl = `${process.env.SERVER_URL}/vnpay/return/${walletDeposit.id}?redirect=${vnpayRequest.redirectPath}`;
 
     var vnpParams: any = {
       vnp_Version: '2.1.0',
@@ -93,7 +89,7 @@ export class VnpayService {
     req: any,
     response: any,
     walletDepositId: string,
-    context: 'WALLET' | 'CHECKOUT',
+    redirectPath: string,
   ) {
     let vnp_Params = req.query;
 
@@ -101,6 +97,7 @@ export class VnpayService {
 
     delete vnp_Params['vnp_SecureHash'];
     delete vnp_Params['vnp_SecureHashType'];
+    delete vnp_Params['redirect'];
 
     vnp_Params = this.sortObject(vnp_Params);
 
@@ -126,22 +123,18 @@ export class VnpayService {
 
       if (vnp_Params['vnp_ResponseCode'] === '00') {
         response.redirect(
-          context === 'WALLET'
-            ? `${process.env.CLIENT_URL}?payment_status=SUCCESSFUL`
-            : `${process.env.CLIENT_URL}/checkout?payment_status=SUCCESSFUL`,
+          `${process.env.CLIENT_URL}${redirectPath}?payment_status=SUCCESSFUL`,
         );
       } else {
+        console.log('VNPAY_Params on error: ', vnp_Params);
         response.redirect(
-          context === 'WALLET'
-            ? `${process.env.CLIENT_URL}?payment_status=FAILED`
-            : `${process.env.CLIENT_URL}/checkout?payment_status=FAILED`,
+          `${process.env.CLIENT_URL}${redirectPath}?payment_status=FAILED`,
         );
       }
     } else {
+      console.log('VNPAY_Params on error: ', vnp_Params);
       response.redirect(
-        context === 'WALLET'
-          ? `${process.env.CLIENT_URL}?payment_status=FAILED`
-          : `${process.env.CLIENT_URL}/checkout?payment_status=FAILED`,
+        `${process.env.CLIENT_URL}${redirectPath}?payment_status=FAILED`,
       );
     }
   }

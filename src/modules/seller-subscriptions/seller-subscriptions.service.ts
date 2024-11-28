@@ -10,19 +10,18 @@ import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { SellerSubsPlansService } from '../seller-subs-plans/seller-subs-plans.service';
-import { Transaction } from 'src/entities/transactions.entity';
 import { SellerSubscriptionDTO } from './dto/seller-subscription.dto';
-import { generateNumericCode } from 'src/utils/generator/generators';
-import { TransactionStatusEnum } from '../transactions/dto/transaction-status.enum';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class SellerSubscriptionsService extends BaseService<SellerSubscription> {
   constructor(
     @InjectRepository(SellerSubscription)
     private readonly sellerSubscriptionsRepository: Repository<SellerSubscription>,
-    @InjectRepository(Transaction)
-    private readonly transactionsRepository: Repository<Transaction>,
+
     @Inject(UsersService) private readonly usersService: UsersService,
+    @Inject(TransactionsService)
+    private readonly transactionsService: TransactionsService,
     @Inject(SellerSubsPlansService)
     private readonly sellerSubsPlansService: SellerSubsPlansService,
   ) {
@@ -45,17 +44,17 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     if (!user) throw new NotFoundException('User cannot be found!');
 
     const sellerSubsPlan = await this.sellerSubsPlansService.getOne(
-      sellerSubscriptionDto.sellerSubscriptionPlanId,
+      sellerSubscriptionDto.planId,
     );
     if (!sellerSubsPlan)
       throw new NotFoundException('Subscription plan cannot be found!');
 
     if (user.balance < sellerSubsPlan.price)
       throw new ForbiddenException(
-        'Insufficient balance to activate the subscription!',
+        'Insufficient balance to register the subscription!',
       );
 
-    await this.usersService.updateBalance(userId, sellerSubsPlan.price * -1);
+    await this.usersService.updateBalance(userId, -sellerSubsPlan.price);
 
     const newSubscription = this.sellerSubscriptionsRepository.create({
       user,
@@ -68,23 +67,23 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     const findUserSubs = await this.getSellerSubsOfUser(userId);
 
     if (findUserSubs)
-      await this.sellerSubscriptionsRepository.update(
-        findUserSubs.id,
-        newSubscription,
-      );
+      await this.sellerSubscriptionsRepository.update(findUserSubs.id, {
+        plan: sellerSubsPlan,
+        activatedTime: new Date(),
+        remainingAuctionTime:
+          findUserSubs.remainingAuctionTime + sellerSubsPlan.auctionTime,
+        remainingSellTime:
+          findUserSubs.remainingSellTime + sellerSubsPlan.sellTime,
+        isAutoRenewed: true,
+      });
     else await this.sellerSubscriptionsRepository.save(newSubscription);
 
-    const savedTransaction = this.transactionsRepository.create({
-      user,
-      code: generateNumericCode(8),
-      sellerSubscription: newSubscription,
-      amount: newSubscription.plan.price,
-      status: TransactionStatusEnum.SUCCESSFUL,
-      profitAmount: newSubscription.plan.price,
-    });
+    if (sellerSubsPlan.price > 0)
+      await this.transactionsService.createSellerSubscriptionTransaction(
+        userId,
+        newSubscription.id,
+      );
 
-    return await this.transactionsRepository
-      .save(savedTransaction)
-      .then(() => this.getOne(newSubscription.id));
+    return this.getOne(newSubscription.id);
   }
 }

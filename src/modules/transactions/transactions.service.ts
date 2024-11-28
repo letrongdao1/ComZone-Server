@@ -65,6 +65,7 @@ export class TransactionsService extends BaseService<Transaction> {
   async createWalletDepositTransaction(
     userId: string,
     walletDepositId: string,
+    status?: TransactionStatusEnum,
   ) {
     const user = await this.usersService.getOne(userId);
     const walletDeposit = await this.walletDepositsRepository.findOneBy({
@@ -78,7 +79,7 @@ export class TransactionsService extends BaseService<Transaction> {
       code: generateNumericCode(8),
       walletDeposit,
       amount: walletDeposit.amount,
-      status: TransactionStatusEnum.SUCCESSFUL,
+      status: status || TransactionStatusEnum.SUCCESSFUL,
       type: 'ADD',
     });
 
@@ -143,6 +144,7 @@ export class TransactionsService extends BaseService<Transaction> {
       code: generateNumericCode(8),
       sellerSubscription,
       amount: sellerSubscription.plan.price,
+      profitAmount: sellerSubscription.plan.price,
       status: TransactionStatusEnum.SUCCESSFUL,
     });
 

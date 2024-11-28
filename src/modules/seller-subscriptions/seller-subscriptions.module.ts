@@ -5,13 +5,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { UsersModule } from '../users/users.module';
 import { SellerSubsPlansModule } from '../seller-subs-plans/seller-subs-plans.module';
-import { Transaction } from 'src/entities/transactions.entity';
+import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SellerSubscription, Transaction]),
+    TypeOrmModule.forFeature([SellerSubscription]),
     UsersModule,
     SellerSubsPlansModule,
+    TransactionsModule,
   ],
   controllers: [SellerSubscriptionsController],
   providers: [SellerSubscriptionsService],

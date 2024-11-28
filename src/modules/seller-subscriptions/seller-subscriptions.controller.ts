@@ -40,6 +40,6 @@ export class SellerSubscriptionsController {
   @UseGuards(JwtAuthGuard)
   @Get('user')
   getSellerSubscriptionOfUser(@Req() req: any) {
-    return this.sellerSubscriptionsService;
+    return this.sellerSubscriptionsService.getSellerSubsOfUser(req.user.id);
   }
 }

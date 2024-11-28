@@ -22,20 +22,13 @@ export class ZalopayService {
       'https://sandbox.zalopay.com.vn/v001/tpe/getstatusbyapptransid',
   };
 
-  async createPaymentLink(
-    userId: string,
-    zaloPayRequest: ZaloPayRequest,
-    context: 'WALLET' | 'CHECKOUT',
-  ) {
+  async createPaymentLink(userId: string, zaloPayRequest: ZaloPayRequest) {
     const walletDeposit = await this.walletDepositsService.getOne(
       zaloPayRequest.walletDeposit,
     );
 
     const embeddata = {
-      redirecturl:
-        context === 'WALLET'
-          ? `${process.env.SERVER_URL}/zalopay/status/${walletDeposit.id}`
-          : `${process.env.SERVER_URL}/zalopay/checkout/status/${walletDeposit.id}`,
+      redirecturl: `${process.env.SERVER_URL}/zalopay/status/${walletDeposit.id}?redirect=${zaloPayRequest.redirectPath}`,
       merchantinfo: 'ComZoneZaloPay',
     };
 
@@ -92,7 +85,7 @@ export class ZalopayService {
     req: any,
     response: any,
     walletDepositId: string,
-    context: 'WALLET' | 'CHECKOUT',
+    redirectPath: string,
   ) {
     const appTransId = req.query.apptransid;
 
@@ -130,9 +123,7 @@ export class ZalopayService {
           );
 
           response.redirect(
-            context === 'WALLET'
-              ? `${process.env.CLIENT_URL}?payment_status=SUCCESSFUL`
-              : `${process.env.CLIENT_URL}/checkout`,
+            `${process.env.CLIENT_URL}${redirectPath}?payment_status=SUCCESSFUL`,
           );
         } else {
           await this.walletDepositsService.updateWalletDepositStatus(
@@ -141,9 +132,7 @@ export class ZalopayService {
           );
 
           response.redirect(
-            context === 'WALLET'
-              ? `${process.env.CLIENT_URL}?payment_status=FAILED`
-              : `${process.env.CLIENT_URL}/checkout?payment_status=FAILED`,
+            `${process.env.CLIENT_URL}${redirectPath}?payment_status=FAILED`,
           );
         }
       })
