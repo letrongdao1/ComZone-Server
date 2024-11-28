@@ -91,6 +91,7 @@ export class OrdersService extends BaseService<Order> {
         throw new ForbiddenException('Insufficient balance!');
 
       await this.usersService.updateBalance(userId, -createOrderDto.totalPrice);
+
       await this.usersService.updateBalanceWithNonWithdrawableAmount(
         createOrderDto.sellerId,
         createOrderDto.totalPrice,
@@ -103,7 +104,17 @@ export class OrdersService extends BaseService<Order> {
 
     await this.ordersRepository.save(newOrder);
 
-    await this.transactionsService.createOrderTransaction(userId, newOrder.id);
+    await this.transactionsService.createOrderTransaction(
+      userId,
+      newOrder.id,
+      'SUBTRACT',
+    );
+
+    await this.transactionsService.createOrderTransaction(
+      createOrderDto.sellerId,
+      newOrder.id,
+      'ADD',
+    );
 
     return await this.getOne(newOrder.id);
   }

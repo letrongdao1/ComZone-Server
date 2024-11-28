@@ -43,7 +43,11 @@ export class TransactionsService extends BaseService<Transaction> {
     super(transactionsRepository);
   }
 
-  async createOrderTransaction(userId: string, orderId: string) {
+  async createOrderTransaction(
+    userId: string,
+    orderId: string,
+    type: 'ADD' | 'SUBTRACT',
+  ) {
     const user = await this.usersService.getOne(userId);
     const order = await this.ordersRepository.findOneBy({ id: orderId });
     if (!order)
@@ -57,6 +61,8 @@ export class TransactionsService extends BaseService<Transaction> {
       order,
       amount: order.totalPrice,
       status: TransactionStatusEnum.SUCCESSFUL,
+      type,
+      note: type === 'ADD' && 'Chưa thể sử dụng',
     });
 
     return await this.transactionsRepository.save(newTransaction);

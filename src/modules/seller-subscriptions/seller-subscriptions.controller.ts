@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { SellerSubscriptionsService } from './seller-subscriptions.service';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { SellerSubscriptionDTO } from './dto/seller-subscription.dto';
+import {
+  SellerSubscriptionDTO,
+  UpdateRemainingTimeDTO,
+} from './dto/seller-subscription.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
@@ -41,5 +52,23 @@ export class SellerSubscriptionsController {
   @Get('user')
   getSellerSubscriptionOfUser(@Req() req: any) {
     return this.sellerSubscriptionsService.getSellerSubsOfUser(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('sell')
+  updateAfterSell(@Req() req: any, @Body() dto: UpdateRemainingTimeDTO) {
+    return this.sellerSubscriptionsService.updateAfterSell(
+      req.user.id,
+      dto.quantity,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('auction')
+  updateAfterAuction(@Req() req: any, @Body() dto: UpdateRemainingTimeDTO) {
+    return this.sellerSubscriptionsService.updateAfterAuction(
+      req.user.id,
+      dto.quantity,
+    );
   }
 }
