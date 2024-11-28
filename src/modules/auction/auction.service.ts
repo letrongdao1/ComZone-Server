@@ -137,10 +137,14 @@ export class AuctionService {
       auction.status = 'CANCELED';
       auction.currentCondition = 'Buổi đấu giá thất bại do không ai đấu giá';
       await this.auctionRepository.save(auction);
-      const failedAnnouncement = new Announcement();
-      failedAnnouncement.title = `Auction for ${auction.comics.title} failed.`;
-      failedAnnouncement.message = `The auction for ${auction.comics.title} ended without any bids.`;
-      await this.announcementRepository.save(failedAnnouncement);
+      this.eventsGateway.notifyUser(
+        auction.comics.sellerId.id,
+        `Buổi đấu giá ${auction.comics.title} thất bại do không ai tham gia.`,
+        { auctionId: auction.id },
+        'Đấu giá',
+        'AUCTION',
+        RecipientType.SELLER,
+      );
     }
   }
 
