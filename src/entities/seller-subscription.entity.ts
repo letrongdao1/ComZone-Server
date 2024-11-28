@@ -1,5 +1,12 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { User } from './users.entity';
 import { Transaction } from './transactions.entity';
 import { SellerSubscriptionPlan } from './seller-subs-plan.entity';
@@ -45,6 +52,6 @@ export class SellerSubscription extends BaseEntity {
   })
   isAutoRenewed: boolean;
 
-  @OneToOne(() => Transaction, (transaction) => transaction.sellerSubscription)
-  transaction: Transaction;
+  @OneToMany(() => Transaction, (transaction) => transaction.sellerSubscription)
+  transactions: Transaction[];
 }

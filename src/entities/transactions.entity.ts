@@ -38,6 +38,15 @@ export class Transaction extends BaseEntity {
   )
   refundRequest: RefundRequest;
 
+  @ManyToOne(
+    () => SellerSubscription,
+    (sellerSubscription) => sellerSubscription.transactions,
+    {
+      eager: true,
+    },
+  )
+  sellerSubscription?: SellerSubscription;
+
   @OneToOne(() => WalletDeposit, (walletDeposit) => walletDeposit.transaction, {
     nullable: true,
     eager: true,
@@ -51,17 +60,6 @@ export class Transaction extends BaseEntity {
   })
   @JoinColumn({ name: 'withdrawal' })
   withdrawal?: Withdrawal;
-
-  @OneToOne(
-    () => SellerSubscription,
-    (sellerSubscription) => sellerSubscription.transaction,
-    {
-      nullable: true,
-      eager: true,
-    },
-  )
-  @JoinColumn({ name: 'seller-subscription' })
-  sellerSubscription?: SellerSubscription;
 
   @Column({
     type: 'varchar',

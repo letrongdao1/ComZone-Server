@@ -206,7 +206,7 @@ export class TransactionsService extends BaseService<Transaction> {
       if (!refundRequest.exchange) return;
       const exchange = refundRequest.exchange;
       if (exchange.compensateUser && exchange.compensateUser.id === userId) {
-        return exchange.compensationAmount + exchange.depositAmount;
+        return exchange.compensationAmount + exchange.depositAmount * 2;
       } else return exchange.depositAmount;
     };
 
