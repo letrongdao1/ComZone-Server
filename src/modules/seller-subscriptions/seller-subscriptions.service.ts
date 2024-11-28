@@ -77,8 +77,6 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
         'Insufficient balance to register the subscription!',
       );
 
-    await this.usersService.updateBalance(userId, -sellerSubsPlan.price);
-
     const newSubscription = this.sellerSubscriptionsRepository.create({
       user,
       plan: sellerSubsPlan,
@@ -101,11 +99,16 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       });
     else await this.sellerSubscriptionsRepository.save(newSubscription);
 
-    if (sellerSubsPlan.price > 0)
+    if (sellerSubsPlan.price > 0) {
+      await this.usersService.updateBalance(userId, -sellerSubsPlan.price);
+
       await this.transactionsService.createSellerSubscriptionTransaction(
         userId,
         newSubscription.id,
       );
+    } else {
+      await this.updateTrialUsed(userId);
+    }
 
     return this.getOne(newSubscription.id);
   }
@@ -141,6 +144,18 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
 
     return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
       remainingAuctionTime: sellerSub.remainingAuctionTime - quantity,
+    });
+  }
+
+  async updateTrialUsed(userId: string) {
+    const sellerSubs = await this.sellerSubscriptionsRepository.findOneBy({
+      user: { id: userId },
+    });
+    if (!sellerSubs)
+      throw new NotFoundException('Seller subscription cannot be found!');
+
+    return await this.sellerSubscriptionsRepository.update(sellerSubs.id, {
+      usedTrial: true,
     });
   }
 }

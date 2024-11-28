@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Patch,
   Post,
   Req,
@@ -20,7 +19,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { RegisterUserDTO } from './dto/register-user.dto';
-import { LoginUserDTO } from './dto/login-user.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
@@ -48,7 +46,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@Request() req: any, @Body() loginUserDto: LoginUserDTO) {
+  login(@Request() req: any) {
     return this.authService.login(req.user.id);
   }
 
@@ -67,7 +65,6 @@ export class AuthController {
     return this.authService.logout(req.user.id);
   }
 
-  @ApiExcludeEndpoint()
   @UseGuards(GoogleAuthGuard)
   @Get('google/login')
   googleLogin() {}
