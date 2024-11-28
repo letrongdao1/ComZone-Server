@@ -15,7 +15,7 @@ export class Transaction extends BaseEntity {
   @ManyToOne(() => User, (user) => user.transactions, { eager: true })
   user: User;
 
-  @OneToOne(() => Order, (order) => order.transaction, {
+  @ManyToOne(() => Order, (order) => order.transactions, {
     nullable: true,
     eager: true,
   })
