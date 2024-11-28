@@ -110,7 +110,7 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       await this.updateTrialUsed(userId);
     }
 
-    return this.getOne(newSubscription.id);
+    return await this.getOne(newSubscription.id);
   }
 
   async updateAfterSell(userId: string, quantity: number) {
