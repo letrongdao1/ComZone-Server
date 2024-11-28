@@ -52,6 +52,14 @@ export class SellerSubscription extends BaseEntity {
   })
   isAutoRenewed: boolean;
 
+  @Column({
+    name: 'used_trial',
+    type: 'boolean',
+    nullable: true,
+    default: false,
+  })
+  usedTrial: boolean;
+
   @OneToMany(() => Transaction, (transaction) => transaction.sellerSubscription)
   transactions: Transaction[];
 }
