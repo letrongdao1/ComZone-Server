@@ -62,7 +62,7 @@ export class SellerFeedbackService {
   async findBySeller(id: string, limit?: number): Promise<any> {
     if (!limit)
       return await this.sellerFeedbackRepository.find({
-        where: { seller: { id } },
+        where: { seller: { id }, isApprove: true },
         relations: ['user', 'seller'],
         order: {
           updatedAt: 'DESC',
@@ -71,7 +71,7 @@ export class SellerFeedbackService {
       });
     else {
       const feedbackList = await this.sellerFeedbackRepository.find({
-        where: { seller: { id } },
+        where: { seller: { id }, isApprove: true },
         relations: ['user', 'seller'],
         take: limit,
         order: {
@@ -85,13 +85,13 @@ export class SellerFeedbackService {
       }, 0);
 
       const totalFeedback = await this.sellerFeedbackRepository.count({
-        where: { seller: { id } },
+        where: { seller: { id }, isApprove: true },
       });
 
       return {
         feedback: feedbackList,
         totalFeedback,
-        averageRating: Math.round((totalRating / totalFeedback) * 50) / 10,
+        averageRating: Math.round((totalRating / totalFeedback) * 10) / 10,
       };
     }
   }

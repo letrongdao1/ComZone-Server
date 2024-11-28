@@ -83,8 +83,19 @@ export class ComicController {
   }
 
   @Get('status/:status')
-  findByStatus(@Param('status') status: string, @Query('load') load: string) {
-    return this.comicService.findByStatus(status, parseInt(load));
+  findByStatus(@Param('status') status: string) {
+    return this.comicService.findByStatus(status.toUpperCase());
+  }
+
+  @Get('count/status/:status')
+  findByStatusAndCount(
+    @Param('status') status: string,
+    @Query('load') load: string,
+  ) {
+    return this.comicService.findByStatusAndCount(
+      status.toUpperCase(),
+      Number(load),
+    );
   }
 
   @Get('sort/price')
