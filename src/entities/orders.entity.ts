@@ -86,8 +86,8 @@ export class Order extends BaseEntity {
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
   orderItems: OrderItem[];
 
-  @OneToOne(() => Transaction, (transaction) => transaction.order)
-  transaction: Transaction;
+  @OneToMany(() => Transaction, (transaction) => transaction.order)
+  transactions: Transaction[];
 
   @OneToOne(() => RefundRequest, (request) => request.order)
   refundRequest: RefundRequest;

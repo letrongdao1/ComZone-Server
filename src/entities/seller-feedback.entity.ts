@@ -31,8 +31,8 @@ export class SellerFeedback extends BaseEntity {
 
   @Column({
     type: 'boolean',
-    default: false,
     nullable: false,
+    default: false,
   })
   isApprove: boolean;
 }
