@@ -11,7 +11,7 @@ import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { Bid } from 'src/entities/bid.entity';
-import { Announcement } from 'src/entities/announcement.entity';
+import { Announcement, RecipientType } from 'src/entities/announcement.entity';
 import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
@@ -104,9 +104,10 @@ export class AuctionService {
       this.eventsGateway.notifyUser(
         latestBid.user.id,
         `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
-        { id: auction.id },
+        { auctionId: auction.id },
         'Chúc mừng',
         'AUCTION',
+        RecipientType.USER,
         'SUCCESSFUL',
       );
 
@@ -252,9 +253,10 @@ export class AuctionService {
     this.eventsGateway.notifyUser(
       winningBid.user.id,
       `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
-      { id: auction.id },
+      { auctionId: auction.id },
       'Chúc mừng',
       'AUCTION',
+      RecipientType.USER,
       'SUCCESSFUL',
     );
 

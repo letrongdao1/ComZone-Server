@@ -13,6 +13,8 @@ import { OrdersService } from '../orders/orders.service';
 import { CreateOrderItemDTO } from './dto/createOrderItemDTO';
 import { ComicService } from '../comics/comics.service';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
+import { EventsGateway } from '../socket/event.gateway';
+import { RecipientType } from 'src/entities/announcement.entity';
 
 @Injectable()
 export class OrderItemsService extends BaseService<OrderItem> {
@@ -21,6 +23,7 @@ export class OrderItemsService extends BaseService<OrderItem> {
     private orderItemsRepository: Repository<OrderItem>,
     @Inject() private readonly ordersService: OrdersService,
     @Inject() private readonly comicsService: ComicService,
+    @Inject() private readonly eventsGateway: EventsGateway,
   ) {
     super(orderItemsRepository);
   }
@@ -75,7 +78,26 @@ export class OrderItemsService extends BaseService<OrderItem> {
       orderItem.comics,
       ComicsStatusEnum.SOLD,
     );
+    console.log('order', fetchedOrder);
+    console.log('comics', fetchedComics);
 
+    this.eventsGateway.notifyUser(
+      fetchedOrder.user.id,
+      `Bạn đã đặt hàng thành công truyện "${fetchedComics.title}" .`,
+      { orderId: fetchedOrder.id },
+      'Đơn hàng',
+      'ORDER',
+      RecipientType.USER,
+    );
+
+    this.eventsGateway.notifyUser(
+      fetchedComics.sellerId.id,
+      `Truyện "${fetchedComics.title}" vừa được đặt hàng.`,
+      { orderId: fetchedOrder.id },
+      'Đơn hàng',
+      'ORDER',
+      RecipientType.SELLER,
+    );
     // Save order item
     return await this.orderItemsRepository.save({
       order: fetchedOrder,

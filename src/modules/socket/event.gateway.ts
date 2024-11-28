@@ -15,6 +15,7 @@ import { User } from 'src/entities/users.entity';
 import { AuctionService } from '../auction/auction.service';
 import { UsersService } from '../users/users.service';
 import { DepositsService } from '../deposits/deposits.service';
+import { RecipientType } from 'src/entities/announcement.entity';
 
 @WebSocketGateway({
   cors: {
@@ -127,19 +128,23 @@ export class EventsGateway implements OnModuleInit {
   async notifyUser(
     userId: string,
     message: string,
-    auction: { id: string },
+    ids: { exchangeId?: string; orderId?: string; auctionId?: string },
     title: string,
     type: string,
-    status: string,
+    recipientType: RecipientType,
+    status?: string,
   ) {
     try {
       const createAnnouncementDto: CreateAnnouncementDto = {
-        auctionId: auction.id,
+        auctionId: ids.auctionId,
+        orderId: ids.orderId,
+        exchangeId: ids.exchangeId,
         userId,
         message,
         title,
         type,
         status,
+        recipientType,
       };
 
       const savedAnnouncement =
@@ -152,10 +157,11 @@ export class EventsGateway implements OnModuleInit {
       this.server.to(userId).emit('notification', {
         id: savedAnnouncement.id,
         message,
-        auction,
+        auction: ids.auctionId,
         title,
         type,
         status,
+        recipientType,
       });
     } catch (error) {
       console.error('Error in notifyUser:', error);

@@ -14,7 +14,10 @@ export class Announcement extends BaseEntity {
   @ManyToOne(() => User, (user) => user.announcements, { eager: true })
   user: User;
 
-  @ManyToOne(() => Order, (order) => order.announcements, { nullable: true })
+  @ManyToOne(() => Order, (order) => order.announcements, {
+    nullable: true,
+    eager: true,
+  })
   order: Order;
 
   @ManyToOne(() => Auction, (auction) => auction.announcements, {

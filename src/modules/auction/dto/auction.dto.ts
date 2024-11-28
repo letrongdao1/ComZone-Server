@@ -33,7 +33,14 @@ export class CreateAuctionDto {
   endTime: Date;
 
   @IsOptional()
-  @IsEnum(['ONGOING', 'SUCCESSFUL', 'FAILED'])
+  @IsEnum([
+    'ONGOING',
+    'SUCCESSFUL',
+    'FAILED',
+    'UPCOMING',
+    'CANCELED',
+    'COMPLETED',
+  ])
   status: string;
 }
 
@@ -60,6 +67,13 @@ export class UpdateAuctionDto {
   endTime?: Date;
 
   @IsOptional()
-  @IsEnum(['ONGOING', 'SUCCESSFUL', 'FAILED'])
+  @IsEnum([
+    'ONGOING',
+    'SUCCESSFUL',
+    'FAILED',
+    'UPCOMING',
+    'CANCELED',
+    'COMPLETED',
+  ])
   status?: string;
 }

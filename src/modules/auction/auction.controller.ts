@@ -92,7 +92,7 @@ export class AuctionController {
     );
   }
   @UseGuards(JwtAuthGuard)
-  @Patch(':id/status/')
+  @Patch(':id/cancel')
   async cancelAuction(@Param('id') id: string): Promise<Auction> {
     return this.auctionService.cancelAuction(id);
   }

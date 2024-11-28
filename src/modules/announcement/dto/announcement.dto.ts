@@ -1,4 +1,5 @@
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
+import { RecipientType } from 'src/entities/announcement.entity';
 
 export class CreateAnnouncementDto {
   @IsString()
@@ -25,6 +26,9 @@ export class CreateAnnouncementDto {
 
   @IsOptional()
   exchangeId?: string; // ID of the exchange request related to the announcement
+
+  @IsOptional()
+  recipientType?: RecipientType;
 }
 
 export class UpdateAnnouncementDto {

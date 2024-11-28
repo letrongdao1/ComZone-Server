@@ -2,7 +2,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Announcement } from '../../entities/announcement.entity';
+import {
+  Announcement,
+  RecipientType,
+} from '../../entities/announcement.entity';
 import {
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
@@ -61,7 +64,7 @@ export class AnnouncementService {
   async createAnnouncement(
     createAnnouncementDto: CreateAnnouncementDto,
   ): Promise<Announcement> {
-    const { userId, orderId, auctionId, exchangeId, ...rest } =
+    const { userId, orderId, auctionId, exchangeId, recipientType, ...rest } =
       createAnnouncementDto;
 
     const user = userId
@@ -97,7 +100,8 @@ export class AnnouncementService {
       user: user || undefined,
       order: order || undefined,
       auction: auction || undefined,
-      exchange: undefined,
+      exchange: exchange || undefined,
+      recipientType,
     });
 
     return await this.announcementRepository.save(announcement);

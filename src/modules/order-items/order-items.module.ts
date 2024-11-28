@@ -5,9 +5,15 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrdersModule } from '../orders/orders.module';
 import { ComicModule } from '../comics/comics.module';
+import { EventsModule } from '../socket/event.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([OrderItem]), OrdersModule, ComicModule],
+  imports: [
+    TypeOrmModule.forFeature([OrderItem]),
+    OrdersModule,
+    ComicModule,
+    EventsModule,
+  ],
   controllers: [OrderItemsController],
   providers: [OrderItemsService],
   exports: [OrderItemsService],
