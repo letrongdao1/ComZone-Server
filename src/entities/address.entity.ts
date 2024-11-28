@@ -1,7 +1,6 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { User } from './users.entity';
-import { Order } from './orders.entity';
 
 @Entity('addresses')
 export class Address extends BaseEntity {
