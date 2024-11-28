@@ -29,11 +29,33 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
   }
 
   async getSellerSubsOfUser(userId: string) {
-    return await this.sellerSubscriptionsRepository.findOne({
+    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
       where: {
         user: { id: userId },
       },
     });
+
+    if (!sellerSub) return null;
+
+    const checkActive = () => {
+      if (
+        sellerSub.remainingSellTime === 0 &&
+        sellerSub.remainingAuctionTime === 0
+      ) {
+        return sellerSub.plan.duration > 0;
+      } else
+        return sellerSub.plan.duration > 0
+          ? sellerSub.activatedTime.getTime() + sellerSub.plan.duration >
+              new Date().getTime()
+          : true;
+    };
+
+    return {
+      ...sellerSub,
+      canSell: sellerSub.remainingSellTime > 0,
+      canAuction: sellerSub.remainingAuctionTime > 0,
+      isActive: checkActive(),
+    };
   }
 
   async registerNewSellerSubscription(
@@ -85,5 +107,39 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       );
 
     return this.getOne(newSubscription.id);
+  }
+
+  async updateAfterSell(userId: string, quantity: number) {
+    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
+    });
+
+    if (!sellerSub)
+      throw new NotFoundException('Seller subscription cannot be found!');
+    if (sellerSub.remainingSellTime < quantity)
+      throw new ForbiddenException('Insufficient sell time!');
+
+    return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
+      remainingSellTime: sellerSub.remainingSellTime - quantity,
+    });
+  }
+
+  async updateAfterAuction(userId: string, quantity: number) {
+    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
+    });
+
+    if (!sellerSub)
+      throw new NotFoundException('Seller subscription cannot be found!');
+    if (sellerSub.remainingAuctionTime < quantity)
+      throw new ForbiddenException('Insufficient auction time!');
+
+    return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
+      remainingAuctionTime: sellerSub.remainingAuctionTime - quantity,
+    });
   }
 }
