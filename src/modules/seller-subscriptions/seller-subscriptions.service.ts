@@ -45,7 +45,8 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
         return sellerSub.plan.duration > 0;
       } else
         return sellerSub.plan.duration > 0
-          ? sellerSub.activatedTime.getTime() + sellerSub.plan.duration >
+          ? sellerSub.activatedTime.getTime() +
+              sellerSub.plan.duration * 30 * 24 * 60 * 60 * 1000 >
               new Date().getTime()
           : true;
     };
