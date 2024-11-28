@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -22,24 +23,7 @@ export class ZalopayController {
   @UseGuards(JwtAuthGuard)
   @Post()
   createPaymentLink(@Req() req: any, @Body() zaloPayRequest: ZaloPayRequest) {
-    return this.zalopayService.createPaymentLink(
-      req.user.id,
-      zaloPayRequest,
-      'WALLET',
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('checkout')
-  createPaymentLinkInCheckout(
-    @Req() req: any,
-    @Body() zaloPayRequest: ZaloPayRequest,
-  ) {
-    return this.zalopayService.createPaymentLink(
-      req.user.id,
-      zaloPayRequest,
-      'CHECKOUT',
-    );
+    return this.zalopayService.createPaymentLink(req.user.id, zaloPayRequest);
   }
 
   @Get('status/:transactionId')
@@ -47,26 +31,8 @@ export class ZalopayController {
     @Req() req: any,
     @Res() res: any,
     @Param('transactionId') transactionId: string,
+    @Query('redirect') path: string,
   ) {
-    return this.zalopayService.getPaymentStatus(
-      req,
-      res,
-      transactionId,
-      'WALLET',
-    );
-  }
-
-  @Get('checkout/status/:transactionId')
-  getPaymentStatusInCheckout(
-    @Req() req: any,
-    @Res() res: any,
-    @Param('transactionId') transactionId: string,
-  ) {
-    return this.zalopayService.getPaymentStatus(
-      req,
-      res,
-      transactionId,
-      'CHECKOUT',
-    );
+    return this.zalopayService.getPaymentStatus(req, res, transactionId, path);
   }
 }

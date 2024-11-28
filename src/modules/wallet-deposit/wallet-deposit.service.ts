@@ -12,6 +12,7 @@ import { BaseService } from 'src/common/service.base';
 import { PaymentGatewayEnum } from './dto/provider.enum';
 import { WalletDepositStatusEnum } from './dto/status.enum';
 import { TransactionsService } from '../transactions/transactions.service';
+import { TransactionStatusEnum } from '../transactions/dto/transaction-status.enum';
 
 @Injectable()
 export class WalletDepositService extends BaseService<WalletDeposit> {
@@ -83,6 +84,12 @@ export class WalletDepositService extends BaseService<WalletDeposit> {
       await this.transactionsService.createWalletDepositTransaction(
         walletDeposit.user.id,
         walletDeposit.id,
+      );
+    } else {
+      await this.transactionsService.createWalletDepositTransaction(
+        walletDeposit.user.id,
+        walletDeposit.id,
+        TransactionStatusEnum.FAILED,
       );
     }
 

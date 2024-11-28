@@ -5,6 +5,7 @@ import {
   Ip,
   Param,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -27,27 +28,7 @@ export class VnpayController {
     @Body() vnpayRequest: VNPayRequestDTO,
     @Ip() ip: string,
   ) {
-    return this.vnpayService.createPaymentLink(
-      req.user.id,
-      vnpayRequest,
-      ip,
-      'WALLET',
-    );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('checkout')
-  createPaymentLinkInCheckout(
-    @Req() req: any,
-    @Body() vnpayRequest: VNPayRequestDTO,
-    @Ip() ip: string,
-  ) {
-    return this.vnpayService.createPaymentLink(
-      req.user.id,
-      vnpayRequest,
-      ip,
-      'CHECKOUT',
-    );
+    return this.vnpayService.createPaymentLink(req.user.id, vnpayRequest, ip);
   }
 
   @Get('return/:transactionId')
@@ -55,26 +36,8 @@ export class VnpayController {
     @Req() req: any,
     @Res() res: any,
     @Param('transactionId') transactionId: string,
+    @Query('redirect') path: string,
   ) {
-    return this.vnpayService.handlePaymentReturn(
-      req,
-      res,
-      transactionId,
-      'WALLET',
-    );
-  }
-
-  @Get('checkout/return/:transactionId')
-  handleReturnInCheckout(
-    @Req() req: any,
-    @Res() res: any,
-    @Param('transactionId') transactionId: string,
-  ) {
-    return this.vnpayService.handlePaymentReturn(
-      req,
-      res,
-      transactionId,
-      'CHECKOUT',
-    );
+    return this.vnpayService.handlePaymentReturn(req, res, transactionId, path);
   }
 }
