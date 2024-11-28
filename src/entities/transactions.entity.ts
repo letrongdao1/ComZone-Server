@@ -6,7 +6,6 @@ import { WalletDeposit } from './wallet-deposit.entity';
 import { Withdrawal } from './withdrawal.entity';
 import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
-import { ExchangeSubscription } from './exchange-subscription.entity';
 import { Exchange } from './exchange.entity';
 import { RefundRequest } from './refund-request.entity';
 
@@ -16,11 +15,28 @@ export class Transaction extends BaseEntity {
   user: User;
 
   @ManyToOne(() => Order, (order) => order.transactions, {
-    nullable: true,
     eager: true,
   })
-  @JoinColumn({ name: 'order' })
-  order?: Order;
+  order: Order;
+
+  @ManyToOne(() => Deposit, (deposit) => deposit.transactions, {
+    eager: true,
+  })
+  deposit: Deposit;
+
+  @ManyToOne(() => Exchange, (exchange) => exchange.transactions, {
+    eager: true,
+  })
+  exchange: Exchange;
+
+  @ManyToOne(
+    () => RefundRequest,
+    (refundRequest) => refundRequest.transactions,
+    {
+      eager: true,
+    },
+  )
+  refundRequest: RefundRequest;
 
   @OneToOne(() => WalletDeposit, (walletDeposit) => walletDeposit.transaction, {
     nullable: true,
@@ -36,13 +52,6 @@ export class Transaction extends BaseEntity {
   @JoinColumn({ name: 'withdrawal' })
   withdrawal?: Withdrawal;
 
-  @ManyToOne(() => Deposit, (deposit) => deposit.transactions, {
-    nullable: true,
-    eager: true,
-  })
-  @JoinColumn({ name: 'deposit' })
-  deposit?: Deposit;
-
   @OneToOne(
     () => SellerSubscription,
     (sellerSubscription) => sellerSubscription.transaction,
@@ -53,32 +62,6 @@ export class Transaction extends BaseEntity {
   )
   @JoinColumn({ name: 'seller-subscription' })
   sellerSubscription?: SellerSubscription;
-
-  @OneToOne(
-    () => ExchangeSubscription,
-    (exchangeSubscription) => exchangeSubscription.transaction,
-    { nullable: true, eager: true },
-  )
-  @JoinColumn({ name: 'exchange-subscription' })
-  exchangeSubscription?: ExchangeSubscription;
-
-  @ManyToOne(() => Exchange, (exchange) => exchange.transactions, {
-    nullable: true,
-    eager: true,
-  })
-  @JoinColumn({ name: 'exchange' })
-  exchange?: Exchange;
-
-  @ManyToOne(
-    () => RefundRequest,
-    (refundRequest) => refundRequest.transactions,
-    {
-      nullable: true,
-      eager: true,
-    },
-  )
-  @JoinColumn({ name: 'refund-request' })
-  refundRequest?: RefundRequest;
 
   @Column({
     type: 'varchar',
