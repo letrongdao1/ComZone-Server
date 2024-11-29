@@ -88,6 +88,37 @@ export class BidService {
       order: { createdAt: 'DESC' }, // Optional: order bids by creation date
     });
   }
+  async findUserBidsInAuction(
+    auctionId: string,
+    userId: string,
+  ): Promise<Bid[]> {
+    // Check if auction exists
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+    });
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${auctionId} not found`);
+    }
+
+    // Check if user exists
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Fetch bids by the user in the given auction
+    return this.bidRepository.find({
+      where: {
+        auction: { id: auctionId },
+        user: { id: userId },
+      },
+      relations: ['auction', 'user'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async findHighestBidOfUserByAuction(
     auctionId: string,
     userId: string,

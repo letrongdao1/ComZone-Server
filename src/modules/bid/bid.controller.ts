@@ -37,6 +37,15 @@ export class BidController {
     return this.bidService.findAllByAuction(auctionId);
   }
   @UseGuards(JwtAuthGuard)
+  @Get('user/auction/:auctionId')
+  async getUserBidsInAuction(
+    @Req() req: any,
+    @Param('auctionId') auctionId: string,
+  ) {
+    return this.bidService.findUserBidsInAuction(auctionId, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('highest-bid/:auctionId')
   async findHighestBidOfUserByAuction(
     @Param('auctionId') auctionId: string,
