@@ -162,7 +162,8 @@ export class ComicService {
         ]),
       },
       order: {
-        createdAt: 'DESC', // Sorting by createdAt in descending order
+        status: 'ASC',
+        createdAt: 'DESC',
       },
     });
 
@@ -262,8 +263,26 @@ export class ComicService {
       });
     }
     comic.status = status;
-    comic.type = 'SELL';
+    comic.type = ComicsTypeEnum.SELL;
     await this.comicRepository.save(comic);
+
+    return comic;
+  }
+  async stopSelling(comicsId: string): Promise<Comic> {
+    // Check if the comic exists
+    const comic = await this.comicRepository.findOne({
+      where: { id: comicsId },
+    });
+
+    if (!comic) {
+      throw new NotFoundException('Comic not found');
+    }
+
+    comic.status = ComicsStatusEnum.UNAVAILABLE;
+    comic.type = ComicsTypeEnum.NONE;
+    await this.comicRepository.save(comic);
+
+    console.log(comic);
 
     return comic;
   }

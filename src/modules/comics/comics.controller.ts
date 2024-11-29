@@ -144,6 +144,10 @@ export class ComicController {
   findOne(@Param('id') id: string) {
     return this.comicService.findOne(id);
   }
+  @Get(':id/stop-sell')
+  async stopSelling(@Param('id') id: string) {
+    return await this.comicService.stopSelling(id);
+  }
 
   @Get(':id/genres')
   async findComicWithGenres(@Param('id') id: string) {

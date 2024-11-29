@@ -17,6 +17,7 @@ import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
 import { BidService } from '../bid/bid.service';
 import { DepositsService } from '../deposits/deposits.service';
+import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 
 @Injectable()
 export class AuctionService {
@@ -45,7 +46,7 @@ export class AuctionService {
       throw new NotFoundException(`Comic with ID ${data.comicsId} not found`);
     }
 
-    comic.status = 'AVAILABLE';
+    comic.status = ComicsStatusEnum.AVAILABLE;
     comic.type = ComicsTypeEnum.AUCTION;
     await this.comicRepository.save(comic);
 
@@ -109,6 +110,14 @@ export class AuctionService {
         'AUCTION',
         RecipientType.USER,
         'SUCCESSFUL',
+      );
+      this.eventsGateway.notifyUser(
+        auction.comics.sellerId.id,
+        `Buổi đấu giá ${auction.comics.title} đã diễn ra thành công.`,
+        { auctionId: auction.id },
+        'Đấu giá',
+        'AUCTION',
+        RecipientType.SELLER,
       );
 
       // Collect all losing bidders' userIds
