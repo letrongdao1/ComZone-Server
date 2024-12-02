@@ -40,7 +40,7 @@ export class ComicController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createComicDto: CreateComicDto, @Req() req: any) {
-    return this.comicService.create(createComicDto, req.user.id);
+    return this.comicService.createComic(createComicDto, req.user.id);
   }
 
   @Roles(Role.MEMBER, Role.SELLER)
@@ -54,7 +54,8 @@ export class ComicController {
     return this.comicsExchangeService.createExchangeComics(req.user.id, dto);
   }
 
-  @UseGuards(PermissionsGuard)
+  // @Roles(Role.MODERATOR)
+  // @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
   findAllSellComics() {
@@ -70,6 +71,14 @@ export class ComicController {
   @Get('seller/:seller_id')
   async findBySellerId(@Param('seller_id') sellerId: string): Promise<Comic[]> {
     return this.comicService.findBySeller(sellerId);
+  }
+
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('search/seller')
+  searchSellerComics(@Req() req: any, @Query('search') key: string) {
+    return this.comicService.searchSellerComicsByKey(req.user.id, key);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -169,6 +178,18 @@ export class ComicController {
   ) {
     const { status } = updateComicStatusDto;
     return await this.comicService.updateStatus(id, status);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('soft/:id')
+  sellerDelete(@Param('id') id: string) {
+    return this.comicService.softDelete(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('undo/:id')
+  undoDelete(@Param('id') id: string) {
+    return this.comicService.restore(id);
   }
 
   @Roles(Role.MODERATOR)
