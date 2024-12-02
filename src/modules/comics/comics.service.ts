@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, In, Not, Repository } from 'typeorm';
+import { FindManyOptions, ILike, In, Not, Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
@@ -13,9 +13,10 @@ import { User } from 'src/entities/users.entity';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
 import { ComicsTypeEnum } from './dto/comic-type.enum';
 import { SellerDetailsService } from '../seller-details/seller-details.service';
+import { BaseService } from 'src/common/service.base';
 
 @Injectable()
-export class ComicService {
+export class ComicService extends BaseService<Comic> {
   constructor(
     @InjectRepository(Comic)
     private readonly comicRepository: Repository<Comic>,
@@ -25,7 +26,9 @@ export class ComicService {
     private readonly userRepository: Repository<User>,
 
     private readonly sellerDetailsService: SellerDetailsService,
-  ) {}
+  ) {
+    super(comicRepository);
+  }
 
   async checkSellerAvailability(userId: string) {
     const sellerDetails = await this.sellerDetailsService.getByUserId(userId);
@@ -42,7 +45,10 @@ export class ComicService {
     return;
   }
 
-  async create(createComicDto: CreateComicDto, id: string): Promise<Comic> {
+  async createComic(
+    createComicDto: CreateComicDto,
+    id: string,
+  ): Promise<Comic> {
     const { genreIds, ...comicData } = createComicDto;
 
     const seller = await this.userRepository.findOne({
@@ -162,12 +168,41 @@ export class ComicService {
         ]),
       },
       order: {
-        status: 'ASC',
+        updatedAt: 'DESC',
         createdAt: 'DESC',
       },
     });
 
     return comics;
+  }
+
+  async searchSellerComicsByKey(sellerId: string, key: string) {
+    return await this.comicRepository.find({
+      where: [
+        {
+          sellerId: { id: sellerId },
+          type: In([
+            ComicsTypeEnum.SELL,
+            ComicsTypeEnum.AUCTION,
+            ComicsTypeEnum.NONE,
+          ]),
+          title: ILike(`%${key}%`),
+        },
+        {
+          sellerId: { id: sellerId },
+          type: In([
+            ComicsTypeEnum.SELL,
+            ComicsTypeEnum.AUCTION,
+            ComicsTypeEnum.NONE,
+          ]),
+          author: ILike(`%${key}%`),
+        },
+      ],
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
+      },
+    });
   }
 
   async findAllExceptSeller(
@@ -246,7 +281,6 @@ export class ComicService {
     comicsId: string,
     status: ComicsStatusEnum,
   ): Promise<Comic> {
-    // Check if the comic exists
     const comic = await this.comicRepository.findOne({
       where: { id: comicsId },
     });
@@ -264,6 +298,10 @@ export class ComicService {
     }
     comic.status = status;
     comic.type = ComicsTypeEnum.SELL;
+
+    if (status === ComicsStatusEnum.AVAILABLE)
+      comic.onSaleSince = new Date(Date.now());
+
     await this.comicRepository.save(comic);
 
     return comic;
@@ -280,6 +318,7 @@ export class ComicService {
 
     comic.status = ComicsStatusEnum.UNAVAILABLE;
     comic.type = ComicsTypeEnum.NONE;
+    comic.onSaleSince = null;
     await this.comicRepository.save(comic);
 
     console.log(comic);
