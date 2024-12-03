@@ -16,6 +16,8 @@ import { AuctionService } from '../auction/auction.service';
 import { UsersService } from '../users/users.service';
 import { DepositsService } from '../deposits/deposits.service';
 import { RecipientType } from 'src/entities/announcement.entity';
+import { OrderItemsService } from '../order-items/order-items.service';
+import { Comic } from 'src/entities/comics.entity';
 
 @WebSocketGateway({
   cors: {
@@ -32,6 +34,8 @@ export class EventsGateway implements OnModuleInit {
     private readonly announcementService: AnnouncementService,
     @Inject(forwardRef(() => AuctionService))
     private readonly auctionService: AuctionService, // AuctionService should be correctly injected here
+    // @Inject(forwardRef(() => OrderItemsService))
+    // private readonly orderItemService: OrderItemsService,
     private readonly userService: UsersService,
     private readonly depositsService: DepositsService,
   ) {}
@@ -148,21 +152,23 @@ export class EventsGateway implements OnModuleInit {
         recipientType,
       };
 
+      // Create the announcement
       const savedAnnouncement =
         await this.announcementService.createAnnouncement(
           createAnnouncementDto,
         );
       console.log('Saved announcement:', savedAnnouncement);
 
-      // Emit to the room where the user has joined (based on userId)
       this.server.to(userId).emit('notification', {
         id: savedAnnouncement.id,
         message,
         auction: ids.auctionId,
+        order: ids.orderId,
+        exchange: ids.exchangeId,
         title,
         type,
-        status,
         recipientType,
+        status,
       });
     } catch (error) {
       console.error('Error in notifyUser:', error);
@@ -209,8 +215,8 @@ export class EventsGateway implements OnModuleInit {
     }
   }
 
-  broadcastNotification(message: string) {
-    console.log('Broadcasting notification to all clients');
-    this.server.emit('notification', { message });
-  }
+  // broadcastNotification(message: string) {
+  //   console.log('Broadcasting notification to all clients');
+  //   this.server.emit('notification', { message });
+  // }
 }

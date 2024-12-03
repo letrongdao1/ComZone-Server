@@ -36,13 +36,13 @@ export class AnnouncementService {
     const announcement = await this.announcementRepository.findOne({
       where: {
         id: announcementId,
-        user: { id: userId }, // Access the `user` relation and specify `id` inside it
+        user: { id: userId },
       },
     });
 
     if (announcement) {
-      announcement.isRead = true; // Mark as read
-      await this.announcementRepository.save(announcement); // Save the update
+      announcement.isRead = true;
+      await this.announcementRepository.save(announcement);
     } else {
       throw new Error(
         'Announcement not found or user not authorized to read it',

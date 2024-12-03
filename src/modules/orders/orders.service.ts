@@ -2,6 +2,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -27,6 +29,8 @@ import {
 } from './dto/complete-order.dto';
 import { DeliveriesService } from '../deliveries/deliveries.service';
 import { TransactionsService } from '../transactions/transactions.service';
+import { EventsGateway } from '../socket/event.gateway';
+import { RecipientType } from 'src/entities/announcement.entity';
 dotenv.config();
 
 @Injectable()
@@ -42,6 +46,8 @@ export class OrdersService extends BaseService<Order> {
     private readonly comicsService: ComicService,
     private readonly addressesService: UserAddressesService,
     private readonly transactionsService: TransactionsService,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(ordersRepository);
   }
@@ -115,7 +121,15 @@ export class OrdersService extends BaseService<Order> {
       newOrder.id,
       'ADD',
     );
-
+    this.eventsGateway.notifyUser(
+      createOrderDto.sellerId,
+      `Bạn có một đơn hàng từ tài khoản ${user.name} trị giá ${newOrder.totalPrice.toLocaleString('vi-VN')}đ`,
+      { orderId: newOrder.id },
+      'Đơn hàng mới',
+      'ORDER',
+      RecipientType.SELLER,
+      'SUCCESSFUL',
+    );
     return await this.getOne(newOrder.id);
   }
 

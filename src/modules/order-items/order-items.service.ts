@@ -14,18 +14,15 @@ import { OrdersService } from '../orders/orders.service';
 import { CreateOrderItemDTO } from './dto/createOrderItemDTO';
 import { ComicService } from '../comics/comics.service';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
-import { EventsGateway } from '../socket/event.gateway';
-import { RecipientType } from 'src/entities/announcement.entity';
 
 @Injectable()
 export class OrderItemsService extends BaseService<OrderItem> {
   constructor(
     @InjectRepository(OrderItem)
     private orderItemsRepository: Repository<OrderItem>,
-    @Inject() private readonly ordersService: OrdersService,
+    @Inject(forwardRef(() => OrdersService))
+    private readonly ordersService: OrdersService,
     @Inject() private readonly comicsService: ComicService,
-    @Inject(forwardRef(() => EventsGateway))
-    private readonly eventsGateway: EventsGateway,
   ) {
     super(orderItemsRepository);
   }
@@ -83,14 +80,6 @@ export class OrderItemsService extends BaseService<OrderItem> {
     console.log('order', fetchedOrder);
     console.log('comics', fetchedComics);
 
-    this.eventsGateway.notifyUser(
-      fetchedComics.sellerId.id,
-      `Truyện "${fetchedComics.title}" vừa được đặt hàng.`,
-      { orderId: fetchedOrder.id },
-      'Đơn hàng',
-      'ORDER',
-      RecipientType.SELLER,
-    );
     // Save order item
     return await this.orderItemsRepository.save({
       order: fetchedOrder,

@@ -5,14 +5,15 @@ import { OrderItem } from 'src/entities/order-item.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrdersModule } from '../orders/orders.module';
 import { ComicModule } from '../comics/comics.module';
-import { EventsModule } from '../socket/event.module';
+
+import { AnnouncementModule } from '../announcement/announcement.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrderItem]),
-    OrdersModule,
+    forwardRef(() => AnnouncementModule),
     ComicModule,
-    forwardRef(() => EventsModule),
+    forwardRef(() => OrdersModule),
   ],
   controllers: [OrderItemsController],
   providers: [OrderItemsService],

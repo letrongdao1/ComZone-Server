@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,6 +9,7 @@ import { UserAddressesModule } from '../user-addresses/user-addresses.module';
 import { DeliveriesModule } from '../deliveries/deliveries.module';
 import { OrdersScheduleService } from './order-schedule.service.';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { EventsModule } from '../socket/event.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     UserAddressesModule,
     DeliveriesModule,
     TransactionsModule,
+    forwardRef(() => EventsModule),
   ],
   controllers: [OrdersController],
   providers: [OrdersService, OrdersScheduleService],

@@ -28,6 +28,7 @@ export class Announcement extends BaseEntity {
 
   @ManyToOne(() => Exchange, (exchange) => exchange.announcements, {
     nullable: true,
+    eager: true,
   })
   exchange: Exchange;
 

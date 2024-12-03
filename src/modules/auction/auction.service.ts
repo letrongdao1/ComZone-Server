@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
@@ -106,7 +105,7 @@ export class AuctionService {
         latestBid.user.id,
         `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
         { auctionId: auction.id },
-        'Chúc mừng',
+        'Kết quả đấu giá',
         'AUCTION',
         RecipientType.USER,
         'SUCCESSFUL',
