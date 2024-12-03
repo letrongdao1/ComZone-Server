@@ -46,7 +46,6 @@ export class ComicsExchangeService extends BaseService<Comic> {
           id: userId,
         },
         type: ComicsTypeEnum.EXCHANGE,
-        status: ComicsStatusEnum.AVAILABLE,
       },
       order: {
         updatedAt: 'DESC',

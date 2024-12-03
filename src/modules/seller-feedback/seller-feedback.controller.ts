@@ -6,6 +6,8 @@ import {
   Delete,
   Param,
   Body,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { SellerFeedbackService } from './seller-feedback.service';
 import {
@@ -13,6 +15,7 @@ import {
   UpdateSellerFeedbackDto,
 } from './dto/seller-feedback.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
 @ApiTags('seller-feedback')
 @Controller('seller-feedback')
@@ -37,6 +40,12 @@ export class SellerFeedbackController {
   @Get('seller/all/:id')
   findAllBySeller(@Param('id') id: string) {
     return this.sellerFeedbackService.findBySeller(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('seller/self')
+  getSelfFeedback(@Req() req: any) {
+    return this.sellerFeedbackService.findBySeller(req.user.id);
   }
 
   @Get(':id')

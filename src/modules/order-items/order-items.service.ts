@@ -78,10 +78,8 @@ export class OrderItemsService extends BaseService<OrderItem> {
 
     await this.comicsService.updateStatus(
       orderItem.comics,
-      ComicsStatusEnum.SOLD,
+      ComicsStatusEnum.PRE_ORDER,
     );
-    console.log('order', fetchedOrder);
-    console.log('comics', fetchedComics);
 
     this.eventsGateway.notifyUser(
       fetchedComics.sellerId.id,
