@@ -19,6 +19,8 @@ import { TransactionsService } from '../transactions/transactions.service';
 import { Delivery } from 'src/entities/delivery.entity';
 import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity';
 import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enum';
+import { ComicService } from '../comics/comics.service';
+import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -26,7 +28,7 @@ export class ExchangesService extends BaseService<Exchange> {
     @InjectRepository(Exchange)
     private readonly exchangesRepository: Repository<Exchange>,
     @InjectRepository(ExchangeComics)
-    private readonly comicsRepository: Repository<ExchangeComics>,
+    private readonly exchangeComicsRepository: Repository<ExchangeComics>,
     @InjectRepository(ExchangeConfirmation)
     private readonly excConfirmationRepository: Repository<ExchangeConfirmation>,
     @InjectRepository(Delivery)
@@ -34,6 +36,8 @@ export class ExchangesService extends BaseService<Exchange> {
 
     @Inject(UsersService)
     private readonly usersService: UsersService,
+    @Inject(ComicService)
+    private readonly comicsService: ComicService,
     @Inject(ExchangePostsService)
     private readonly postsService: ExchangePostsService,
     @Inject(TransactionsService)
@@ -120,31 +124,23 @@ export class ExchangesService extends BaseService<Exchange> {
         }
         case StatusQueryEnum.FINISHED_DELIVERY: {
           const deliveryList = await this.deliveriesRepository.find({
-            where: {
-              exchange: Not(IsNull),
-              from: { user: { id: userId } },
-              status: OrderDeliveryStatusEnum.DELIVERED,
-            },
-            relations: ['exchange'],
-          });
-
-          const exchangeList = await this.exchangesRepository.find({
             where: [
               {
-                post: { user: { id: userId } },
+                exchange: Not(IsNull()),
+                from: { user: { id: userId } },
+                status: OrderDeliveryStatusEnum.DELIVERED,
               },
               {
-                requestUser: { id: userId },
+                exchange: Not(IsNull()),
+                to: { user: { id: userId } },
+                status: OrderDeliveryStatusEnum.DELIVERED,
               },
             ],
-            order: { updatedAt: 'DESC' },
+            relations: ['exchange'],
+            select: ['exchange'],
           });
 
-          return exchangeList.map((exchange) =>
-            deliveryList.some(
-              (delivery) => delivery.exchange.id === exchange.id,
-            ),
-          );
+          return deliveryList.map((delivery) => delivery.exchange);
         }
         case StatusQueryEnum.SUCCESSFUL: {
           return await this.exchangesRepository.find({
@@ -196,7 +192,7 @@ export class ExchangesService extends BaseService<Exchange> {
 
     return await Promise.all(
       (await getExchangeList()).map(async (exchange) => {
-        const exchangeComicsList = await this.comicsRepository.find({
+        const exchangeComicsList = await this.exchangeComicsRepository.find({
           where: { exchange: { id: exchange.id } },
           select: ['comics'],
           relations: ['comics'],
@@ -226,6 +222,7 @@ export class ExchangesService extends BaseService<Exchange> {
     const exchangesOnPost = await this.exchangesRepository.find({
       where: { post: { id: exchange.post.id } },
     });
+
     await Promise.all(
       exchangesOnPost.map(async (exc) => {
         await this.exchangesRepository.update(exc.id, {
@@ -238,6 +235,19 @@ export class ExchangesService extends BaseService<Exchange> {
     );
 
     await this.postsService.hidePost(exchange.post.id);
+
+    const comicsList = await this.exchangeComicsRepository.findBy({
+      exchange: { id: exchangeId },
+    });
+
+    await Promise.all(
+      comicsList.map(async (exchangeComics) => {
+        await this.comicsService.updateStatus(
+          exchangeComics.comics.id,
+          ComicsStatusEnum.PRE_ORDER,
+        );
+      }),
+    );
 
     return await this.getOne(exchangeId);
   }
