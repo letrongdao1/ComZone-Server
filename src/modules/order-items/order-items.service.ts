@@ -75,10 +75,8 @@ export class OrderItemsService extends BaseService<OrderItem> {
 
     await this.comicsService.updateStatus(
       orderItem.comics,
-      ComicsStatusEnum.SOLD,
+      ComicsStatusEnum.PRE_ORDER,
     );
-    console.log('order', fetchedOrder);
-    console.log('comics', fetchedComics);
 
     // Save order item
     return await this.orderItemsRepository.save({

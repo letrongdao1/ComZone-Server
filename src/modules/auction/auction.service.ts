@@ -47,6 +47,7 @@ export class AuctionService {
 
     comic.status = ComicsStatusEnum.AVAILABLE;
     comic.type = ComicsTypeEnum.AUCTION;
+    comic.onSaleSince = new Date(Date.now());
     await this.comicRepository.save(comic);
 
     // Create a new auction and associate it with the comic

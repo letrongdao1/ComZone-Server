@@ -44,10 +44,6 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
 
     const createdExchangeComicsForRequestUser = await Promise.all(
       requestUserComicsList.map(async (comics: Comic) => {
-        await this.comicsService.updateStatus(
-          comics.id,
-          ComicsStatusEnum.UNAVAILABLE,
-        );
         return this.exchangeComicsRepository.create({
           exchange,
           user,
@@ -67,10 +63,6 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
 
     const createdExchangeComicsForPostUser = await Promise.all(
       postUserComicsList.map(async (comics: Comic) => {
-        await this.comicsService.updateStatus(
-          comics.id,
-          ComicsStatusEnum.UNAVAILABLE,
-        );
         return this.exchangeComicsRepository.create({
           exchange,
           user: exchange.post.user,

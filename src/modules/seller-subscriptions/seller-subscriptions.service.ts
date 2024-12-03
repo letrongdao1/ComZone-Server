@@ -63,12 +63,14 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     userId: string,
     sellerSubscriptionDto: SellerSubscriptionDTO,
   ) {
+    console.log(sellerSubscriptionDto);
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
     const sellerSubsPlan = await this.sellerSubsPlansService.getOne(
       sellerSubscriptionDto.planId,
     );
+
     if (!sellerSubsPlan)
       throw new NotFoundException('Subscription plan cannot be found!');
 
@@ -85,7 +87,14 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       remainingAuctionTime: sellerSubsPlan.auctionTime,
     });
 
-    const findUserSubs = await this.getSellerSubsOfUser(userId);
+    const findUserSubs = await this.sellerSubscriptionsRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
+    });
+
+    if (findUserSubs && findUserSubs.usedTrial && sellerSubsPlan.price === 0)
+      return;
 
     if (findUserSubs)
       await this.sellerSubscriptionsRepository.update(findUserSubs.id, {
@@ -110,7 +119,7 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
       await this.updateTrialUsed(userId);
     }
 
-    return await this.getOne(newSubscription.id);
+    return await this.getSellerSubsOfUser(user.id);
   }
 
   async updateAfterSell(userId: string, quantity: number) {
@@ -127,6 +136,21 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
 
     return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
       remainingSellTime: sellerSub.remainingSellTime - quantity,
+    });
+  }
+
+  async updateAfterStopSelling(userId: string, quantity: number) {
+    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
+    });
+
+    if (!sellerSub)
+      throw new NotFoundException('Seller subscription cannot be found!');
+
+    return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
+      remainingSellTime: sellerSub.remainingSellTime + quantity,
     });
   }
 
