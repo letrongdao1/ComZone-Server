@@ -7,6 +7,7 @@ import { ExchangesModule } from '../exchanges/exchanges.module';
 import { UsersModule } from '../users/users.module';
 import { DepositsModule } from '../deposits/deposits.module';
 import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module';
+import { EventsModule } from '../socket/event.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module'
     ExchangesModule,
     ExchangeComicsModule,
     DepositsModule,
+    EventsModule,
   ],
   controllers: [ExchangeConfirmationController],
   providers: [ExchangeConfirmationService],

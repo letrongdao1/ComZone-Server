@@ -1,12 +1,11 @@
 import { OnModuleInit, Injectable, Inject, forwardRef } from '@nestjs/common';
 import {
-  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { BidService } from '../bid/bid.service';
 import { CreateBidDto } from '../bid/dto/bid.dto';
 import { CreateAnnouncementDto } from '../announcement/dto/announcement.dto';
@@ -15,9 +14,10 @@ import { User } from 'src/entities/users.entity';
 import { AuctionService } from '../auction/auction.service';
 import { UsersService } from '../users/users.service';
 import { DepositsService } from '../deposits/deposits.service';
-import { RecipientType } from 'src/entities/announcement.entity';
-import { OrderItemsService } from '../order-items/order-items.service';
-import { Comic } from 'src/entities/comics.entity';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @WebSocketGateway({
   cors: {
@@ -135,7 +135,7 @@ export class EventsGateway implements OnModuleInit {
     message: string,
     ids: { exchangeId?: string; orderId?: string; auctionId?: string },
     title: string,
-    type: string,
+    type: AnnouncementType,
     recipientType: RecipientType,
     status?: string,
   ) {
@@ -181,7 +181,7 @@ export class EventsGateway implements OnModuleInit {
     message: string,
     auction: { id: string },
     title: string,
-    type: string,
+    type: AnnouncementType,
     status: string,
   ) {
     for (const userId of userIds) {

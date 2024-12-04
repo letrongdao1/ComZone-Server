@@ -133,9 +133,26 @@ export class ComicController {
     return this.comicsExchangeService.getExchangeComicsOfUser(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/exchange/search/self')
+  searchUserExchangeComics(@Req() req: any, @Query('key') key: string) {
+    return this.comicsExchangeService.searchUserExchangeComics(
+      req.user.id,
+      key,
+    );
+  }
+
   @Get('/exchange/:user_id')
   findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
     return this.comicsExchangeService.getExchangeComicsOfUser(userId);
+  }
+
+  @Get('/exchange/search/other/:user_id')
+  searchOthersExchangeComics(
+    @Param('user_id') userId: string,
+    @Query('key') key: string,
+  ) {
+    return this.comicsExchangeService.searchUserExchangeComics(userId, key);
   }
 
   @Get(':id')

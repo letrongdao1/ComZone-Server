@@ -15,7 +15,6 @@ import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
 import { ExchangesService } from '../exchanges/exchanges.service';
-import { DeliveriesService } from '../deliveries/deliveries.service';
 import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
@@ -26,10 +25,8 @@ export class DepositsService extends BaseService<Deposit> {
     @Inject(UsersService) private readonly usersService: UsersService,
     @Inject(forwardRef(() => AuctionService))
     private auctionService: AuctionService,
-    @Inject(ExchangesService)
+    @Inject(forwardRef(() => ExchangesService))
     private readonly exchangesService: ExchangesService,
-    @Inject(DeliveriesService)
-    private readonly deliveriesService: DeliveriesService,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
   ) {
@@ -115,14 +112,7 @@ export class DepositsService extends BaseService<Deposit> {
     });
     if (foundDeposit.length < 2) return;
 
-    const exchangeDeliveries = await this.deliveriesService.getByExchange(
-      dto.exchange,
-    );
-    await Promise.all(
-      exchangeDeliveries.map(async (delivery) => {
-        await this.deliveriesService.registerNewGHNDelivery(delivery.id);
-      }),
-    );
+    await this.exchangesService.registerGHNDeliveryForExchange(dto.exchange);
 
     return await this.getOne(newDeposit.id);
   }

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comic } from 'src/entities/comics.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { ComicsStatusEnum } from './dto/comic-status.enum';
 import { BaseService } from 'src/common/service.base';
 import { ComicsTypeEnum } from './dto/comic-type.enum';
@@ -50,6 +50,27 @@ export class ComicsExchangeService extends BaseService<Comic> {
       order: {
         updatedAt: 'DESC',
         title: 'ASC',
+      },
+    });
+  }
+
+  async searchUserExchangeComics(userId: string, key: string) {
+    return await this.comicsRepository.find({
+      where: [
+        {
+          sellerId: { id: userId },
+          type: ComicsTypeEnum.EXCHANGE,
+          title: ILike(`%${key}%`),
+        },
+        {
+          sellerId: { id: userId },
+          type: ComicsTypeEnum.EXCHANGE,
+          author: ILike(`%${key}%`),
+        },
+      ],
+      order: {
+        updatedAt: 'DESC',
+        createdAt: 'DESC',
       },
     });
   }
