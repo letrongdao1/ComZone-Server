@@ -30,7 +30,10 @@ import {
 import { DeliveriesService } from '../deliveries/deliveries.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { EventsGateway } from '../socket/event.gateway';
-import { RecipientType } from 'src/entities/announcement.entity';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 dotenv.config();
 
 @Injectable()
@@ -126,7 +129,7 @@ export class OrdersService extends BaseService<Order> {
       `Bạn có một đơn hàng từ tài khoản ${user.name} trị giá ${newOrder.totalPrice.toLocaleString('vi-VN')}đ`,
       { orderId: newOrder.id },
       'Đơn hàng mới',
-      'ORDER',
+      AnnouncementType.ORDER,
       RecipientType.SELLER,
       'SUCCESSFUL',
     );

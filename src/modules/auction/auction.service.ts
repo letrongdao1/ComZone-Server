@@ -10,7 +10,11 @@ import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { Bid } from 'src/entities/bid.entity';
-import { Announcement, RecipientType } from 'src/entities/announcement.entity';
+import {
+  Announcement,
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 import { EventsGateway } from '../socket/event.gateway';
 import { User } from 'src/entities/users.entity';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
@@ -107,7 +111,7 @@ export class AuctionService {
         `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
         { auctionId: auction.id },
         'Kết quả đấu giá',
-        'AUCTION',
+        AnnouncementType.AUCTION,
         RecipientType.USER,
         'SUCCESSFUL',
       );
@@ -116,7 +120,7 @@ export class AuctionService {
         `Buổi đấu giá ${auction.comics.title} đã diễn ra thành công.`,
         { auctionId: auction.id },
         'Đấu giá',
-        'AUCTION',
+        AnnouncementType.AUCTION,
         RecipientType.SELLER,
       );
 
@@ -138,7 +142,7 @@ export class AuctionService {
         `Buổi đấu giá ${auction.comics.title} đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
         { id: auction.id },
         'Kết quả đấu giá',
-        'AUCTION',
+        AnnouncementType.AUCTION,
         'FAILED',
       );
     } else {
@@ -151,7 +155,7 @@ export class AuctionService {
         `Buổi đấu giá ${auction.comics.title} thất bại do không ai tham gia.`,
         { auctionId: auction.id },
         'Đấu giá',
-        'AUCTION',
+        AnnouncementType.AUCTION,
         RecipientType.SELLER,
       );
     }
@@ -268,7 +272,7 @@ export class AuctionService {
       `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
       { auctionId: auction.id },
       'Chúc mừng',
-      'AUCTION',
+      AnnouncementType.AUCTION,
       RecipientType.USER,
       'SUCCESSFUL',
     );
@@ -287,7 +291,7 @@ export class AuctionService {
       `Buổi đấu giá đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
       { id: auction.id },
       'Kết quả đấu giá',
-      'AUCTION',
+      AnnouncementType.AUCTION,
       'FAILED',
     );
   }

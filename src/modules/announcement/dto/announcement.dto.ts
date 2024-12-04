@@ -1,5 +1,8 @@
 import { IsString, IsBoolean, IsOptional } from 'class-validator';
-import { RecipientType } from 'src/entities/announcement.entity';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 export class CreateAnnouncementDto {
   @IsString()
@@ -13,7 +16,7 @@ export class CreateAnnouncementDto {
   status?: string;
 
   @IsOptional()
-  type?: string;
+  type?: AnnouncementType;
 
   @IsOptional()
   auctionId?: string;

@@ -100,6 +100,7 @@ export class AnnouncementService {
       auction: auction || undefined,
       exchange: exchange || undefined,
       recipientType,
+      type: rest.type || null,
     });
 
     return await this.announcementRepository.save(announcement);
