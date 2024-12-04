@@ -21,11 +21,16 @@ import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enu
 import { Comic } from 'src/entities/comics.entity';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 import { Order } from 'src/entities/orders.entity';
-import { ExchangesService } from '../exchanges/exchanges.service';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
 import { UsersService } from '../users/users.service';
 import { DeliveryOverallStatusEnum } from './dto/overall-status.enum';
 import { DeliveryInformation } from 'src/entities/delivery-information.entity';
+import { Exchange } from 'src/entities/exchange.entity';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 dotenv.config();
 
@@ -36,15 +41,18 @@ export class DeliveriesService extends BaseService<Delivery> {
     private readonly deliveriesRepository: Repository<Delivery>,
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+    @InjectRepository(Exchange)
+    private readonly exchangesRepository: Repository<Exchange>,
 
     private readonly usersService: UsersService,
-    private readonly exchangesService: ExchangesService,
     @Inject(ExchangeComicsService)
     private readonly exchangeComicsService: ExchangeComicsService,
     @Inject(DeliveryInformationService)
     private readonly deliveryInfoService: DeliveryInformationService,
     @Inject(VietNamAddressService)
     private readonly vnAddressService: VietNamAddressService,
+    @Inject(EventsGateway)
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(deliveriesRepository);
   }
@@ -91,7 +99,9 @@ export class DeliveriesService extends BaseService<Delivery> {
     if (!deliveryInfo)
       throw new NotFoundException('Delivery information cannot be found!');
 
-    const exchange = await this.exchangesService.getOne(dto.exchange);
+    const exchange = await this.exchangesRepository.findOneBy({
+      id: dto.exchange,
+    });
     if (!exchange)
       throw new NotFoundException('Exchange request cannot be found!');
 
@@ -124,6 +134,17 @@ export class DeliveriesService extends BaseService<Delivery> {
           to: deliveryInfo,
         })
         .then(() => this.getOne(missingTo.id));
+
+      await this.eventsGateway.notifyUser(
+        checkExisted[0].from
+          ? checkExisted[0].from.user.id
+          : checkExisted[1].from.user.id,
+        'Bạn có một cuộc trao đổi có thể tiến hành thanh toán ngay!',
+        { exchangeId: exchange.id },
+        'Thanh toán trao đổi.',
+        AnnouncementType.EXCHANGE_PAY_AVAILABLE,
+        RecipientType.USER,
+      );
 
       return {
         from,

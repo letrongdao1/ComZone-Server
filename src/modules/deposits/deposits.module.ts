@@ -6,7 +6,6 @@ import { Deposit } from 'src/entities/deposit.entity';
 import { UsersModule } from '../users/users.module';
 import { AuctionModule } from '../auction/auction.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
-import { DeliveriesModule } from '../deliveries/deliveries.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
@@ -14,8 +13,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     TypeOrmModule.forFeature([Deposit]),
     UsersModule,
     forwardRef(() => AuctionModule),
-    ExchangesModule,
-    DeliveriesModule,
+    forwardRef(() => ExchangesModule),
     TransactionsModule,
   ],
   controllers: [DepositsController],

@@ -13,6 +13,11 @@ import { ComicsExchangeService } from '../comics/comics.exchange.service';
 import { CreateExchangeDTO } from './dto/exchange-comics.dto';
 import { Comic } from 'src/entities/comics.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @Injectable()
 export class ExchangeComicsService extends BaseService<ExchangeComics> {
@@ -22,6 +27,7 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
     private readonly exchangesService: ExchangesService,
     private readonly usersService: UsersService,
     private readonly comicsService: ComicsExchangeService,
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(exchangeComicsRepository);
   }
@@ -83,6 +89,15 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
         async (exchangeComics) =>
           await this.exchangeComicsRepository.save(exchangeComics),
       ),
+    );
+
+    await this.eventsGateway.notifyUser(
+      exchange.post.user.id,
+      'Bạn vừa nhận được yêu cầu trao đổi mới!',
+      { exchangeId: exchange.id },
+      'Yêu cầu trao đổi mới.',
+      AnnouncementType.EXCHANGE_NEW_REQUEST,
+      RecipientType.USER,
     );
 
     return {

@@ -12,6 +12,6 @@ export class ExchangeComics extends BaseEntity {
   @ManyToOne(() => User, (user) => user.exchangeComics)
   user: User;
 
-  @ManyToOne(() => Comic, (comics) => comics.exchangeComics)
+  @ManyToOne(() => Comic, (comics) => comics.exchangeComics, { eager: true })
   comics: Comic;
 }

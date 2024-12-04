@@ -9,6 +9,11 @@ import { UsersService } from '../users/users.service';
 import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
 import { DepositsService } from '../deposits/deposits.service';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @Injectable()
 export class ExchangeConfirmationService extends BaseService<ExchangeConfirmation> {
@@ -19,6 +24,7 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     private readonly exchangesService: ExchangesService,
     private readonly comicsService: ExchangeComicsService,
     private readonly depositsService: DepositsService,
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(excConfirmationRepository);
   }
@@ -30,12 +36,31 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException();
 
-    if (!exchange.compensationAmount && !exchange.depositAmount)
+    if (!exchange.compensationAmount && !exchange.depositAmount) {
       await this.exchangesService.updateDeals(dto.exchangeId, {
         compensateUser: dto.compensateUser,
         compensationAmount: dto.compensationAmount,
         depositAmount: dto.depositAmount,
       });
+
+      await this.eventsGateway.notifyUser(
+        exchange.post.user.id,
+        'Bạn có một cuộc trao đổi nhận được thỏa thuận tiền cọc và tiền bù mới. Xem ngay!',
+        { exchangeId: exchange.id },
+        'Thỏa thuận trao đổi mới.',
+        AnnouncementType.EXCHANGE_NEW_DEAL,
+        RecipientType.USER,
+      );
+    } else {
+      await this.eventsGateway.notifyUser(
+        exchange.requestUser.id,
+        'Bạn có một cuộc trao đổi mà thỏa thuận tiền cọc và tiền bù của bạn đã được chấp thuận. Hãy tiến hành xác nhận địa chỉ để tiếp tục trao đổi!',
+        { exchangeId: exchange.id },
+        'Thỏa thuận trao đổi được chấp thuận.',
+        AnnouncementType.EXCHANGE_NEW_DEAL,
+        RecipientType.USER,
+      );
+    }
 
     const newConfimation = this.excConfirmationRepository.create({
       exchange,
@@ -47,6 +72,9 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
   }
 
   async rejectDeals(exchangeId: string) {
+    const exchange = await this.exchangesService.getOne(exchangeId);
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
     const exchangeConfirmation = await this.excConfirmationRepository.findBy({
       exchange: { id: exchangeId },
     });
@@ -55,6 +83,15 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
       depositAmount: null,
       compensateUser: null,
     });
+
+    await this.eventsGateway.notifyUser(
+      exchange.requestUser.id,
+      'Bạn có một cuộc trao đổi mà thỏa thuận tiền cọc và tiền bù của bạn đã bị người đăng bài từ chối! Hãy tiến hành thương lượng và đặt mức thỏa thuận mới!',
+      { exchangeId: exchange.id },
+      'Thỏa thuận trao đổi bị từ chối.',
+      AnnouncementType.EXCHANGE_REJECTED,
+      RecipientType.USER,
+    );
 
     return await this.excConfirmationRepository.remove(exchangeConfirmation);
   }

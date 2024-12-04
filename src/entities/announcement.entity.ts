@@ -9,6 +9,18 @@ export enum RecipientType {
   USER = 'USER',
   SELLER = 'SELLER',
 }
+
+export enum AnnouncementType {
+  ORDER = 'ORDER',
+  AUCTION = 'AUCTION',
+  EXCHANGE_NEW_REQUEST = 'EXCHANGE_NEW_REQUEST',
+  EXCHANGE_APPROVED = 'EXCHANGE_APPROVED',
+  EXCHANGE_REJECTED = 'EXCHANGE_REJECTED',
+  EXCHANGE_NEW_DEAL = 'EXCHANGE_NEW_DEAL',
+  EXCHANGE_PAY_AVAILABLE = 'EXCHANGE_PAY_AVAILABLE',
+  EXCHANGE_SUCCESSFUL = 'EXCHANGE_SUCCESSFUL',
+  EXCHANGE_FAILED = 'EXCHANGE_FAILED',
+}
 @Entity('announcement')
 export class Announcement extends BaseEntity {
   @ManyToOne(() => User, (user) => user.announcements, { eager: true })
@@ -51,10 +63,11 @@ export class Announcement extends BaseEntity {
   status: string;
 
   @Column({
-    type: 'varchar',
+    type: 'enum',
+    enum: AnnouncementType,
     nullable: true,
   })
-  type: string;
+  type: AnnouncementType;
 
   @Column({
     name: 'is_read',

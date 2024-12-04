@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -21,6 +22,12 @@ import { ExchangeConfirmation } from 'src/entities/exchange-confirmation.entity'
 import { OrderDeliveryStatusEnum } from '../orders/dto/order-delivery-status.enum';
 import { ComicService } from '../comics/comics.service';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
+import { DeliveriesService } from '../deliveries/deliveries.service';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -42,6 +49,10 @@ export class ExchangesService extends BaseService<Exchange> {
     private readonly postsService: ExchangePostsService,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
+    @Inject(forwardRef(() => DeliveriesService))
+    private readonly deliveriesService: DeliveriesService,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(exchangesRepository);
   }
@@ -190,20 +201,23 @@ export class ExchangesService extends BaseService<Exchange> {
       }
     };
 
+    const exchangeList = await getExchangeList();
+    if (exchangeList.length === 0) return [];
+
     return await Promise.all(
-      (await getExchangeList()).map(async (exchange) => {
+      exchangeList.map(async (exchange) => {
         const exchangeComicsList = await this.exchangeComicsRepository.find({
           where: { exchange: { id: exchange.id } },
-          select: ['comics'],
-          relations: ['comics'],
+          relations: ['exchange', 'user', 'comics'],
         });
+
         return {
           ...exchange,
           myComics: exchangeComicsList.filter(
-            (comics) => comics.comics.sellerId.id === userId,
+            (exchangeComics) => exchangeComics.user.id === userId,
           ),
           othersComics: exchangeComicsList.filter(
-            (comics) => comics.comics.sellerId.id !== userId,
+            (exchangeComics) => exchangeComics.user.id !== userId,
           ),
         };
       }),
@@ -225,12 +239,13 @@ export class ExchangesService extends BaseService<Exchange> {
 
     await Promise.all(
       exchangesOnPost.map(async (exc) => {
-        await this.exchangesRepository.update(exc.id, {
-          status:
-            exc.id === exchange.id
-              ? ExchangeStatusEnum.DEALING
-              : ExchangeStatusEnum.REJECTED,
-        });
+        if (exc.id === exchange.id) {
+          await this.exchangesRepository.update(exc.id, {
+            status: ExchangeStatusEnum.DEALING,
+          });
+        } else {
+          await this.rejectExchangeRequest(exc.post.user.id, exc.id);
+        }
       }),
     );
 
@@ -247,6 +262,15 @@ export class ExchangesService extends BaseService<Exchange> {
           ComicsStatusEnum.PRE_ORDER,
         );
       }),
+    );
+
+    await this.eventsGateway.notifyUser(
+      exchange.requestUser.id,
+      `Giờ đây bạn có thể tiến hành trao đổi truyện với "${exchange.post.user.name}". Hãy sử dụng chat và luôn nắm được tiến độ trao đổi để cuộc trao đổi được diễn ra thuận tiện!`,
+      { exchangeId: exchange.id },
+      'Yêu cầu trao đổi của bạn đã được chấp nhận.',
+      AnnouncementType.EXCHANGE_APPROVED,
+      RecipientType.USER,
     );
 
     return await this.getOne(exchangeId);
@@ -319,6 +343,20 @@ export class ExchangesService extends BaseService<Exchange> {
       .then(() => this.getOne(exchangeId));
   }
 
+  async registerGHNDeliveryForExchange(exchangeId: string) {
+    const deliveries = await this.deliveriesRepository.findBy({
+      exchange: { id: exchangeId },
+    });
+
+    return await Promise.all(
+      deliveries.map(async (delivery) => {
+        await this.deliveriesService.registerNewGHNDelivery(delivery.id);
+
+        return `Successfully registered GHN delivery for ${delivery.id}`;
+      }),
+    );
+  }
+
   async transferCompensationAmount(exchangeId: string) {
     const exchange = await this.exchangesRepository.findOneBy({
       id: exchangeId,
@@ -383,7 +421,16 @@ export class ExchangesService extends BaseService<Exchange> {
         'Only post user can reject requests on this post!',
       );
 
-    await this.exchangesRepository
+    await this.eventsGateway.notifyUser(
+      exchange.requestUser.id,
+      `Yêu cầu trao đổi của bạn có thể đã không đáp ứng được nhu cầu trao đổi truyện của "${exchange.post.user.name}" hoặc họ đã chấp nhận một yêu cầu trao đổi khác.`,
+      { exchangeId: exchange.id },
+      'Yêu cầu trao đổi của bạn đã bị từ chối.',
+      AnnouncementType.EXCHANGE_REJECTED,
+      RecipientType.USER,
+    );
+
+    return await this.exchangesRepository
       .update(exchangeId, {
         status: ExchangeStatusEnum.REJECTED,
       })
