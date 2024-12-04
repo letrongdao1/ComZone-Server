@@ -268,7 +268,7 @@ export class ExchangesService extends BaseService<Exchange> {
       exchange.requestUser.id,
       `Giờ đây bạn có thể tiến hành trao đổi truyện với "${exchange.post.user.name}". Hãy sử dụng chat và luôn nắm được tiến độ trao đổi để cuộc trao đổi được diễn ra thuận tiện!`,
       { exchangeId: exchange.id },
-      'Yêu cầu trao đổi của bạn đã được chấp nhận.',
+      'Yêu cầu trao đổi của bạn đã được chấp nhận',
       AnnouncementType.EXCHANGE_APPROVED,
       RecipientType.USER,
     );
@@ -344,16 +344,37 @@ export class ExchangesService extends BaseService<Exchange> {
   }
 
   async registerGHNDeliveryForExchange(exchangeId: string) {
+    const exchange = await this.exchangesRepository.findOneBy({
+      id: exchangeId,
+    });
+    if (!exchange) throw new NotFoundException('Exchange cannot be found!');
+
     const deliveries = await this.deliveriesRepository.findBy({
       exchange: { id: exchangeId },
     });
 
-    return await Promise.all(
+    await Promise.all(
       deliveries.map(async (delivery) => {
         await this.deliveriesService.registerNewGHNDelivery(delivery.id);
-
-        return `Successfully registered GHN delivery for ${delivery.id}`;
       }),
+    );
+
+    await this.eventsGateway.notifyUser(
+      exchange.requestUser.id,
+      `Nhân viên giao hàng của chúng tôi đang trên đường đến lấy truyện của bạn để giao. Hãy đảm bảo bạn đã hoàn tất quá trình đóng gói truyện trước khi nhân viên giao hàng đến!`,
+      { exchangeId: exchange.id },
+      'Bắt đầu giao hàng trao đổi',
+      AnnouncementType.EXCHANGE_DELIVERY,
+      RecipientType.USER,
+    );
+
+    await this.eventsGateway.notifyUser(
+      exchange.post.user.id,
+      `Nhân viên giao hàng của chúng tôi đang trên đường đến lấy truyện của bạn để giao. Hãy đảm bảo bạn đã hoàn tất quá trình đóng gói truyện trước khi nhân viên giao hàng đến!`,
+      { exchangeId: exchange.id },
+      'Bắt đầu giao hàng trao đổi',
+      AnnouncementType.EXCHANGE_DELIVERY,
+      RecipientType.USER,
     );
   }
 
@@ -425,7 +446,7 @@ export class ExchangesService extends BaseService<Exchange> {
       exchange.requestUser.id,
       `Yêu cầu trao đổi của bạn có thể đã không đáp ứng được nhu cầu trao đổi truyện của "${exchange.post.user.name}" hoặc họ đã chấp nhận một yêu cầu trao đổi khác.`,
       { exchangeId: exchange.id },
-      'Yêu cầu trao đổi của bạn đã bị từ chối.',
+      'Yêu cầu trao đổi của bạn đã bị từ chối',
       AnnouncementType.EXCHANGE_REJECTED,
       RecipientType.USER,
     );

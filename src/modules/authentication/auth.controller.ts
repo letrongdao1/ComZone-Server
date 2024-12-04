@@ -14,6 +14,7 @@ import {
 import { AuthService } from './auth.service';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiCreatedResponse,
   ApiExcludeEndpoint,
   ApiTags,
@@ -44,6 +45,13 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @ApiBody({
+    schema: {
+      title: 'Login',
+      type: 'object',
+      example: { email: 'email', password: 'password' },
+    },
+  })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   login(@Request() req: any) {
