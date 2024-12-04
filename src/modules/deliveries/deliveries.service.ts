@@ -614,6 +614,15 @@ export class DeliveriesService extends BaseService<Delivery> {
       await this.deliveriesRepository.update(delivery.id, {
         overallStatus: DeliveryOverallStatusEnum.DELIVERING,
       });
+
+      await this.eventsGateway.notifyUser(
+        delivery.to.user.id,
+        'Bạn có một đơn hàng đang trên đường giao đến bạn.',
+        { exchangeId: delivery.exchange ? delivery.exchange.id : null },
+        'Đơn hàng đang được giao đến bạn.',
+        AnnouncementType.DELIVERY_ONGOING,
+        RecipientType.USER,
+      );
     } else if (deliveredGroup.some((status) => status === checkStatus)) {
       await this.deliveriesRepository.update(delivery.id, {
         overallStatus: DeliveryOverallStatusEnum.DELIVERED,
