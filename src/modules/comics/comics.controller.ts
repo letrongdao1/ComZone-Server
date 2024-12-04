@@ -113,29 +113,18 @@ export class ComicController {
   }
 
   @Get('filter')
-  async findByGenresAndOrAuthor(
+  async filterComics(
     @Query('genreIds') genreIds: string,
-    @Query('author') author?: string,
+    @Query('author') author: string,
+    @Query('condition') condition: string | null,
   ) {
-    let genreIdArray: string[] = [];
-
-    if (genreIds) {
-      genreIdArray = genreIds.split(',');
-    }
-
-    if (genreIdArray.length > 0 && author) {
-      // If both genres and author are provided
-      return this.comicService.findByGenresAndAuthor(genreIdArray, author);
-    } else if (genreIdArray.length > 0) {
-      // If only genres are provided
-      return this.comicService.findByGenres(genreIdArray);
-    } else if (author) {
-      // If only author is provided
-      return this.comicService.findByAuthor(author);
-    } else {
-      // Handle case where no filters are provided (e.g., return all comics)
-      return this.comicService.findAllSellComics();
-    }
+    const genresArray = genreIds ? genreIds.split(',') : [];
+    const authorsArray = author ? author.split(',') : [];
+    return await this.comicService.findByGenresAuthorsConditions(
+      genresArray,
+      authorsArray,
+      condition,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

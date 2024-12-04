@@ -260,21 +260,65 @@ export class ComicService extends BaseService<Comic> {
   }
 
   async findByGenres(genreIds: string[]): Promise<Comic[]> {
+    console.log(genreIds);
+
     return this.comicRepository
       .createQueryBuilder('comic')
       .leftJoin('comic.genres', 'genre')
       .where('genre.id IN (:...genreIds)', { genreIds })
       .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
-      .groupBy('comic.id')
-      .having('COUNT(genre.id) >= :genreCount', { genreCount: genreIds.length }) // Match at least the provided genres
+      .groupBy('comic.id') // Group by comic ID to aggregate matching genres
+      .having('COUNT(genre.id) = :genreCount', { genreCount: genreIds.length })
       .getMany();
   }
+
   async findByAuthor(author: string): Promise<Comic[]> {
     return this.comicRepository
       .createQueryBuilder('comic')
       .where('comic.author = :author', { author })
       .andWhere('comic.type = :type', { type: ComicsTypeEnum.SELL })
       .getMany();
+  }
+
+  async findByGenresAuthorsConditions(
+    genreIds: string[],
+    authors: string[],
+    condition: string | null,
+  ): Promise<Comic[]> {
+    console.log(condition);
+
+    const query = this.comicRepository
+      .createQueryBuilder('comic')
+      .leftJoin('comic.genres', 'genre')
+      .select([
+        'comic', // Select comic fields
+        'genre', // Select genre fields
+      ])
+      .where('comic.type = :type', { type: ComicsTypeEnum.SELL });
+
+    if (genreIds.length > 0) {
+      query
+        .andWhere('genre.id IN (:...genreIds)', { genreIds })
+        .groupBy('comic.id')
+        .having('COUNT(genre.id) >= :genreCount', {
+          genreCount: genreIds.length,
+        });
+    }
+
+    if (authors.length > 0) {
+      query.andWhere('comic.author IN (:...authors)', { authors });
+    }
+
+    if (condition) {
+      if (condition === 'SEALED') {
+        query.andWhere('comic.condition = :condition', { condition: 'SEALED' });
+      } else if (condition === 'USED') {
+        query.andWhere('comic.condition = :condition', { condition: 'USED' });
+      } else if (condition === 'ALL') {
+      }
+    }
+
+    return query.getMany();
   }
 
   async updateStatus(
