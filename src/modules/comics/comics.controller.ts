@@ -25,6 +25,7 @@ import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
 import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
 import { ComicsExchangeService } from './comics.exchange.service';
+import { ComicsStatusEnum } from './dto/comic-status.enum';
 
 @ApiBearerAuth()
 @ApiTags('Comics')
@@ -85,26 +86,23 @@ export class ComicController {
   @Get('except-seller/:status')
   async findAllExceptSeller(
     @Req() req: any,
-    @Param('status') status: string,
+    @Param('status') status: ComicsStatusEnum,
   ): Promise<Comic[]> {
     const sellerId = req.user ? req.user.id : null;
     return this.comicService.findAllExceptSeller(sellerId, status);
   }
 
   @Get('status/:status')
-  findByStatus(@Param('status') status: string) {
-    return this.comicService.findByStatus(status.toUpperCase());
+  findByStatus(@Param('status') status: ComicsStatusEnum) {
+    return this.comicService.findByStatus(status);
   }
 
   @Get('count/status/:status')
   findByStatusAndCount(
-    @Param('status') status: string,
+    @Param('status') status: ComicsStatusEnum,
     @Query('load') load: string,
   ) {
-    return this.comicService.findByStatusAndCount(
-      status.toUpperCase(),
-      Number(load),
-    );
+    return this.comicService.findByStatusAndCount(status, Number(load));
   }
 
   @Get('sort/price')

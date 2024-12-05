@@ -59,7 +59,10 @@ export class TransactionsService extends BaseService<Transaction> {
       user,
       code: generateNumericCode(8),
       order,
-      amount: order.totalPrice,
+      amount:
+        type === 'SUBTRACT'
+          ? order.totalPrice
+          : order.totalPrice - order.delivery.deliveryFee,
       status: TransactionStatusEnum.SUCCESSFUL,
       type,
       note: type === 'ADD' && 'Chưa thể sử dụng',

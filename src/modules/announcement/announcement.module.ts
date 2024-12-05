@@ -10,10 +10,18 @@ import { Exchange } from 'src/entities/exchange.entity';
 
 import { OrderItemsModule } from '../order-items/order-items.module';
 import { Order } from 'src/entities/orders.entity';
+import { Transaction } from 'src/entities/transactions.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Announcement, Order, Auction, User, Exchange]),
+    TypeOrmModule.forFeature([
+      Announcement,
+      Order,
+      Auction,
+      User,
+      Exchange,
+      Transaction,
+    ]),
     // UsersModule,
     forwardRef(() => OrderItemsModule),
   ],

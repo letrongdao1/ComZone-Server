@@ -96,14 +96,14 @@ export class Comic extends BaseEntity {
     enum: ComicsTypeEnum,
     default: ComicsTypeEnum.NONE,
   })
-  type: string;
+  type: ComicsTypeEnum;
 
   @Column({
     type: 'enum',
     enum: ComicsStatusEnum,
     default: ComicsStatusEnum.UNAVAILABLE,
   })
-  status: string;
+  status: ComicsStatusEnum;
 
   @ManyToMany(() => ExchangeComics, (exchangeComics) => exchangeComics.comics, {
     cascade: true,

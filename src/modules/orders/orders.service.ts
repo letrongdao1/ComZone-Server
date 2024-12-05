@@ -95,6 +95,13 @@ export class OrdersService extends BaseService<Order> {
       type: createOrderDto.type,
     });
 
+    await this.addressesService.incrementAddressUsedTime(
+      createOrderDto.addressId,
+    );
+
+    await this.ordersRepository.save(newOrder);
+
+    //Create transaction if paid via WALLET
     if (createOrderDto.paymentMethod === 'WALLET') {
       if (user.balance < createOrderDto.totalPrice)
         throw new ForbiddenException('Insufficient balance!');
@@ -105,31 +112,48 @@ export class OrdersService extends BaseService<Order> {
         createOrderDto.sellerId,
         createOrderDto.totalPrice,
       );
+
+      const userTransaction =
+        await this.transactionsService.createOrderTransaction(
+          userId,
+          newOrder.id,
+          'SUBTRACT',
+        );
+
+      const sellerTransaction =
+        await this.transactionsService.createOrderTransaction(
+          createOrderDto.sellerId,
+          newOrder.id,
+          'ADD',
+        );
+
+      await this.eventsGateway.notifyUser(
+        userId,
+        `Thanh toán số tiền ${newOrder.totalPrice.toLocaleString('vi-VN')}đ bằng ví ComZone thành công.`,
+        { transactionId: userTransaction.id },
+        'Thanh toán thành công',
+        AnnouncementType.TRANSACTION_SUBTRACT,
+        RecipientType.USER,
+        'SUCCESSFUL',
+      );
+
+      await this.eventsGateway.notifyUser(
+        createOrderDto.sellerId,
+        `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
+        { transactionId: sellerTransaction.id },
+        'Nhận tiền đơn hàng',
+        AnnouncementType.TRANSACTION_ADD,
+        RecipientType.SELLER,
+        'SUCCESSFUL',
+      );
     }
 
-    await this.addressesService.incrementAddressUsedTime(
-      createOrderDto.addressId,
-    );
-
-    await this.ordersRepository.save(newOrder);
-
-    await this.transactionsService.createOrderTransaction(
-      userId,
-      newOrder.id,
-      'SUBTRACT',
-    );
-
-    await this.transactionsService.createOrderTransaction(
-      createOrderDto.sellerId,
-      newOrder.id,
-      'ADD',
-    );
-    this.eventsGateway.notifyUser(
+    await this.eventsGateway.notifyUser(
       createOrderDto.sellerId,
       `Bạn có một đơn hàng từ tài khoản ${user.name} trị giá ${newOrder.totalPrice.toLocaleString('vi-VN')}đ`,
       { orderId: newOrder.id },
       'Đơn hàng mới',
-      AnnouncementType.ORDER,
+      AnnouncementType.ORDER_NEW,
       RecipientType.SELLER,
       'SUCCESSFUL',
     );
@@ -367,7 +391,7 @@ export class OrdersService extends BaseService<Order> {
       `Bạn có một đơn hàng đã được người bán xác nhận. Hệ thống sẽ thông báo cho bạn khi người bán hoàn tất bàn giao truyện để giao.`,
       { orderId: orderId },
       'Đơn hàng được xác nhận',
-      AnnouncementType.ORDER,
+      AnnouncementType.ORDER_CONFIRMED,
       RecipientType.USER,
       'SUCCESSFUL',
     );

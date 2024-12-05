@@ -389,8 +389,8 @@ export class AuctionService {
       await Promise.all(
         overdueAuctions.map(async (auction) => {
           // Update auction status to 'FAILED'
-          auction.comics.status = 'UNAVAILABLE';
-          auction.comics.type = 'NONE';
+          auction.comics.status = ComicsStatusEnum.UNAVAILABLE;
+          auction.comics.type = ComicsTypeEnum.NONE;
           console.log('z', auction.comics.status);
 
           auction.status = 'FAILED';

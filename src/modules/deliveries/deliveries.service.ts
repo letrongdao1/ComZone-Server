@@ -90,6 +90,7 @@ export class DeliveriesService extends BaseService<Delivery> {
     const newDelivery = this.deliveriesRepository.create({
       from: fromAddress,
       to: toAddress,
+      deliveryFee: dto.deliveryFee,
     });
 
     return await this.deliveriesRepository

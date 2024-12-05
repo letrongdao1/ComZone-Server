@@ -129,7 +129,12 @@ export class EventsGateway implements OnModuleInit {
   async notifyUser(
     userId: string,
     message: string,
-    ids: { exchangeId?: string; orderId?: string; auctionId?: Auction },
+    ids: {
+      exchangeId?: string;
+      orderId?: string;
+      auctionId?: Auction;
+      transactionId?: string;
+    },
     title: string,
     type: AnnouncementType,
     recipientType: RecipientType,
@@ -142,6 +147,7 @@ export class EventsGateway implements OnModuleInit {
         auctionId: ids.auctionId?.id,
         orderId: ids.orderId,
         exchangeId: ids.exchangeId,
+        transactionId: ids.transactionId,
         userId,
         message,
         title,
