@@ -90,6 +90,15 @@ export class DepositsService extends BaseService<Deposit> {
     if (user.balance < exchange.depositAmount)
       throw new ForbiddenException('Insufficient balance!');
 
+    const checkDeposit = await this.depositsRepository.findOne({
+      where: {
+        user: { id: userId },
+        exchange: { id: dto.exchange },
+      },
+    });
+
+    if (checkDeposit) return;
+
     const newDeposit = this.depositsRepository.create({
       user,
       exchange,

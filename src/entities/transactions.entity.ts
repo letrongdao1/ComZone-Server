@@ -1,5 +1,12 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
 import { User } from './users.entity';
 import { Order } from './orders.entity';
 import { WalletDeposit } from './wallet-deposit.entity';
@@ -8,6 +15,7 @@ import { Deposit } from './deposit.entity';
 import { SellerSubscription } from './seller-subscription.entity';
 import { Exchange } from './exchange.entity';
 import { RefundRequest } from './refund-request.entity';
+import { Announcement } from './announcement.entity';
 
 @Entity('transactions')
 export class Transaction extends BaseEntity {
@@ -102,4 +110,7 @@ export class Transaction extends BaseEntity {
     nullable: true,
   })
   note?: string;
+
+  @OneToMany(() => Announcement, (announcement) => announcement.transaction)
+  announcements: Announcement;
 }

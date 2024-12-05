@@ -12,6 +12,7 @@ import { User } from 'src/entities/users.entity';
 import { Exchange } from 'src/entities/exchange.entity';
 import { Order } from 'src/entities/orders.entity';
 import { OrderItemsService } from '../order-items/order-items.service';
+import { Transaction } from 'src/entities/transactions.entity';
 
 @Injectable()
 export class AnnouncementService {
@@ -28,6 +29,8 @@ export class AnnouncementService {
     private readonly auctionRepository: Repository<Auction>,
     @InjectRepository(Exchange)
     private readonly exchangeRepository: Repository<Exchange>,
+    @InjectRepository(Transaction)
+    private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
   // Create an announcement
@@ -61,11 +64,19 @@ export class AnnouncementService {
       },
     });
   }
+
   async createAnnouncement(
     createAnnouncementDto: CreateAnnouncementDto,
   ): Promise<Announcement> {
-    const { userId, orderId, auctionId, exchangeId, recipientType, ...rest } =
-      createAnnouncementDto;
+    const {
+      userId,
+      orderId,
+      auctionId,
+      exchangeId,
+      transactionId,
+      recipientType,
+      ...rest
+    } = createAnnouncementDto;
 
     const user = userId
       ? await this.userRepository.findOne({ where: { id: userId } })
@@ -78,6 +89,11 @@ export class AnnouncementService {
       : null;
     const exchange = exchangeId
       ? await this.exchangeRepository.findOne({ where: { id: exchangeId } })
+      : null;
+    const transaction = transactionId
+      ? await this.transactionRepository.findOne({
+          where: { id: transactionId },
+        })
       : null;
 
     if (userId && !user) {
@@ -92,6 +108,9 @@ export class AnnouncementService {
     if (exchangeId && !exchange) {
       throw new Error('Exchange not found');
     }
+    if (transactionId && !transaction) {
+      throw new Error('Transaction not found');
+    }
 
     const announcement = this.announcementRepository.create({
       ...rest,
@@ -99,6 +118,7 @@ export class AnnouncementService {
       order: order || undefined,
       auction: auction || undefined,
       exchange: exchange || undefined,
+      transaction: transaction || undefined,
       recipientType,
       type: rest.type || null,
     });
@@ -116,11 +136,12 @@ export class AnnouncementService {
       where: { id },
     });
   }
+
   async findByUserId(userId: string): Promise<any[]> {
     // Fetch announcements related to the user
     const announcements = await this.announcementRepository.find({
       where: { user: { id: userId } },
-      relations: ['exchange'],
+      relations: ['exchange', 'transaction'],
       order: { createdAt: 'DESC' },
     });
 
@@ -145,6 +166,7 @@ export class AnnouncementService {
       }),
     );
 
+    console.log(enrichedAnnouncements);
     return enrichedAnnouncements;
   }
 

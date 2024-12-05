@@ -31,6 +31,9 @@ export class CreateAnnouncementDto {
   exchangeId?: string; // ID of the exchange request related to the announcement
 
   @IsOptional()
+  transactionId?: string; // ID of the transaction related to the announcement
+
+  @IsOptional()
   recipientType?: RecipientType;
 }
 

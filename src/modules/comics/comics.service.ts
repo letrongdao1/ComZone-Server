@@ -88,7 +88,7 @@ export class ComicService extends BaseService<Comic> {
     });
   }
 
-  async findByStatus(status: string): Promise<Comic[]> {
+  async findByStatus(status: ComicsStatusEnum): Promise<Comic[]> {
     return await this.comicRepository.find({
       where: { type: ComicsTypeEnum.SELL, status },
       relations: ['genres', 'sellerId'],
@@ -96,7 +96,7 @@ export class ComicService extends BaseService<Comic> {
   }
 
   async findByStatusAndCount(
-    status: string,
+    status: ComicsStatusEnum,
     load?: number,
   ): Promise<[Comic[], number]> {
     return await this.comicRepository.findAndCount({
@@ -207,7 +207,7 @@ export class ComicService extends BaseService<Comic> {
 
   async findAllExceptSeller(
     sellerId: string | null,
-    status: string,
+    status: ComicsStatusEnum,
   ): Promise<Comic[]> {
     if (sellerId) {
       // Exclude comics of the specified seller

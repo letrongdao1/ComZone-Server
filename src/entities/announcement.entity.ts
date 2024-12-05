@@ -4,6 +4,7 @@ import { User } from './users.entity';
 import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
 import { Exchange } from './exchange.entity';
+import { Transaction } from './transactions.entity';
 
 export enum RecipientType {
   USER = 'USER',
@@ -11,7 +12,9 @@ export enum RecipientType {
 }
 
 export enum AnnouncementType {
-  ORDER = 'ORDER',
+  ORDER_NEW = 'ORDER_NEW',
+  ORDER_CONFIRMED = 'ORDER_CONFIRMED',
+  ORDER_DELIVERY = 'ORDER_DELIVERY',
   AUCTION = 'AUCTION',
   EXCHANGE_NEW_REQUEST = 'EXCHANGE_NEW_REQUEST',
   EXCHANGE_APPROVED = 'EXCHANGE_APPROVED',
@@ -28,11 +31,8 @@ export enum AnnouncementType {
   DELIVERY_FAILED_SEND = 'DELIVERY_FAILED_SEND',
   DELIVERY_FAILED_RECEIVE = 'DELIVERY_FAILED_RECEIVE',
   DELIVERY_RETURN = 'DELIVERY_RETURN',
-  DEPOSIT_WALLET = 'DEPOSIT_WALLET',
-  WITHDRAW_WALLET = 'WITHDRAW_WALLET',
-  DEPOSIT_MONEY = 'DEPOSIT_MONEY',
-  REFUND_MONEY = 'REFUND_MONEY',
-  SEIZED_MONEY = 'SEIZED_MONEY',
+  TRANSACTION_SUBTRACT = 'TRANSACTION_SUBTRACT',
+  TRANSACTION_ADD = 'TRANSACTION_ADD',
 }
 
 @Entity('announcement')
@@ -54,9 +54,13 @@ export class Announcement extends BaseEntity {
 
   @ManyToOne(() => Exchange, (exchange) => exchange.announcements, {
     nullable: true,
-    eager: true,
   })
   exchange: Exchange;
+
+  @ManyToOne(() => Transaction, (transaction) => transaction.announcements, {
+    nullable: true,
+  })
+  transaction: Transaction;
 
   @Column({
     type: 'varchar',

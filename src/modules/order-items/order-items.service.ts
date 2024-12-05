@@ -74,7 +74,7 @@ export class OrderItemsService extends BaseService<OrderItem> {
     }
 
     await this.comicsService.updateStatus(
-      orderItem.comics,
+      fetchedComics.id,
       ComicsStatusEnum.PRE_ORDER,
     );
 
