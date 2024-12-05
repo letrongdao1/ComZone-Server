@@ -437,8 +437,8 @@ export class DeliveriesService extends BaseService<Delivery> {
         {
           where: {
             user: { id: recipientId },
-            type,
             order: { id: order.id },
+            type,
           },
         },
       );

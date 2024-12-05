@@ -359,8 +359,18 @@ export class OrdersService extends BaseService<Order> {
 
   async sellerStartsPackaging(orderId: string) {
     const order = await this.getOne(orderId);
-    if (order.status !== OrderStatusEnum.PENDING)
+    if (!order || order.status !== OrderStatusEnum.PENDING)
       throw new ForbiddenException('Only pending orders are accepted!');
+
+    await this.eventsGateway.notifyUser(
+      order.user.id,
+      `Bạn có một đơn hàng đã được người bán xác nhận. Hệ thống sẽ thông báo cho bạn khi người bán hoàn tất bàn giao truyện để giao.`,
+      { orderId: orderId },
+      'Đơn hàng được xác nhận',
+      AnnouncementType.ORDER,
+      RecipientType.USER,
+      'SUCCESSFUL',
+    );
 
     return await this.updateOrderStatus(
       orderId,
@@ -387,6 +397,16 @@ export class OrdersService extends BaseService<Order> {
     await this.deliveriesService.registerNewGHNDelivery(
       order.delivery.id,
       comicsList,
+    );
+
+    await this.eventsGateway.notifyUser(
+      order.user.id,
+      `Người bán đã hoàn tất quá trình đóng gói. Nhân viên giao hàng đã bắt đầu nhận hàng từ người bán để giao cho bạn.`,
+      { orderId: orderId },
+      'Đơn hàng bắt đầu giao',
+      AnnouncementType.DELIVERY_PICKING,
+      RecipientType.USER,
+      'SUCCESSFUL',
     );
 
     return await this.getOne(orderId);
