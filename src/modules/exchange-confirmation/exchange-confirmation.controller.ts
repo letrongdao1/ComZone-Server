@@ -69,20 +69,23 @@ export class ExchangeConfirmationController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch('delivery/failed/:exchange_id')
+  @Patch('delivery/failed/:user_id/:exchange_id')
   failedDeliveryMark(
-    @Req() req: any,
+    @Param('user_id') userId: string,
     @Param('exchange_id') exchangeId: string,
   ) {
     return this.exchangeConfirmationService.failedDeliveryMark(
-      req.user.id,
+      userId,
       exchangeId,
     );
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch('cancel/:exchange_id')
-  cancelExchange(@Param('exchange_id') id: string) {
-    return this.exchangeConfirmationService.cancelExchange(id);
+  cancelExchange(@Req() req: any, @Param('exchange_id') exchangeId: string) {
+    return this.exchangeConfirmationService.cancelExchange(
+      req.user.id,
+      exchangeId,
+    );
   }
 }

@@ -55,7 +55,7 @@ export class Delivery extends BaseEntity {
     enum: OrderDeliveryStatusEnum,
     nullable: true,
   })
-  status: string;
+  status: OrderDeliveryStatusEnum;
 
   @Column({
     name: 'overall_status',
@@ -63,7 +63,7 @@ export class Delivery extends BaseEntity {
     enum: DeliveryOverallStatusEnum,
     nullable: true,
   })
-  overallStatus: string;
+  overallStatus: DeliveryOverallStatusEnum;
 
   @Column({
     type: 'text',

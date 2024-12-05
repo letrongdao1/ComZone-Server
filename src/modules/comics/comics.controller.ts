@@ -155,21 +155,14 @@ export class ComicController {
 
   @Get('/exchange/:user_id')
   findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
-    return this.comicsExchangeService.getExchangeComicsOfUser(userId);
-  }
-
-  @Get('/exchange/search/other/:user_id')
-  searchOthersExchangeComics(
-    @Param('user_id') userId: string,
-    @Query('key') key: string,
-  ) {
-    return this.comicsExchangeService.searchUserExchangeComics(userId, key);
+    return this.comicsExchangeService.getAvailableExchangeComicsOfUser(userId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.comicService.findOne(id);
   }
+
   @Get(':id/stop-sell')
   async stopSelling(@Param('id') id: string) {
     return await this.comicService.stopSelling(id);

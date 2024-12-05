@@ -15,12 +15,23 @@ import {
   CreateOrderDeliveryDTO,
 } from './dto/create-delivery.dto';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
+import { Roles } from '../authorization/roles.decorator';
+import { Role } from '../authorization/role.enum';
+import { PermissionsGuard } from '../authorization/permission.guard';
 
 @ApiBearerAuth()
 @ApiTags('Delivery')
 @Controller('deliveries')
 export class DeliveriesController {
   constructor(private readonly deliveriesService: DeliveriesService) {}
+
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('all')
+  getAllDeliveries() {
+    return this.deliveriesService.getAll();
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('order')
@@ -44,6 +55,12 @@ export class DeliveriesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('attempt/register/:id')
+  attemptToRegisterGHN(@Param('id') deliveryId: string) {
+    return this.deliveriesService.registerNewGHNDelivery(deliveryId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('details/:delivery_id')
   getDeliveryDetailsByDeliveryId(@Param('delivery_id') id: string) {
     return this.deliveriesService.getDeliveryDetailsByDeliveryId(id);
@@ -57,7 +74,13 @@ export class DeliveriesController {
 
   @UseGuards(JwtAuthGuard)
   @Get('exchange/from-user/:exchange_id')
-  getByExchangeAndUser(@Req() req: any, @Param('exchange_id') id: string) {
-    return this.deliveriesService.getByExchangeAndUser(req.user.id, id);
+  getByExchangeAndFromUser(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.deliveriesService.getByExchangeAndFromUser(req.user.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange/to-user/:exchange_id')
+  getByExchangeAndToUser(@Req() req: any, @Param('exchange_id') id: string) {
+    return this.deliveriesService.getByExchangeAndToUser(req.user.id, id);
   }
 }
