@@ -22,6 +22,14 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class ExchangesController {
   constructor(private readonly exchangesService: ExchangesService) {}
 
+  @Roles(Role.MODERATOR)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('all')
+  getAllExchanges() {
+    return this.exchangesService.getAllWithDeleted();
+  }
+
   @ApiQuery({ name: 'status', type: 'enum', enum: StatusQueryEnum })
   @UseGuards(JwtAuthGuard)
   @Get('user/status')
