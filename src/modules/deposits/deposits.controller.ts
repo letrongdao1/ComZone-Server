@@ -36,7 +36,11 @@ export class DepositsController {
   getDepositsOfUser(@Req() req: any) {
     return this.depositsService.getAllDepositOfUser(req.user.id);
   }
-
+  @UseGuards(JwtAuthGuard)
+  @Get('user/auction')
+  async getUserDepositsWithAuction(@Req() req: any) {
+    return await this.depositsService.getUserDepositsWithAuction(req.user.id);
+  }
   @UseGuards(JwtAuthGuard)
   @Get('user/:id')
   getDepositsByUserId(@Param('id') id: string) {
@@ -47,6 +51,7 @@ export class DepositsController {
   checkUserDepositsOfAnAuction(@Req() req: any, @Param('id') id: string) {
     return this.depositsService.getUserDepositOfAnAuction(req.user.id, id);
   }
+
   // @Patch('auction/:auctionId/refund')
   // async refundAllDepositsOfAnAuction(@Param('auctionId') auctionId: string) {
   //   return await this.depositsService.refundAllDepositsExceptWinner(auctionId);

@@ -77,20 +77,20 @@ export class AuctionController {
     return this.auctionService.findJoinedAuctionByUser(req.user.id);
   }
   // Get a single auction by ID
-  @UseGuards(JwtAuthGuard)
-  @Patch(':id/status/completed')
-  async updateStatusToCompleted(
-    @Param('id') id: string,
-    @Body('currentPrice') currentPrice: number,
-    @Req() req: any,
-  ): Promise<Auction> {
-    const user = req.user; // Get the ID of the authenticated user
-    return this.auctionService.updateAuctionStatusToCompleted(
-      id,
-      currentPrice,
-      user,
-    );
-  }
+  // @UseGuards(JwtAuthGuard)
+  // @Patch(':id/status/completed')
+  // async updateStatusToCompleted(
+  //   @Param('id') id: string,
+  //   @Body('currentPrice') currentPrice: number,
+  //   @Req() req: any,
+  // ): Promise<Auction> {
+  //   const user = req.user; // Get the ID of the authenticated user
+  //   return this.auctionService.updateAuctionStatusToCompleted(
+  //     id,
+  //     currentPrice,
+  //     user,
+  //   );
+  // }
   @UseGuards(JwtAuthGuard)
   @Patch(':id/cancel')
   async cancelAuction(@Param('id') id: string): Promise<Auction> {

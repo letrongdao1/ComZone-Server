@@ -109,7 +109,7 @@ export class AuctionService {
       this.eventsGateway.notifyUser(
         latestBid.user.id,
         `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
-        { auctionId: auction.id },
+        { auctionId: auction },
         'Kết quả đấu giá',
         AnnouncementType.AUCTION,
         RecipientType.USER,
@@ -118,7 +118,7 @@ export class AuctionService {
       this.eventsGateway.notifyUser(
         auction.comics.sellerId.id,
         `Buổi đấu giá ${auction.comics.title} đã diễn ra thành công.`,
-        { auctionId: auction.id },
+        { auctionId: auction },
         'Đấu giá',
         AnnouncementType.AUCTION,
         RecipientType.SELLER,
@@ -140,10 +140,11 @@ export class AuctionService {
       await this.eventsGateway.notifyUsers(
         losingUserIds,
         `Buổi đấu giá ${auction.comics.title} đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
-        { id: auction.id },
+        { id: auction },
         'Kết quả đấu giá',
         AnnouncementType.AUCTION,
         'FAILED',
+        RecipientType.USER,
       );
     } else {
       // No bids, so the auction failed
@@ -153,7 +154,7 @@ export class AuctionService {
       this.eventsGateway.notifyUser(
         auction.comics.sellerId.id,
         `Buổi đấu giá ${auction.comics.title} thất bại do không ai tham gia.`,
-        { auctionId: auction.id },
+        { auctionId: auction },
         'Đấu giá',
         AnnouncementType.AUCTION,
         RecipientType.SELLER,
@@ -233,7 +234,6 @@ export class AuctionService {
 
   async updateAuctionStatusToCompleted(
     id: string,
-    currentPrice: number,
     user: User,
   ): Promise<Auction> {
     const auction = await this.auctionRepository.findOne({
@@ -250,50 +250,49 @@ export class AuctionService {
     auction.endTime = new Date();
     auction.isPaid = true;
 
-    console.log('Today:', new Date().toISOString());
-    console.log('Updated endTime:', auction.endTime);
-    // Save the updated auction
     const updatedAuction = await this.auctionRepository.save(auction);
 
-    // Notify the winner and losers
-    this.notifyWinnerAndLosers(auction);
-
-    return updatedAuction;
-  }
-
-  async notifyWinnerAndLosers(auction: Auction) {
-    // Get the winning bid
-    const winningBid = auction.bids.reduce((maxBid, bid) =>
-      bid.price > maxBid.price ? bid : maxBid,
+    const latestBid = auction.bids.reduce((highest, bid) =>
+      bid.price > highest.price ? bid : highest,
     );
-    // Notify the winner
     this.eventsGateway.notifyUser(
-      winningBid.user.id,
+      latestBid.user.id,
       `Xin chúc mừng! Bạn đã chiến thắng đấu giá ${auction.comics.title}.`,
-      { auctionId: auction.id },
-      'Chúc mừng',
+      { auctionId: updatedAuction },
+      'Kết quả đấu giá',
       AnnouncementType.AUCTION,
       RecipientType.USER,
       'SUCCESSFUL',
     );
-
-    console.log('winningBid', winningBid);
-
-    // Collect the losing bidders
-    const losingBidders = auction.bids.filter(
-      (bid) => bid.user.id !== winningBid.user.id,
+    this.eventsGateway.notifyUser(
+      auction.comics.sellerId.id,
+      `Buổi đấu giá ${auction.comics.title} đã diễn ra thành công.`,
+      { auctionId: updatedAuction },
+      'Đấu giá',
+      AnnouncementType.AUCTION,
+      RecipientType.SELLER,
     );
-    console.log('losingBidders', losingBidders);
-    // Notify the losing bidders
-    const losingUserIds = losingBidders.map((bid) => bid.user.id);
-    this.eventsGateway.notifyUsers(
+    const losingUserIds = Array.from(
+      new Set(
+        auction.bids
+          .filter((bid) => bid.user.id !== latestBid.user.id)
+          .map((bid) => bid.user.id),
+      ),
+    );
+    await this.eventsGateway.notifyUsers(
       losingUserIds,
-      `Buổi đấu giá đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
-      { id: auction.id },
+      `Buổi đấu giá ${auction.comics.title} đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
+      { id: updatedAuction },
       'Kết quả đấu giá',
       AnnouncementType.AUCTION,
       'FAILED',
+      RecipientType.USER,
     );
+    await this.depositsService.refundAllDepositsExceptWinner(
+      auction.id,
+      latestBid.user.id,
+    );
+    return updatedAuction;
   }
 
   async startAuctionsThatShouldBeginNow(): Promise<{

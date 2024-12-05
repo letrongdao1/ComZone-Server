@@ -18,6 +18,7 @@ import {
   AnnouncementType,
   RecipientType,
 } from 'src/entities/announcement.entity';
+import { Auction } from 'src/entities/auction.entity';
 
 @WebSocketGateway({
   cors: {
@@ -114,17 +115,12 @@ export class EventsGateway implements OnModuleInit {
     }
 
     const updatedAuction =
-      await this.auctionService.updateAuctionStatusToCompleted(
-        auctionId,
-        currentPrice,
-        user,
-      );
+      await this.auctionService.updateAuctionStatusToCompleted(auctionId, user);
     console.log('12312', updatedAuction);
 
     // Call refund logic
 
-    const refund = await this.depositsService.refundDepositToWinner(auctionId);
-    console.log('Refund', refund);
+    await this.depositsService.refundDepositToWinner(auctionId);
 
     // Emit the updated auction to notify clients
     this.server.emit('auctionUpdated', updatedAuction);
@@ -133,15 +129,17 @@ export class EventsGateway implements OnModuleInit {
   async notifyUser(
     userId: string,
     message: string,
-    ids: { exchangeId?: string; orderId?: string; auctionId?: string },
+    ids: { exchangeId?: string; orderId?: string; auctionId?: Auction },
     title: string,
     type: AnnouncementType,
     recipientType: RecipientType,
     status?: string,
   ) {
+    console.log('Passed ids object:', ids);
+
     try {
       const createAnnouncementDto: CreateAnnouncementDto = {
-        auctionId: ids.auctionId,
+        auctionId: ids.auctionId?.id,
         orderId: ids.orderId,
         exchangeId: ids.exchangeId,
         userId,
@@ -179,35 +177,37 @@ export class EventsGateway implements OnModuleInit {
   async notifyUsers(
     userIds: string[],
     message: string,
-    auction: { id: string },
+    auction: { id: Auction },
     title: string,
     type: AnnouncementType,
     status: string,
+    recipientType: RecipientType,
   ) {
     for (const userId of userIds) {
       try {
         const createAnnouncementDto: CreateAnnouncementDto = {
-          auctionId: auction.id,
+          auctionId: auction.id.id,
           userId,
           message,
           title,
           type,
           status,
+          recipientType,
         };
         const savedAnnouncement =
           await this.announcementService.createAnnouncement(
             createAnnouncementDto,
           );
-        console.log('Saved announcement for user:', userId);
-
+        console.log('Saved announcementLOSER:', savedAnnouncement);
         // Emit to the room where each user has joined
         this.server.to(userId).emit('notification', {
           id: savedAnnouncement.id,
           message,
-          auction,
+          auction: auction.id,
           title,
           type,
           status,
+          recipientType,
         });
       } catch (error) {
         console.error(`Error notifying user ${userId}:`, error);

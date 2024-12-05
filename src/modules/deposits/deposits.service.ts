@@ -9,7 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Deposit } from 'src/entities/deposit.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { ExchangeDepositDTO } from './dto/create-deposit.dto';
 import { UsersService } from '../users/users.service';
 import { AuctionService } from '../auction/auction.service';
@@ -127,6 +127,18 @@ export class DepositsService extends BaseService<Deposit> {
       where: {
         user: { id: userId }, // Match the user by ID
         auction: { id: auctionId }, // Match the auction by ID
+      },
+    });
+  }
+  async getUserDepositsWithAuction(userId: string): Promise<Deposit[]> {
+    return await this.depositsRepository.find({
+      where: {
+        user: { id: userId },
+        auction: Not(IsNull()),
+      },
+      relations: ['user', 'auction'],
+      order: {
+        createdAt: 'DESC',
       },
     });
   }
