@@ -54,6 +54,22 @@ export class ComicsExchangeService extends BaseService<Comic> {
     });
   }
 
+  async getAvailableExchangeComicsOfUser(userId: string) {
+    return await this.comicsRepository.find({
+      where: {
+        sellerId: {
+          id: userId,
+        },
+        type: ComicsTypeEnum.EXCHANGE,
+        status: ComicsStatusEnum.AVAILABLE,
+      },
+      order: {
+        updatedAt: 'DESC',
+        title: 'ASC',
+      },
+    });
+  }
+
   async searchUserExchangeComics(userId: string, key: string) {
     return await this.comicsRepository.find({
       where: [

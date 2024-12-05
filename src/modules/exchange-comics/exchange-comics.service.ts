@@ -44,6 +44,10 @@ export class ExchangeComicsService extends BaseService<ExchangeComics> {
         const comics = await this.comicsService.getOne(comicsId);
         if (!comics)
           throw new NotFoundException(`Comics ${comicsId} cannot be found!`);
+        await this.comicsService.updateStatus(
+          comicsId,
+          ComicsStatusEnum.PRE_ORDER,
+        );
         return comics;
       }),
     );

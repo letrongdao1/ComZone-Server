@@ -28,6 +28,7 @@ import { DeliveryInformation } from 'src/entities/delivery-information.entity';
 import { Exchange } from 'src/entities/exchange.entity';
 import { EventsGateway } from '../socket/event.gateway';
 import {
+  Announcement,
   AnnouncementType,
   RecipientType,
 } from 'src/entities/announcement.entity';
@@ -43,6 +44,8 @@ export class DeliveriesService extends BaseService<Delivery> {
     private readonly ordersRepository: Repository<Order>,
     @InjectRepository(Exchange)
     private readonly exchangesRepository: Repository<Exchange>,
+    @InjectRepository(Announcement)
+    private readonly announcementsRepository: Repository<Announcement>,
 
     private readonly usersService: UsersService,
     @Inject(ExchangeComicsService)
@@ -182,13 +185,11 @@ export class DeliveriesService extends BaseService<Delivery> {
         'GHN service has already been registered for this delivery!',
       );
 
-    if (delivery.from.phone.length !== 10 || delivery.to.phone.length !== 10)
-      throw new BadRequestException('Only 10-digit phone numbers are valid!');
-
     const headers = {
       Token: process.env.GHN_TOKEN,
       ShopId: process.env.GHN_SHOPID,
     };
+
     const from = {
       province: await this.vnAddressService.getProvinceById(
         delivery.from.provinceId,
@@ -202,6 +203,7 @@ export class DeliveriesService extends BaseService<Delivery> {
         delivery.from.wardId,
       ),
     };
+
     let comicsList: Comic[];
     if (delivery.order) {
       if (!orderComicsList)
@@ -231,70 +233,82 @@ export class DeliveriesService extends BaseService<Delivery> {
         console.log('Error getting available services: ', err.response);
         throw new BadRequestException(err.response.data);
       });
-    await axios
-      .post(
-        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create',
-        {
-          payment_type_id:
-            delivery.order && delivery.order.paymentMethod === 'COD' ? 2 : 1,
-          required_note: 'CHOXEMHANGKHONGTHU',
-          from_name: delivery.from.name,
-          from_phone: delivery.from.phone,
-          from_address: delivery.from.address,
-          from_ward_name: from.ward.name,
-          from_district_name: from.district.name,
-          from_province_name: from.province.name,
-          return_phone: delivery.from.phone,
-          return_address: delivery.from.address,
-          return_district_id: delivery.from.districtId,
-          return_ward_code: delivery.from.wardId,
-          to_name: delivery.to.name,
-          to_phone: delivery.to.phone,
-          to_address: delivery.to.address,
-          to_ward_code: delivery.to.wardId,
-          to_district_id: delivery.to.districtId,
-          cod_amount: 0,
-          content: 'Truyện tranh',
-          weight: comicsList.length * 500,
+
+    const registerGHNPayload = {
+      payment_type_id:
+        delivery.order && delivery.order.paymentMethod === 'COD' ? 2 : 1,
+      required_note: 'CHOXEMHANGKHONGTHU',
+      from_name: delivery.from.name,
+      from_phone: delivery.from.phone,
+      from_address: delivery.from.address,
+      from_ward_name: from.ward.name,
+      from_district_name: from.district.name,
+      from_province_name: from.province.name,
+      return_phone: delivery.from.phone,
+      return_address: delivery.from.address,
+      return_district_id: null,
+      return_ward_code: '',
+      client_order_code: '',
+      to_name: delivery.to.name,
+      to_phone: delivery.to.phone,
+      to_address: delivery.to.address,
+      to_ward_code: delivery.to.wardId,
+      to_district_id: delivery.to.districtId,
+      cod_amount: 0,
+      content: 'Truyện tranh',
+      weight: comicsList.length * 500,
+      length: 30,
+      width: 15,
+      height: comicsList.length * 4,
+      quantity: comicsList.length,
+      pick_station_id: null,
+      deliver_station_id: null,
+      insurance_value: 0,
+      service_id: services[0].service_id,
+      service_type_id: services[0].service_type_id,
+      coupon: null,
+      items: comicsList.map((item) => {
+        return {
+          code: item.id + '-' + new Date(Date.now()).getTime().toString(),
+          name: item.title,
+          quantity: item.quantity,
+          price: item.price || 0,
           length: 30,
           width: 15,
-          height: comicsList.length * 4,
-          quantity: comicsList.length,
-          pick_station_id: null,
-          deliver_station_id: null,
-          insurance_value: 0,
-          service_id: services[0].service_id,
-          service_type_id: services[0].service_type_id,
-          coupon: null,
-          items: comicsList.map((item) => {
-            return {
-              code: item.id + '-' + new Date(Date.now()).getTime().toString(),
-              name: item.title,
-              quantity: item.quantity,
-              price: item.price,
-              length: 30,
-              width: 15,
-              height: item.quantity * 4,
-              weight: item.quantity * 500,
-              category: {
-                level1: 'Truyện tranh',
-              },
-            };
-          }),
-        },
+          height: item.quantity * 4,
+          weight: item.quantity * 500,
+          category: {
+            level1: 'Truyện tranh',
+          },
+        };
+      }),
+    };
+
+    return await axios
+      .post(
+        'https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/create',
+        registerGHNPayload,
         { headers },
       )
       .then(async (res) => {
         const data = res.data.data;
-        await this.deliveriesRepository.update(deliveryId, {
-          deliveryTrackingCode: data.order_code,
-          deliveryFee: data.total_fee,
-          estimatedDeliveryTime: data.expected_delivery_time,
-          status: OrderDeliveryStatusEnum.READY_TO_PICK,
-        });
+        return await this.deliveriesRepository
+          .update(deliveryId, {
+            deliveryTrackingCode: data.order_code,
+            deliveryFee: data.total_fee,
+            estimatedDeliveryTime: data.expected_delivery_time,
+            status: OrderDeliveryStatusEnum.READY_TO_PICK,
+          })
+          .then(
+            async () =>
+              await this.deliveriesRepository.findOne({
+                where: { id: deliveryId },
+                relations: ['exchange'],
+              }),
+          );
       })
       .catch((err) => {
-        console.log('Error creating GHN delivery: ', err.response);
+        console.log('Error creating GHN delivery: ', err.response.data);
         throw new BadRequestException(err.response.data);
       });
   }
@@ -302,6 +316,10 @@ export class DeliveriesService extends BaseService<Delivery> {
   async autoUpdateGHNDeliveryStatus(deliveryId: string) {
     const delivery = await this.getOne(deliveryId);
     if (!delivery || !delivery.deliveryTrackingCode) return;
+
+    const skippedStatus = [DeliveryOverallStatusEnum.DELIVERED];
+
+    if (skippedStatus.includes(delivery.overallStatus)) return;
 
     const headers = {
       Token: process.env.GHN_TOKEN,
@@ -397,6 +415,235 @@ export class DeliveriesService extends BaseService<Delivery> {
     };
   }
 
+  async sendDeliveryAnnouncement(
+    deliveryId: string,
+    type: AnnouncementType,
+    recipientId: string,
+    recipientType: RecipientType,
+  ) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: {
+        id: deliveryId,
+      },
+      relations: ['exchange'],
+    });
+
+    const order = await this.ordersRepository.findOneBy({
+      delivery: { id: delivery.id },
+    });
+
+    if (order) {
+      const checkOrderAnnouncement = await this.announcementsRepository.findOne(
+        {
+          where: {
+            user: { id: recipientId },
+            type,
+            order: { id: order.id },
+          },
+        },
+      );
+
+      if (checkOrderAnnouncement) return;
+    } else if (delivery.exchange) {
+      const checkExchangeAnnouncement =
+        await this.announcementsRepository.findOne({
+          where: {
+            user: { id: recipientId },
+            exchange: { id: delivery.exchange.id },
+            type,
+          },
+        });
+
+      if (checkExchangeAnnouncement) return;
+    }
+
+    const getAnnouncementData = () => {
+      switch (type) {
+        case AnnouncementType.DELIVERY_PICKING:
+          return {
+            title: 'Đơn hàng đang được lấy để giao',
+            message:
+              'Chúng tôi đang trên đường lấy đơn hàng của bạn để giao. Hãy đảm bảo bạn đã hoàn tất đóng gói trước khi nhân viên giao hàng của chúng tôi đến!',
+          };
+        case AnnouncementType.DELIVERY_ONGOING:
+          return {
+            title: 'Đơn hàng đang được giao đến bạn',
+            message: 'Bạn có một đơn hàng đang trên đường giao đến bạn.',
+          };
+        case AnnouncementType.DELIVERY_FINISHED_RECEIVE:
+          return {
+            title: 'Đơn hàng đã nhận thành công',
+            message:
+              'Bạn có một đơn hàng đã được hoàn tất nhận hàng. Hãy đảm bảo bạn đã nhận được truyện nguyên vẹn từ nhân viên giao hàng của chúng tôi trước khi xác nhận giao hàng thành công!',
+          };
+        case AnnouncementType.DELIVERY_FINISHED_SEND:
+          return {
+            title: 'Đơn hàng đã giao thành công',
+            message:
+              'Một đơn hàng của bạn đã được giao thành công. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận giao hàng thành công!',
+          };
+        case AnnouncementType.DELIVERY_FAILED_RECEIVE:
+          return {
+            title: 'Đơn hàng đã giao thất bại',
+            message:
+              'Giao hàng thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với bạn và đơn hàng sẽ được hoàn trả!',
+          };
+        case AnnouncementType.DELIVERY_FAILED_SEND:
+          return {
+            title: 'Đơn hàng đã giao thất bại',
+            message:
+              'Bạn có một đơn hàng được ghi nhận đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với người nhận. Hệ thống sẽ gửi thông báo cho bạn khi đơn hàng được hoàn trả!',
+          };
+        case AnnouncementType.DELIVERY_RETURN:
+          return {
+            title: 'Đơn hàng được hoàn trả',
+            message:
+              'Bạn có một đơn hàng được được hoàn trả do không giao thành công đến người nhận!',
+          };
+      }
+    };
+
+    await this.eventsGateway.notifyUser(
+      recipientId,
+      getAnnouncementData().message,
+      {
+        exchangeId: delivery.exchange ? delivery.exchange.id : null,
+        orderId: order ? order.id : null,
+      },
+      getAnnouncementData().title,
+      type,
+      recipientType,
+    );
+  }
+
+  async updateDeliveryOverallStatus(
+    deliveryId: string,
+    checkStatus: OrderDeliveryStatusEnum,
+  ) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: { id: deliveryId },
+      relations: ['exchange'],
+    });
+
+    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    if (!delivery.deliveryTrackingCode) return;
+
+    if (
+      [DeliveryOverallStatusEnum.DELIVERED].some(
+        (status) => status === delivery.overallStatus,
+      )
+    )
+      return;
+
+    const pickingGroup = [
+      OrderDeliveryStatusEnum.READY_TO_PICK,
+      OrderDeliveryStatusEnum.PICKING,
+      OrderDeliveryStatusEnum.MONEY_COLLECT_PICKING,
+      OrderDeliveryStatusEnum.PICKED,
+    ];
+
+    const deliveringGroup = [
+      OrderDeliveryStatusEnum.STORING,
+      OrderDeliveryStatusEnum.TRANSPORTING,
+      OrderDeliveryStatusEnum.SORTING,
+      OrderDeliveryStatusEnum.DELIVERING,
+      OrderDeliveryStatusEnum.MONEY_COLLECT_DELIVERING,
+    ];
+
+    const deliveredGroup = [OrderDeliveryStatusEnum.DELIVERED];
+
+    const failedGroup = [
+      OrderDeliveryStatusEnum.DELIVERY_FAIL,
+      OrderDeliveryStatusEnum.EXCEPTION,
+      OrderDeliveryStatusEnum.DAMAGE,
+      OrderDeliveryStatusEnum.LOST,
+    ];
+
+    const returnGroup = [
+      OrderDeliveryStatusEnum.WAITING_TO_RETURN,
+      OrderDeliveryStatusEnum.RETURN,
+      OrderDeliveryStatusEnum.RETURN_SORTING,
+      OrderDeliveryStatusEnum.RETURN_TRANSPORTING,
+      OrderDeliveryStatusEnum.RETURNING,
+      OrderDeliveryStatusEnum.RETURN_FAIL,
+      OrderDeliveryStatusEnum.RETURNED,
+    ];
+
+    if (pickingGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.PICKING,
+      });
+
+      if (checkStatus === OrderDeliveryStatusEnum.PICKING) {
+        await this.sendDeliveryAnnouncement(
+          delivery.id,
+          AnnouncementType.DELIVERY_PICKING,
+          delivery.from.user.id,
+          delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
+        );
+      }
+    } else if (deliveringGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.DELIVERING,
+      });
+
+      await this.sendDeliveryAnnouncement(
+        delivery.id,
+        AnnouncementType.DELIVERY_ONGOING,
+        delivery.to.user.id,
+        RecipientType.USER,
+      );
+    } else if (deliveredGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.DELIVERED,
+      });
+
+      await this.sendDeliveryAnnouncement(
+        delivery.id,
+        AnnouncementType.DELIVERY_FINISHED_RECEIVE,
+        delivery.to.user.id,
+        RecipientType.USER,
+      );
+
+      await this.sendDeliveryAnnouncement(
+        delivery.id,
+        AnnouncementType.DELIVERY_FINISHED_SEND,
+        delivery.from.user.id,
+        delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
+      );
+    } else if (failedGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.FAILED,
+      });
+
+      await this.sendDeliveryAnnouncement(
+        delivery.id,
+        AnnouncementType.DELIVERY_FAILED_RECEIVE,
+        delivery.to.user.id,
+        RecipientType.USER,
+      );
+
+      await this.sendDeliveryAnnouncement(
+        delivery.id,
+        AnnouncementType.DELIVERY_FAILED_SEND,
+        delivery.from.user.id,
+        delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
+      );
+    } else if (returnGroup.some((status) => status === checkStatus)) {
+      await this.deliveriesRepository.update(delivery.id, {
+        overallStatus: DeliveryOverallStatusEnum.RETURN,
+      });
+
+      await this.sendDeliveryAnnouncement(
+        delivery.id,
+        AnnouncementType.DELIVERY_RETURN,
+        delivery.from.user.id,
+        delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
+      );
+    }
+  }
+
   async getDeliveryDetailsByDeliveryId(deliveryId: string) {
     const delivery = await this.deliveriesRepository.findOne({
       where: { id: deliveryId },
@@ -480,6 +727,25 @@ export class DeliveriesService extends BaseService<Delivery> {
     };
   }
 
+  async getFullAddressString(info: DeliveryInformation) {
+    if (info)
+      return (
+        info.address +
+        ', ' +
+        (await this.vnAddressService.getWardById(info.districtId, info.wardId))
+          .name +
+        ', ' +
+        (
+          await this.vnAddressService.getDistrictById(
+            info.provinceId,
+            info.districtId,
+          )
+        ).name +
+        ', ' +
+        (await this.vnAddressService.getProvinceById(info.provinceId)).name
+      );
+  }
+
   async getByExchange(exchangeId: string) {
     const deliveries = await this.deliveriesRepository.find({
       where: { exchange: { id: exchangeId } },
@@ -490,29 +756,6 @@ export class DeliveriesService extends BaseService<Delivery> {
       await Promise.all(
         deliveries.map((d) => this.autoUpdateGHNDeliveryStatus(d.id)),
       );
-
-    const getFullAddressString = async (info: DeliveryInformation) => {
-      if (info)
-        return (
-          info.address +
-          ', ' +
-          (
-            await this.vnAddressService.getWardById(
-              info.districtId,
-              info.wardId,
-            )
-          ).name +
-          ', ' +
-          (
-            await this.vnAddressService.getDistrictById(
-              info.provinceId,
-              info.districtId,
-            )
-          ).name +
-          ', ' +
-          (await this.vnAddressService.getProvinceById(info.provinceId)).name
-        );
-    };
 
     const newList = await this.deliveriesRepository.find({
       where: { exchange: { id: exchangeId } },
@@ -526,13 +769,13 @@ export class DeliveriesService extends BaseService<Delivery> {
           from: delivery.from
             ? {
                 ...delivery.from,
-                fullAddress: await getFullAddressString(delivery.from),
+                fullAddress: await this.getFullAddressString(delivery.from),
               }
             : null,
           to: delivery.to
             ? {
                 ...delivery.to,
-                fullAddress: await getFullAddressString(delivery.to),
+                fullAddress: await this.getFullAddressString(delivery.to),
               }
             : null,
         };
@@ -540,7 +783,7 @@ export class DeliveriesService extends BaseService<Delivery> {
     );
   }
 
-  async getByExchangeAndUser(userId: string, exchangeId: string) {
+  async getByExchangeAndFromUser(userId: string, exchangeId: string) {
     const delivery = await this.deliveriesRepository.findOne({
       where: {
         exchange: { id: exchangeId },
@@ -549,92 +792,58 @@ export class DeliveriesService extends BaseService<Delivery> {
       relations: ['exchange'],
     });
 
+    if (!delivery) return;
+
     await this.autoUpdateGHNDeliveryStatus(delivery.id);
 
-    return this.getOne(delivery.id);
+    const updated = await this.getOne(delivery.id);
+
+    return {
+      ...updated,
+      from: delivery.from
+        ? {
+            ...delivery.from,
+            fullAddress: await this.getFullAddressString(delivery.from),
+          }
+        : null,
+      to: delivery.to
+        ? {
+            ...delivery.to,
+            fullAddress: await this.getFullAddressString(delivery.to),
+          }
+        : null,
+    };
   }
 
-  async updateDeliveryOverallStatus(
-    deliveryId: string,
-    checkStatus: OrderDeliveryStatusEnum,
-  ) {
+  async getByExchangeAndToUser(userId: string, exchangeId: string) {
     const delivery = await this.deliveriesRepository.findOne({
-      where: { id: deliveryId },
+      where: {
+        exchange: { id: exchangeId },
+        to: { user: { id: userId } },
+      },
+      relations: ['exchange'],
     });
 
-    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+    if (!delivery) return;
 
-    if (!delivery.deliveryTrackingCode) return;
+    await this.autoUpdateGHNDeliveryStatus(delivery.id);
 
-    if (
-      [
-        DeliveryOverallStatusEnum.DELIVERED,
-        DeliveryOverallStatusEnum.FAILED,
-      ].find((status) => status === delivery.overallStatus)
-    )
-      return;
+    const updated = await this.getOne(delivery.id);
 
-    const pickingGroup = [
-      OrderDeliveryStatusEnum.READY_TO_PICK,
-      OrderDeliveryStatusEnum.PICKING,
-      OrderDeliveryStatusEnum.PICKED,
-      OrderDeliveryStatusEnum.MONEY_COLLECT_PICKING,
-    ];
-    const deliveringGroup = [
-      OrderDeliveryStatusEnum.STORING,
-      OrderDeliveryStatusEnum.TRANSPORTING,
-      OrderDeliveryStatusEnum.SORTING,
-      OrderDeliveryStatusEnum.DELIVERING,
-      OrderDeliveryStatusEnum.MONEY_COLLECT_DELIVERING,
-    ];
-    const deliveredGroup = [OrderDeliveryStatusEnum.DELIVERED];
-
-    const failedGroup = [
-      OrderDeliveryStatusEnum.DELIVERY_FAIL,
-      OrderDeliveryStatusEnum.EXCEPTION,
-      OrderDeliveryStatusEnum.DAMAGE,
-      OrderDeliveryStatusEnum.LOST,
-    ];
-
-    const returnGroup = [
-      OrderDeliveryStatusEnum.WAITING_TO_RETURN,
-      OrderDeliveryStatusEnum.RETURN,
-      OrderDeliveryStatusEnum.RETURN_SORTING,
-      OrderDeliveryStatusEnum.RETURN_TRANSPORTING,
-      OrderDeliveryStatusEnum.RETURNING,
-      OrderDeliveryStatusEnum.RETURN_FAIL,
-      OrderDeliveryStatusEnum.RETURNED,
-    ];
-
-    if (pickingGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.PICKING,
-      });
-    } else if (deliveringGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.DELIVERING,
-      });
-
-      await this.eventsGateway.notifyUser(
-        delivery.to.user.id,
-        'Bạn có một đơn hàng đang trên đường giao đến bạn.',
-        { exchangeId: delivery.exchange ? delivery.exchange.id : null },
-        'Đơn hàng đang được giao đến bạn.',
-        AnnouncementType.DELIVERY_ONGOING,
-        RecipientType.USER,
-      );
-    } else if (deliveredGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.DELIVERED,
-      });
-    } else if (failedGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.FAILED,
-      });
-    } else if (returnGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.RETURN,
-      });
-    }
+    return {
+      ...updated,
+      from: delivery.from
+        ? {
+            ...delivery.from,
+            fullAddress: await this.getFullAddressString(delivery.from),
+          }
+        : null,
+      to: delivery.to
+        ? {
+            ...delivery.to,
+            fullAddress: await this.getFullAddressString(delivery.to),
+          }
+        : null,
+    };
   }
 }
