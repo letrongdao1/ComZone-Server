@@ -120,6 +120,7 @@ export class AnnouncementService {
     // Fetch announcements related to the user
     const announcements = await this.announcementRepository.find({
       where: { user: { id: userId } },
+      relations: ['exchange'],
       order: { createdAt: 'DESC' },
     });
 

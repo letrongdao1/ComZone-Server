@@ -64,7 +64,11 @@ export class VietNamAddressService {
             name: d.DistrictName,
           };
         });
-        return filteredData;
+
+        //BỎ QUẬN BẮC TỪ LIÊM, HÀ NỘI
+        return filteredData.filter(
+          (district) => ![1482, 3440].includes(district.id),
+        );
       })
       .catch((err) => console.log(err));
   }

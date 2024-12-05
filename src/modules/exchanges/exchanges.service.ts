@@ -98,7 +98,6 @@ export class ExchangesService extends BaseService<Exchange> {
           return await this.exchangesRepository.find({
             where: {
               requestUser: { id: userId },
-              status: ExchangeStatusEnum.PENDING,
             },
             order: { updatedAt: 'DESC' },
           });
@@ -138,16 +137,16 @@ export class ExchangesService extends BaseService<Exchange> {
             where: [
               {
                 exchange: Not(IsNull()),
-                from: { user: { id: userId } },
-                status: OrderDeliveryStatusEnum.DELIVERED,
-              },
-              {
-                exchange: Not(IsNull()),
                 to: { user: { id: userId } },
                 status: OrderDeliveryStatusEnum.DELIVERED,
               },
             ],
-            relations: ['exchange'],
+            relations: [
+              'exchange',
+              'exchange.post',
+              'exchange.post.user',
+              'exchange.requestUser',
+            ],
             select: ['exchange'],
           });
 
@@ -323,23 +322,17 @@ export class ExchangesService extends BaseService<Exchange> {
 
     const fullPrice =
       userDelivery.deliveryFee +
-      (exchange.compensateUser.id === userId ? exchange.compensationAmount : 0);
+      (exchange.compensateUser && exchange.compensateUser.id === userId
+        ? exchange.compensationAmount
+        : 0);
 
     if (user.balance < fullPrice)
       throw new ForbiddenException('Insufficient balance!');
 
     await this.usersService.updateBalance(userId, -fullPrice);
 
-    await this.transactionsService.createExchangeTransaction(
-      userId,
-      exchangeId,
-      fullPrice,
-    );
-
-    await this.exchangesRepository
-      .update(exchangeId, {
-        status: ExchangeStatusEnum.DELIVERING,
-      })
+    return await this.transactionsService
+      .createExchangeTransaction(userId, exchangeId, fullPrice)
       .then(() => this.getOne(exchangeId));
   }
 
@@ -361,7 +354,7 @@ export class ExchangesService extends BaseService<Exchange> {
 
     await this.eventsGateway.notifyUser(
       exchange.requestUser.id,
-      `Nhân viên giao hàng của chúng tôi đang trên đường đến lấy truyện của bạn để giao. Hãy đảm bảo bạn đã hoàn tất quá trình đóng gói truyện trước khi nhân viên giao hàng đến!`,
+      `Bạn có một cuộc trao đổi đã bắt đầu quá trình giao hàng. Hệ thống sẽ gửi cho bạn thông báo trước khi nhân viên giao hàng đến. Hãy đảm bảo bạn sẽ hoàn tất quá trình đóng gói để bàn giao truyện!`,
       { exchangeId: exchange.id },
       'Bắt đầu giao hàng trao đổi',
       AnnouncementType.EXCHANGE_DELIVERY,
@@ -370,7 +363,7 @@ export class ExchangesService extends BaseService<Exchange> {
 
     await this.eventsGateway.notifyUser(
       exchange.post.user.id,
-      `Nhân viên giao hàng của chúng tôi đang trên đường đến lấy truyện của bạn để giao. Hãy đảm bảo bạn đã hoàn tất quá trình đóng gói truyện trước khi nhân viên giao hàng đến!`,
+      `Bạn có một cuộc trao đổi đã bắt đầu quá trình giao hàng. Hệ thống sẽ gửi cho bạn thông báo trước khi nhân viên giao hàng đến. Hãy đảm bảo bạn sẽ hoàn tất quá trình đóng gói để bàn giao truyện!`,
       { exchangeId: exchange.id },
       'Bắt đầu giao hàng trao đổi',
       AnnouncementType.EXCHANGE_DELIVERY,
@@ -383,7 +376,11 @@ export class ExchangesService extends BaseService<Exchange> {
       id: exchangeId,
     });
 
-    if (!exchange.compensationAmount || exchange.compensationAmount === 0)
+    if (
+      !exchange.compensationAmount ||
+      exchange.compensationAmount === 0 ||
+      exchange.status === ExchangeStatusEnum.FAILED
+    )
       return;
 
     const compensatedUserId =

@@ -13,10 +13,11 @@ import { UsersModule } from '../users/users.module';
 import { Exchange } from 'src/entities/exchange.entity';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { EventsModule } from '../socket/event.module';
+import { Announcement } from 'src/entities/announcement.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Delivery, Order, Exchange]),
+    TypeOrmModule.forFeature([Delivery, Order, Exchange, Announcement]),
     UsersModule,
     ExchangeComicsModule,
     DeliveryInformationModule,

@@ -110,11 +110,11 @@ export class DepositsService extends BaseService<Deposit> {
     const foundDeposit = await this.depositsRepository.find({
       where: { exchange: { id: dto.exchange } },
     });
-    if (foundDeposit.length < 2) return;
-
-    await this.exchangesService.registerGHNDeliveryForExchange(dto.exchange);
-
-    return await this.getOne(newDeposit.id);
+    if (foundDeposit.length < 2) return await this.getOne(newDeposit.id);
+    else
+      return await this.exchangesService
+        .registerGHNDeliveryForExchange(dto.exchange)
+        .then(() => this.getOne(newDeposit.id));
   }
 
   async getAllDepositOfUser(userId: string) {
@@ -255,8 +255,10 @@ export class DepositsService extends BaseService<Deposit> {
     const depositList = await this.depositsRepository.find({
       where: { exchange: { id: exchangeId } },
     });
+
     return await Promise.all(
       depositList.map(async (deposit) => {
+        if (deposit.status !== DepositStatusEnum.HOLDING) return;
         await this.refundDepositToAUser(deposit.id);
       }),
     ).then(() => {

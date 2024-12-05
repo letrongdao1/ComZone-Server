@@ -2,11 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ExchangePost } from 'src/entities/exchange-post.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateExchangePostDTO } from './dto/post.dto';
 import { ExchangePostStatusEnum } from './dto/post-status.enum';
 import { Exchange } from 'src/entities/exchange.entity';
+import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
 
 @Injectable()
 export class ExchangePostsService extends BaseService<ExchangePost> {
@@ -49,7 +50,11 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
       posts.map(async (post) => {
         const mine = userId ? post.user.id === userId : false;
         const alreadyExchange = await this.exchangesRepository.findOne({
-          where: { post: { id: post.id }, requestUser: { id: userId } },
+          where: {
+            post: { id: post.id },
+            requestUser: { id: userId },
+            status: Not(ExchangeStatusEnum.REJECTED),
+          },
         });
 
         return {

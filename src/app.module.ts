@@ -40,6 +40,7 @@ import { ExchangeComicsModule } from './modules/exchange-comics/exchange-comics.
 import { ExchangeConfirmationModule } from './modules/exchange-confirmation/exchange-confirmation.module';
 import { ExchangePostsModule } from './modules/exchange-posts/exchange-posts.module';
 import { RefundRequestsModule } from './modules/refund-requests/refund-requests.module';
+import { SpeedSmsModule } from './modules/speed-sms/speed-sms.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { RefundRequestsModule } from './modules/refund-requests/refund-requests.
     ExchangeConfirmationModule,
     ExchangePostsModule,
     RefundRequestsModule,
+    SpeedSmsModule,
   ],
   controllers: [AppController],
   providers: [
