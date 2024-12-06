@@ -5,7 +5,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
+import { In, LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
 import { Auction } from '../../entities/auction.entity';
 import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { Comic } from 'src/entities/comics.entity';
@@ -196,6 +196,18 @@ export class AuctionService {
         comics: {
           sellerId: { id: sellerId },
         },
+      },
+      relations: ['comics', 'comics.genres'],
+    });
+  }
+
+  async getActiveAuctionsBySeller(sellerId: string): Promise<Auction[]> {
+    return await this.auctionRepository.find({
+      where: {
+        comics: {
+          sellerId: { id: sellerId },
+        },
+        status: Not(In(['FAILED', 'CANCELED'])),
       },
       relations: ['comics', 'comics.genres'],
     });

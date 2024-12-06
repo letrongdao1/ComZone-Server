@@ -316,6 +316,35 @@ export class OrdersService extends BaseService<Order> {
     );
   }
 
+  async getRecentOrdersBySeller(sellerId: string) {
+    const seller = await this.usersService.getOne(sellerId);
+    if (!seller) throw new NotFoundException('Seller cannot be found!');
+
+    const items: { order_id: string }[] = await this.orderItemsRepository
+      .createQueryBuilder('order_item')
+      .leftJoinAndSelect('order_item.comics', 'comics')
+      .leftJoinAndSelect('order_item.order', 'order')
+      .leftJoinAndSelect('comics.sellerId', 'seller')
+      .leftJoinAndSelect('order.delivery', 'delivery')
+      .leftJoinAndSelect('delivery.from', 'from')
+      .leftJoinAndSelect('delivery.to', 'to')
+      .where('seller.id = :sellerId', { sellerId })
+      .where('order.status = :status', { status: OrderStatusEnum.SUCCESSFUL })
+      .select('order.id')
+      .distinct(true)
+      .take(10)
+      .execute();
+
+    return await Promise.all(
+      items.map(async (item) => {
+        return await this.orderItemsRepository.findOne({
+          where: { order: { id: item.order_id } },
+          relations: ['order', 'comics'],
+        });
+      }),
+    );
+  }
+
   async getOrderByDeliveryTrackingCode(code: string): Promise<Order> {
     const order = await this.ordersRepository.findOne({
       where: { delivery: { deliveryTrackingCode: code } },

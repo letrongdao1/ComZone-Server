@@ -71,6 +71,11 @@ export class AuctionController {
     return this.auctionService.findAuctionBySeller(req.user.id);
   }
 
+  @Get('active/seller/:id')
+  getActiveAuctionsBySeller(@Param('id') sellerId: string): Promise<Auction[]> {
+    return this.auctionService.getActiveAuctionsBySeller(sellerId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('user/joined')
   findJoinedAuctionByUser(@Req() req: any): Promise<Auction[]> {
