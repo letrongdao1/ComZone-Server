@@ -139,7 +139,7 @@ export class AuctionService {
       // Create Announcements for Losing Bidders and Notify Them
       await this.eventsGateway.notifyUsers(
         losingUserIds,
-        `Buổi đấu giá ${auction.comics.title} đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
+        `Bạn đã đấu giá ${auction.comics.title} thất bại. Tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')} đã được hoàn trả.`,
         { id: auction },
         'Kết quả đấu giá',
         AnnouncementType.AUCTION,
@@ -149,8 +149,32 @@ export class AuctionService {
     } else {
       // No bids, so the auction failed
       auction.status = 'CANCELED';
-      auction.currentCondition = 'Buổi đấu giá thất bại do không ai đấu giá';
+      auction.currentCondition = 'Buổi đấu giá thất bại do không ai tham gia';
       await this.auctionRepository.save(auction);
+      const depositorIds = await this.depositsService.getAllDepositOfAnAuction(
+        auction.id,
+      );
+      const depositUserIds = depositorIds.map((deposit) => deposit.user.id);
+
+      for (const deposit of depositorIds) {
+        try {
+          await this.depositsService.refundDepositToAUser(deposit.id);
+        } catch (error) {
+          console.error(
+            `Failed to refund deposit for user ${deposit.user.id}:`,
+            error.message,
+          );
+        }
+      }
+      this.eventsGateway.notifyUsers(
+        depositUserIds,
+        `Bạn đã đấu giá ${auction.comics.title} thất bại. Tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')} đã được hoàn trả.`,
+        { id: auction },
+        'Kết quả đấu giá',
+        AnnouncementType.AUCTION,
+        'FAILED',
+        RecipientType.USER,
+      );
       this.eventsGateway.notifyUser(
         auction.comics.sellerId.id,
         `Buổi đấu giá ${auction.comics.title} thất bại do không ai tham gia.`,
@@ -281,7 +305,7 @@ export class AuctionService {
     );
     await this.eventsGateway.notifyUsers(
       losingUserIds,
-      `Buổi đấu giá ${auction.comics.title} đã kết thúc. Thật tiếc bạn đã không thắng lần này.`,
+      `Bạn đã đấu giá ${auction.comics.title} thất bại. Tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')} đã được hoàn trả.`,
       { id: updatedAuction },
       'Kết quả đấu giá',
       AnnouncementType.AUCTION,
@@ -292,6 +316,7 @@ export class AuctionService {
       auction.id,
       latestBid.user.id,
     );
+
     return updatedAuction;
   }
 
@@ -388,7 +413,6 @@ export class AuctionService {
 
       await Promise.all(
         overdueAuctions.map(async (auction) => {
-          // Update auction status to 'FAILED'
           auction.comics.status = ComicsStatusEnum.UNAVAILABLE;
           auction.comics.type = ComicsTypeEnum.NONE;
           console.log('z', auction.comics.status);

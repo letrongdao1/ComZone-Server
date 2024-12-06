@@ -61,7 +61,7 @@ export class DepositsController {
     return await this.depositsService.refundDepositToWinner(auctionId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get('auction/:id')
   getDepositsOfAnAuction(@Param('id') id: string) {
     return this.depositsService.getAllDepositOfAnAuction(id);

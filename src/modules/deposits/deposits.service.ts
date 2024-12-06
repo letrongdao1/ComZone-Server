@@ -151,8 +151,7 @@ export class DepositsService extends BaseService<Deposit> {
       },
     });
   }
-
-  async getAllDepositOfAnAuction(auctionId: string) {
+  async getAllDepositOfAnAuction(auctionId: string): Promise<Deposit[]> {
     return await this.depositsRepository.find({
       where: { auction: { id: auctionId } },
     });
