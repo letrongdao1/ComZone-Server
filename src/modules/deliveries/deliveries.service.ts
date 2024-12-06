@@ -747,6 +747,43 @@ export class DeliveriesService extends BaseService<Delivery> {
       );
   }
 
+  async getByOrder(orderId: string) {
+    const deliveries = await this.deliveriesRepository.find({
+      where: { order: { id: orderId } },
+      relations: ['order'],
+    });
+
+    if (deliveries.length > 0)
+      await Promise.all(
+        deliveries.map((d) => this.autoUpdateGHNDeliveryStatus(d.id)),
+      );
+
+    const newList = await this.deliveriesRepository.find({
+      where: { order: { id: orderId } },
+      relations: ['order'],
+    });
+
+    return await Promise.all(
+      newList.map(async (delivery) => {
+        return {
+          ...delivery,
+          from: delivery.from
+            ? {
+                ...delivery.from,
+                fullAddress: await this.getFullAddressString(delivery.from),
+              }
+            : null,
+          to: delivery.to
+            ? {
+                ...delivery.to,
+                fullAddress: await this.getFullAddressString(delivery.to),
+              }
+            : null,
+        };
+      }),
+    );
+  }
+
   async getByExchange(exchangeId: string) {
     const deliveries = await this.deliveriesRepository.find({
       where: { exchange: { id: exchangeId } },

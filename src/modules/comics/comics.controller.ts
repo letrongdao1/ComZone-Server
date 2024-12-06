@@ -74,6 +74,14 @@ export class ComicController {
     return this.comicService.findBySeller(sellerId);
   }
 
+  @Get('search/available/seller/:seller_id')
+  async searchSellerAvailableComics(
+    @Param('seller_id') sellerId: string,
+    @Query('search') key: string,
+  ): Promise<Comic[]> {
+    return this.comicService.searchSellerAvailableComicsByKey(sellerId, key);
+  }
+
   @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
