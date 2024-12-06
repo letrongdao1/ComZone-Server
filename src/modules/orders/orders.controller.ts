@@ -55,6 +55,11 @@ export class OrdersController {
     return this.ordersService.getAllOrdersOfSeller(req.user.id);
   }
 
+  @Get('recent/seller/:id')
+  getRecentOrdersBySeller(@Param('id') sellerId: string) {
+    return this.ordersService.getRecentOrdersBySeller(sellerId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('/delivery-tracking-code/:code')
   getOrderByCode(@Param('code') code: string) {

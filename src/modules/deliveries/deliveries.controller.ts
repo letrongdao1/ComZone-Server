@@ -67,8 +67,14 @@ export class DeliveriesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('exchange/:id')
-  getByExchange(@Param('id') id: string) {
+  @Get('order/:order_id')
+  getByOrder(@Param('order_id') id: string) {
+    return this.deliveriesService.getByOrder(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('exchange/:exchange_id')
+  getByExchange(@Param('exchange_id') id: string) {
     return this.deliveriesService.getByExchange(id);
   }
 

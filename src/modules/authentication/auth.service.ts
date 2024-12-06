@@ -104,8 +104,13 @@ export class AuthService {
     const { accessToken, refreshToken } = await this.generateTokens(userId);
     const hashedRefreshToken = bcrypt.hashSync(refreshToken, 10);
     await this.usersService.updateRefreshToken(userId, hashedRefreshToken);
+
+    const user = await this.usersService.getOne(userId);
+
     return {
       id: userId,
+      isMod: user.role === 'MODERATOR',
+      isAdmin: user.role === 'ADMIN',
       accessToken,
       refreshToken,
     };

@@ -41,6 +41,7 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
   async getByUserId(userId: string) {
     const sellerDetails = await this.sellerDetailsRepository.findOne({
       where: { user: { id: userId } },
+      relations: ['user'],
     });
 
     if (!sellerDetails)
