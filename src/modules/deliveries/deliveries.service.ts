@@ -318,10 +318,6 @@ export class DeliveriesService extends BaseService<Delivery> {
     const delivery = await this.getOne(deliveryId);
     if (!delivery || !delivery.deliveryTrackingCode) return;
 
-    const skippedStatus = [DeliveryOverallStatusEnum.DELIVERED];
-
-    if (skippedStatus.includes(delivery.overallStatus)) return;
-
     const headers = {
       Token: process.env.GHN_TOKEN,
       ShopId: process.env.GHN_SHOPID,
@@ -444,7 +440,9 @@ export class DeliveriesService extends BaseService<Delivery> {
         },
       );
 
-      if (checkOrderAnnouncement) return;
+      if (checkOrderAnnouncement) {
+        return;
+      }
     } else if (delivery.exchange) {
       const checkExchangeAnnouncement =
         await this.announcementsRepository.findOne({
@@ -457,6 +455,8 @@ export class DeliveriesService extends BaseService<Delivery> {
 
       if (checkExchangeAnnouncement) return;
     }
+
+    console.log('ANNOUNCE: ', delivery.deliveryTrackingCode);
 
     const getAnnouncementData = () => {
       switch (type) {

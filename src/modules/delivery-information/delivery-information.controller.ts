@@ -25,12 +25,12 @@ export class DeliveryInformationController {
   @Post()
   createNewDeliveryInformation(
     @Req() req: any,
-    @Body() createDeliveryInformationDto: CreateDeliveryInformationDTO,
+    @Body() dto: CreateDeliveryInformationDTO,
   ) {
-    return this.deliveryInformationService.createNewDeliveryInfo(
-      req.user.id,
-      createDeliveryInformationDto,
-    );
+    return this.deliveryInformationService.createNewDeliveryInfo({
+      ...dto,
+      userId: dto.userId || req.user.id,
+    });
   }
 
   @UseGuards(JwtAuthGuard)

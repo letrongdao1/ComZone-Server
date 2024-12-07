@@ -8,8 +8,8 @@ export class DeliveriesScheduleService {
 
   constructor(private readonly deliveriesService: DeliveriesService) {}
 
-  @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: true,
+  @Cron(CronExpression.EVERY_10_SECONDS, {
+    disabled: false,
   })
   updateDeliveryStatus() {
     this.logger.debug(

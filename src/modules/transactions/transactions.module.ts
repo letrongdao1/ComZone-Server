@@ -11,6 +11,7 @@ import { Deposit } from 'src/entities/deposit.entity';
 import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { Exchange } from 'src/entities/exchange.entity';
 import { RefundRequest } from 'src/entities/refund-request.entity';
+import { Delivery } from 'src/entities/delivery.entity';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { RefundRequest } from 'src/entities/refund-request.entity';
       Deposit,
       SellerSubscription,
       Exchange,
+      Delivery,
       RefundRequest,
     ]),
     UsersModule,

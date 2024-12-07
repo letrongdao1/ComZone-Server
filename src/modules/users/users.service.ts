@@ -34,7 +34,7 @@ export class UsersService extends BaseService<User> {
   }
 
   async getOne(id: string): Promise<User> {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id },
       select: [
         'id',
@@ -51,6 +51,10 @@ export class UsersService extends BaseService<User> {
         'refresh_token',
       ],
     });
+
+    user.balance -= user.nonWithdrawableAmount;
+
+    return user;
   }
 
   async getUserByEmail(email: string) {
@@ -171,6 +175,16 @@ export class UsersService extends BaseService<User> {
       .update(userId, {
         balance: user.balance + amount,
         nonWithdrawableAmount: user.nonWithdrawableAmount + amount,
+      })
+      .then(() => this.getOne(userId));
+  }
+
+  async updateNWBalanceAfterOrder(userId: string, amount: number) {
+    const user = await this.getOne(userId);
+
+    return await this.userRepository
+      .update(userId, {
+        nonWithdrawableAmount: user.nonWithdrawableAmount - amount,
       })
       .then(() => this.getOne(userId));
   }

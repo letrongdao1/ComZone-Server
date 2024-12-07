@@ -34,11 +34,10 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     const chatRoomList =
       await this.chatRoomsService.getChatRoomByUserId(userId);
 
-    await this.usersService.updateLastActive(userId);
-
     return await Promise.all(
       chatRoomList.map(async (chatRoom) => {
         client.join(chatRoom.id);
+        console.log(`${userId} joined ${chatRoom.id}`);
       }),
     );
   }
