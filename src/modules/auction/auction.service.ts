@@ -442,6 +442,14 @@ export class AuctionService {
             if (winnerDeposit) {
               await this.depositsService.seizeADepositAuction(winnerDeposit.id);
             }
+            this.eventsGateway.notifyUser(
+              auction.comics.sellerId.id,
+              `Tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')}đ đã được gửi về ví của bạn do người dùng ${auction.winner.name} không thanh toán đúng hẹn .`,
+              { auctionId: auction },
+              'Thông báo đấu giá',
+              AnnouncementType.AUCTION,
+              RecipientType.SELLER,
+            );
           }
 
           // Save the updated auction status

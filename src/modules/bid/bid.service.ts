@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bid } from 'src/entities/bid.entity';
@@ -22,7 +18,7 @@ export class BidService {
   ) {}
 
   async create(createBidDto: CreateBidDto): Promise<Bid> {
-    const { userId, auctionId, price } = createBidDto;
+    const { userId, auctionId, price, type } = createBidDto;
     console.log('121312', createBidDto);
 
     // Check if the user exists
@@ -39,19 +35,21 @@ export class BidService {
       throw new NotFoundException(`Auction with ID ${auctionId} not found`);
     }
     console.log('AUCTION', auction);
+    console.log('1231', type !== 'maxPrice');
 
-    // Determine the minimum acceptable bid based on the current price or reserve price
-    const minimumBid = auction.currentPrice
-      ? auction.currentPrice + auction.priceStep
-      : auction.reservePrice + auction.priceStep;
+    if (type !== 'maxPrice') {
+      // Determine the minimum acceptable bid based on the current price or reserve price
+      const minimumBid = auction.currentPrice
+        ? auction.currentPrice + auction.priceStep
+        : auction.reservePrice + auction.priceStep;
 
-    if (price < minimumBid) {
-      throw new Error(`The bid must be at least ${minimumBid}`);
+      if (price < minimumBid) {
+        throw new Error(`The bid must be at least ${minimumBid}`);
+      } else if (price >= auction.maxPrice) {
+        throw new Error(`The bid must not higher than ${auction.maxPrice}`);
+      }
     }
 
-    // Create and save the new bid
-
-    // Update the auction's current price
     auction.currentPrice = price;
     await this.auctionRepository.save(auction);
 

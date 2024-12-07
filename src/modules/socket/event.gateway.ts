@@ -110,6 +110,7 @@ export class EventsGateway implements OnModuleInit {
         userId: user.id,
         auctionId,
         price: currentPrice,
+        type,
       });
       console.log('11111', bid);
     }

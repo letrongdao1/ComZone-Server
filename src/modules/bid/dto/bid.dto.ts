@@ -19,6 +19,9 @@ export class CreateBidDto {
   @IsNumber()
   @IsPositive()
   price: number;
+
+  @IsString()
+  type?: string;
 }
 export class UpdateBidDto {
   @IsOptional()
