@@ -106,7 +106,10 @@ export class OrdersService extends BaseService<Order> {
       if (user.balance < createOrderDto.totalPrice)
         throw new ForbiddenException('Insufficient balance!');
 
-      await this.usersService.updateBalance(userId, -createOrderDto.totalPrice);
+      await this.usersService.updateBalance(
+        userId,
+        -(createOrderDto.totalPrice + delivery.deliveryFee),
+      );
 
       await this.usersService.updateBalanceWithNonWithdrawableAmount(
         createOrderDto.sellerId,
@@ -129,7 +132,7 @@ export class OrdersService extends BaseService<Order> {
 
       await this.eventsGateway.notifyUser(
         userId,
-        `Thanh toán số tiền ${newOrder.totalPrice.toLocaleString('vi-VN')}đ bằng ví ComZone thành công.`,
+        `Thanh toán số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ bằng ví ComZone thành công.`,
         { transactionId: userTransaction.id },
         'Thanh toán thành công',
         AnnouncementType.TRANSACTION_SUBTRACT,
@@ -192,6 +195,7 @@ export class OrdersService extends BaseService<Order> {
       OrderDeliveryStatusEnum.PICKED,
       OrderDeliveryStatusEnum.MONEY_COLLECT_PICKING,
     ];
+
     const deliveringGroup = [
       OrderDeliveryStatusEnum.STORING,
       OrderDeliveryStatusEnum.TRANSPORTING,
@@ -199,11 +203,11 @@ export class OrdersService extends BaseService<Order> {
       OrderDeliveryStatusEnum.DELIVERING,
       OrderDeliveryStatusEnum.MONEY_COLLECT_DELIVERING,
     ];
-    const deliveredGroup = [
-      OrderDeliveryStatusEnum.DELIVERY_FAIL,
-      OrderDeliveryStatusEnum.DELIVERED,
-    ];
+
+    const deliveredGroup = [OrderDeliveryStatusEnum.DELIVERED];
+
     const failedGroup = [
+      OrderDeliveryStatusEnum.DELIVERY_FAIL,
       OrderDeliveryStatusEnum.WAITING_TO_RETURN,
       OrderDeliveryStatusEnum.RETURN,
       OrderDeliveryStatusEnum.RETURN_SORTING,
@@ -473,7 +477,7 @@ export class OrdersService extends BaseService<Order> {
       .then(() => this.getOne(orderId));
   }
 
-  async updateComicsStatusOfAnOrder(orderId: string) {
+  async updateOrderComicsStatus(orderId: string, status: ComicsStatusEnum) {
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: orderId } },
     });
@@ -483,10 +487,7 @@ export class OrdersService extends BaseService<Order> {
 
     await Promise.all(
       orderItemList.map(async (item) => {
-        await this.comicsService.updateStatus(
-          item.comics.id,
-          ComicsStatusEnum.SOLD,
-        );
+        await this.comicsService.updateStatus(item.comics.id, status);
       }),
     );
 
@@ -539,6 +540,25 @@ export class OrdersService extends BaseService<Order> {
 
     if (order.user.id !== userId)
       throw new ForbiddenException('Order does not belong to this user!');
+
+    await this.updateOrderComicsStatus(order.id, ComicsStatusEnum.SOLD);
+
+    const seller = await this.getSellerIdOfAnOrder(order.id);
+
+    await this.usersService.updateNWBalanceAfterOrder(
+      seller.id,
+      order.totalPrice,
+    );
+
+    await this.eventsGateway.notifyUser(
+      seller.id,
+      `Bạn có một đơn hàng đã được người mua xác nhận thành công. Bạn đã có thể sử dụng hoặc rút số tiền của đơn hàng.`,
+      { orderId: order.id },
+      'Đơn hàng đã hoàn tất',
+      AnnouncementType.ORDER_CONFIRMED,
+      RecipientType.SELLER,
+      'SUCCESSFUL',
+    );
 
     return await this.ordersRepository
       .update(order.id, {

@@ -40,18 +40,24 @@ export class ComicsExchangeService extends BaseService<Comic> {
   }
 
   async getExchangeComicsOfUser(userId: string) {
-    return await this.comicsRepository.find({
+    const comicsList = await this.comicsRepository.find({
       where: {
         sellerId: {
           id: userId,
         },
         type: ComicsTypeEnum.EXCHANGE,
       },
-      order: {
-        updatedAt: 'DESC',
-        title: 'ASC',
-      },
     });
+
+    comicsList.sort((a, b) => {
+      if (a.status === b.status) return a.updatedAt > b.updatedAt ? -1 : 1;
+      else {
+        if (a.status === ComicsStatusEnum.AVAILABLE) return -1;
+        else if (a.status === ComicsStatusEnum.PRE_ORDER) return 0;
+        else return 1;
+      }
+    });
+    return comicsList;
   }
 
   async getAvailableExchangeComicsOfUser(userId: string) {

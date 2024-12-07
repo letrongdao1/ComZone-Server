@@ -201,7 +201,7 @@ export class ExchangesService extends BaseService<Exchange> {
     };
 
     const exchangeList = await getExchangeList();
-    if (exchangeList.length === 0) return [];
+    if (!exchangeList || exchangeList.length === 0) return [];
 
     return await Promise.all(
       exchangeList.map(async (exchange) => {
@@ -314,7 +314,7 @@ export class ExchangesService extends BaseService<Exchange> {
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
     const userDelivery = await this.deliveriesRepository.findOne({
-      where: { exchange: { id: exchangeId }, from: { user: { id: userId } } },
+      where: { exchange: { id: exchangeId }, to: { user: { id: userId } } },
     });
 
     if (!userDelivery.deliveryFee)
@@ -438,6 +438,19 @@ export class ExchangesService extends BaseService<Exchange> {
       throw new ForbiddenException(
         'Only post user can reject requests on this post!',
       );
+
+    const comicsList = await this.exchangeComicsRepository.find({
+      where: { exchange: { id: exchangeId } },
+    });
+
+    await Promise.all(
+      comicsList.map(async (comics) => {
+        await this.comicsService.updateStatus(
+          comics.comics.id,
+          ComicsStatusEnum.AVAILABLE,
+        );
+      }),
+    );
 
     await this.eventsGateway.notifyUser(
       exchange.requestUser.id,

@@ -17,6 +17,7 @@ import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { Exchange } from 'src/entities/exchange.entity';
 import { RefundRequest } from 'src/entities/refund-request.entity';
+import { Delivery } from 'src/entities/delivery.entity';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -35,6 +36,8 @@ export class TransactionsService extends BaseService<Transaction> {
     private readonly sellerSubscriptionsRepository: Repository<SellerSubscription>,
     @InjectRepository(Exchange)
     private readonly exchangesRepository: Repository<Exchange>,
+    @InjectRepository(Delivery)
+    private readonly deliveriesRepository: Repository<Delivery>,
     @InjectRepository(RefundRequest)
     private readonly refundsRepository: Repository<RefundRequest>,
 
@@ -61,11 +64,11 @@ export class TransactionsService extends BaseService<Transaction> {
       order,
       amount:
         type === 'SUBTRACT'
-          ? order.totalPrice
-          : order.totalPrice - order.delivery.deliveryFee,
+          ? order.totalPrice + order.delivery.deliveryFee
+          : order.totalPrice,
+      profitAmount: type === 'SUBTRACT' && order.delivery.deliveryFee,
       status: TransactionStatusEnum.SUCCESSFUL,
       type,
-      note: type === 'ADD' && 'Chưa thể sử dụng',
     });
 
     return await this.transactionsRepository.save(newTransaction);
@@ -174,13 +177,22 @@ export class TransactionsService extends BaseService<Transaction> {
     });
     if (!exchange) throw new NotFoundException('Exchange cannot be found!');
 
-    if (amount <= 0) throw new BadRequestException('Invalid delivery fee!');
+    const delivery = await this.deliveriesRepository.findOne({
+      where: { exchange: { id: exchangeId }, to: { user: { id: userId } } },
+    });
+
+    if (!delivery)
+      throw new NotFoundException('Exchange delivery cannot be found!');
+
+    if (amount <= 0 || !delivery.deliveryFee)
+      throw new BadRequestException('Invalid delivery fee!');
 
     const newTransaction = this.transactionsRepository.create({
       code: generateNumericCode(8),
       user,
       exchange,
       amount,
+      profitAmount: delivery.deliveryFee,
       type: type || 'SUBTRACT',
       status: TransactionStatusEnum.SUCCESSFUL,
     });

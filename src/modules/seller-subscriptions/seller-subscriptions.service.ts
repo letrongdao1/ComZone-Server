@@ -38,23 +38,28 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     if (!sellerSub) return null;
 
     const checkActive = () => {
-      if (
-        sellerSub.remainingSellTime === 0 &&
-        sellerSub.remainingAuctionTime === 0
-      ) {
-        return sellerSub.plan.duration > 0;
-      } else
-        return sellerSub.plan.duration > 0
-          ? sellerSub.activatedTime.getTime() +
-              sellerSub.plan.duration * 30 * 24 * 60 * 60 * 1000 >
-              new Date().getTime()
-          : true;
+      if (sellerSub.plan.price === 0) return true;
+
+      return (
+        sellerSub.activatedTime.getTime() +
+          sellerSub.plan.duration * 30 * 24 * 60 * 60 * 1000 >
+        new Date().getTime()
+      );
     };
 
     return {
       ...sellerSub,
-      canSell: sellerSub.remainingSellTime > 0,
-      canAuction: sellerSub.remainingAuctionTime > 0,
+      canSell:
+        checkActive() &&
+        (sellerSub.plan.sellTime === 0
+          ? true
+          : sellerSub.remainingSellTime > 0),
+
+      canAuction:
+        checkActive() &&
+        (sellerSub.plan.auctionTime === 0
+          ? true
+          : sellerSub.remainingAuctionTime > 0),
       isActive: checkActive(),
     };
   }
@@ -123,14 +128,13 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
   }
 
   async updateAfterSell(userId: string, quantity: number) {
-    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
-      where: {
-        user: { id: userId },
-      },
-    });
+    const sellerSub = await this.getSellerSubsOfUser(userId);
 
     if (!sellerSub)
       throw new NotFoundException('Seller subscription cannot be found!');
+
+    if (sellerSub.plan.sellTime === 0 && sellerSub.isActive) return;
+
     if (sellerSub.remainingSellTime < quantity)
       throw new ForbiddenException('Insufficient sell time!');
 
@@ -140,14 +144,12 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
   }
 
   async updateAfterStopSelling(userId: string, quantity: number) {
-    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
-      where: {
-        user: { id: userId },
-      },
-    });
+    const sellerSub = await this.getSellerSubsOfUser(userId);
 
     if (!sellerSub)
       throw new NotFoundException('Seller subscription cannot be found!');
+
+    if (sellerSub.plan.sellTime === 0 && sellerSub.isActive) return;
 
     return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
       remainingSellTime: sellerSub.remainingSellTime + quantity,
@@ -155,14 +157,13 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
   }
 
   async updateAfterAuction(userId: string, quantity: number) {
-    const sellerSub = await this.sellerSubscriptionsRepository.findOne({
-      where: {
-        user: { id: userId },
-      },
-    });
+    const sellerSub = await this.getSellerSubsOfUser(userId);
 
     if (!sellerSub)
       throw new NotFoundException('Seller subscription cannot be found!');
+
+    if (sellerSub.plan.auctionTime === 0 && sellerSub.isActive) return;
+
     if (sellerSub.remainingAuctionTime < quantity)
       throw new ForbiddenException('Insufficient auction time!');
 

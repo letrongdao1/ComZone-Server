@@ -16,11 +16,8 @@ export class DeliveryInformationService extends BaseService<DeliveryInformation>
     super(deliveryInfoRepository);
   }
 
-  async createNewDeliveryInfo(
-    userId: string,
-    dto: CreateDeliveryInformationDTO,
-  ) {
-    const user = await this.usersService.getOne(userId);
+  async createNewDeliveryInfo(dto: CreateDeliveryInformationDTO) {
+    const user = await this.usersService.getOne(dto.userId);
 
     const newDeliveryInfo = this.deliveryInfoRepository.create({
       ...dto,

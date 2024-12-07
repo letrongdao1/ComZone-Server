@@ -175,7 +175,7 @@ export class ComicService extends BaseService<Comic> {
         a.type === b.type ||
         (a.type !== ComicsTypeEnum.NONE && b.type !== ComicsTypeEnum.NONE)
       ) {
-        return new Date(a.updatedAt) > new Date(b.updatedAt) ? 1 : -1;
+        return new Date(a.updatedAt) < new Date(b.updatedAt) ? 1 : -1;
       } else {
         return a.type === ComicsTypeEnum.NONE ? -1 : 1;
       }
@@ -372,17 +372,23 @@ export class ComicService extends BaseService<Comic> {
       throw new NotFoundException('Comic not found');
     }
 
-    if (status === ComicsStatusEnum.AVAILABLE) {
-      await this.checkSellerAvailability(comic.sellerId.id);
+    // if (
+    //   status === ComicsStatusEnum.AVAILABLE ||
+    //   comic.type !== ComicsTypeEnum.EXCHANGE
+    // ) {
+    //   await this.checkSellerAvailability(comic.sellerId.id);
 
-      await this.comicRepository.update(comicsId, {
-        onSaleSince: new Date(),
-      });
-    }
+    //   await this.comicRepository.update(comicsId, {
+    //     onSaleSince: new Date(),
+    //   });
+    // }
+
     comic.status = status;
-    comic.type = ComicsTypeEnum.SELL;
 
-    if (status === ComicsStatusEnum.AVAILABLE)
+    if (
+      status === ComicsStatusEnum.AVAILABLE &&
+      comic.type !== ComicsTypeEnum.EXCHANGE
+    )
       comic.onSaleSince = new Date(Date.now());
 
     await this.comicRepository.save(comic);
