@@ -395,6 +395,28 @@ export class ComicService extends BaseService<Comic> {
 
     return comic;
   }
+  async startSelling(
+    comicsId: string,
+    status: ComicsStatusEnum,
+  ): Promise<Comic> {
+    const comic = await this.comicRepository.findOne({
+      where: { id: comicsId },
+    });
+
+    if (!comic) {
+      throw new NotFoundException('Comic not found');
+    }
+
+    comic.onSaleSince = new Date(Date.now());
+
+    comic.status = status;
+    comic.type = ComicsTypeEnum.SELL;
+
+    if (status === ComicsStatusEnum.AVAILABLE)
+      await this.comicRepository.save(comic);
+
+    return comic;
+  }
   async stopSelling(comicsId: string): Promise<Comic> {
     // Check if the comic exists
     const comic = await this.comicRepository.findOne({

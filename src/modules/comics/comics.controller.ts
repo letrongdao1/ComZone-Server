@@ -185,6 +185,15 @@ export class ComicController {
     return await this.comicService.updateStatus(id, status);
   }
 
+  @Patch(':id/startSelling')
+  async startSelling(
+    @Param('id') id: string,
+    @Body() updateComicStatusDto: UpdateComicStatusDto,
+  ) {
+    const { status } = updateComicStatusDto;
+    return await this.comicService.startSelling(id, status);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Delete('soft/:id')
   sellerDelete(@Param('id') id: string) {

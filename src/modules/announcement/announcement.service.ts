@@ -35,7 +35,6 @@ export class AnnouncementService {
 
   // Create an announcement
   async markAsRead(announcementId: string, userId: string): Promise<void> {
-    console.log(announcementId, userId);
     const announcement = await this.announcementRepository.findOne({
       where: {
         id: announcementId,
@@ -166,7 +165,6 @@ export class AnnouncementService {
       }),
     );
 
-    console.log(enrichedAnnouncements);
     return enrichedAnnouncements;
   }
 
