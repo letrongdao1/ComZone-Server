@@ -291,7 +291,7 @@ export class OrdersService extends BaseService<Order> {
     );
   }
 
-  async getAllOrdersOfSeller(sellerId: string): Promise<any[]> {
+  async getAllOrdersOfSeller(sellerId: string): Promise<Order[]> {
     const seller = await this.usersService.getOne(sellerId);
     if (!seller) throw new NotFoundException('Seller cannot be found!');
 
@@ -347,6 +347,32 @@ export class OrdersService extends BaseService<Order> {
         });
       }),
     );
+  }
+
+  async getSellerOrderData(sellerId: string) {
+    const orders = await this.getAllOrdersOfSeller(sellerId);
+
+    const ongoingGroup = [
+      OrderStatusEnum.PENDING,
+      OrderStatusEnum.PACKAGING,
+      OrderStatusEnum.DELIVERING,
+      OrderStatusEnum.DELIVERED,
+    ];
+
+    const ongoingOrders = orders.filter((order) =>
+      ongoingGroup.includes(order.status as OrderStatusEnum),
+    );
+
+    const successfulOrders = orders.filter(
+      (order) => order.status === OrderStatusEnum.SUCCESSFUL,
+    );
+
+    return {
+      orders: orders,
+      total: orders.length,
+      totalOngoing: ongoingOrders.length,
+      totalSuccessful: successfulOrders.length,
+    };
   }
 
   async getOrderByDeliveryTrackingCode(code: string): Promise<Order> {

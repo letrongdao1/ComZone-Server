@@ -184,6 +184,45 @@ export class ComicService extends BaseService<Comic> {
     return comics;
   }
 
+  async getSellerComicsData(sellerId: string) {
+    const seller = await this.userRepository.findOne({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new Error('Seller not found');
+    }
+
+    const comics = await this.comicRepository.find({
+      where: {
+        sellerId: { id: seller.id },
+        type: In([
+          ComicsTypeEnum.SELL,
+          ComicsTypeEnum.AUCTION,
+          ComicsTypeEnum.NONE,
+        ]),
+      },
+    });
+
+    const countAvailable = await this.comicRepository.count({
+      where: {
+        sellerId: { id: seller.id },
+        type: In([
+          ComicsTypeEnum.SELL,
+          ComicsTypeEnum.AUCTION,
+          ComicsTypeEnum.NONE,
+        ]),
+        status: ComicsStatusEnum.AVAILABLE,
+      },
+    });
+
+    return {
+      comics,
+      total: comics.length,
+      totalAvailable: countAvailable,
+    };
+  }
+
   async searchSellerAvailableComicsByKey(sellerId: string, key: string) {
     return await this.comicRepository.find({
       where: [
