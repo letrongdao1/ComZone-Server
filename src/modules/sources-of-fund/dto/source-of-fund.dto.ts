@@ -2,5 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SourceOfFundDTO {
   @ApiProperty()
-  name: string;
+  number: string;
+
+  @ApiProperty()
+  owner: string;
+
+  @ApiProperty()
+  bankName: string;
+
+  @ApiProperty()
+  logo: string;
 }

@@ -8,6 +8,6 @@ export class SpeedSmsController {
 
   @Post('send')
   sendNewSMS(@Body() dto: SendSMSDTO) {
-    return this.speedSmsService.sendSMS([dto.phone], dto.content, 2);
+    return this.speedSmsService.sendSMS([dto.phone], dto.content);
   }
 }

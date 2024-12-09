@@ -74,6 +74,31 @@ export class TransactionsService extends BaseService<Transaction> {
     return await this.transactionsRepository.save(newTransaction);
   }
 
+  async createCancelledOrderTransaction(
+    userId: string,
+    orderId: string,
+    type: 'ADD' | 'SUBTRACT',
+    amount: number,
+  ) {
+    const user = await this.usersService.getOne(userId);
+    const order = await this.ordersRepository.findOneBy({ id: orderId });
+    if (!order)
+      throw new NotFoundException(
+        'Order cannot be found to create transaction!',
+      );
+
+    const newTransaction = this.transactionsRepository.create({
+      user,
+      code: generateNumericCode(8),
+      order,
+      amount,
+      status: TransactionStatusEnum.SUCCESSFUL,
+      type,
+    });
+
+    return await this.transactionsRepository.save(newTransaction);
+  }
+
   async createWalletDepositTransaction(
     userId: string,
     walletDepositId: string,

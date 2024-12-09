@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SendSMSDTO {
-  @ApiProperty()
+  @ApiProperty({ example: 'Số điện thoại nhận tin nhắn' })
   phone: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'Mã OTP' })
   content: string;
 }
