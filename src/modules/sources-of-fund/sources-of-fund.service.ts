@@ -25,7 +25,10 @@ export class SourcesOfFundService extends BaseService<SourceOfFund> {
 
     const sourceOfFund = this.sourcesOfFundRepository.create({
       user,
-      name: sourceOfFundDto.name,
+      owner: sourceOfFundDto.owner,
+      number: sourceOfFundDto.number,
+      bankName: sourceOfFundDto.bankName,
+      logo: sourceOfFundDto.logo,
     });
 
     return await this.sourcesOfFundRepository.save(sourceOfFund);

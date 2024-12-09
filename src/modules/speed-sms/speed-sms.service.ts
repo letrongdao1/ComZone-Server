@@ -11,16 +11,13 @@ export class SpeedSmsService {
     this.accessToken = process.env.SPEED_SMS_ACCESS_TOKEN;
   }
 
-  async sendSMS(
-    phones: string[],
-    content: string,
-    type: number,
-  ): Promise<void> {
+  async sendSMS(phones: string[], content: string): Promise<void> {
     const authHeader = this.getAuthorizationHeader();
     const payload = {
       to: phones,
-      content,
-      sms_type: type,
+      content: `COMZONE - Ma OTP xac thuc cua ban la: ${content}`,
+      sms_type: 5,
+      sender: process.env.SPEED_SMS_DEVICE_ID,
     };
 
     try {
