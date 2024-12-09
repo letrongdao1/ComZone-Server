@@ -60,6 +60,14 @@ export class OrdersController {
     return this.ordersService.getRecentOrdersBySeller(sellerId);
   }
 
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('seller/data')
+  getSellerOrderData(@Req() req: any) {
+    return this.ordersService.getSellerOrderData(req.user.id);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('/delivery-tracking-code/:code')
   getOrderByCode(@Param('code') code: string) {

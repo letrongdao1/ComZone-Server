@@ -34,6 +34,12 @@ export class TransactionsController {
     return this.transactionsService.getAllTransactionsOfUser(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('seller/data')
+  getSellerTransactionsData(@Req() req: any) {
+    return this.transactionsService.getSellerTransactionsData(req.user.id);
+  }
+
   @Get('/code/:code')
   getTransactionByCode(@Param('code') code: string) {
     return this.transactionsService.getTransactionByCode(code);

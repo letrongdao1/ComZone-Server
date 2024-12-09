@@ -69,6 +69,12 @@ export class ComicController {
     return this.comicService.findBySeller(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('seller/data')
+  async getSellerComicsData(@Req() req: any) {
+    return this.comicService.getSellerComicsData(req.user.id);
+  }
+
   @Get('seller/:seller_id')
   async findBySellerId(@Param('seller_id') sellerId: string): Promise<Comic[]> {
     return this.comicService.findBySeller(sellerId);
