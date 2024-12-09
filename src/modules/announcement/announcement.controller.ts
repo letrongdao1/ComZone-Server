@@ -9,6 +9,8 @@ import {
   Delete,
   Req,
   UseGuards,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import {
@@ -46,6 +48,22 @@ export class AnnouncementController {
       auctionId,
     );
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('mark-all-read')
+  async markAllAsReadByType(
+    @Req() req: any,
+    @Query('type') type?: string, // Optional type parameter
+  ): Promise<{ message: string }> {
+    await this.announcementService.markAllAsRead(req.user.id, type);
+    return { message: 'Announcements marked as read by type' };
+  }
+  // @UseGuards(JwtAuthGuard)
+  // @Patch('mark-all-read/')
+  // async markAllAsRead(@Req() req: any): Promise<{ message: string }> {
+  //   await this.announcementService.markAllAsRead(req.user.id);
+  //   return { message: 'All announcements marked as read' };
+  // }
   @UseGuards(JwtAuthGuard)
   @Get('/user')
   async findAnnouncementsByUser(@Req() req: any) {

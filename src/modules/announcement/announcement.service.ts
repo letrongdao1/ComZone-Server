@@ -186,6 +186,19 @@ export class AnnouncementService {
       where: { id },
     });
   }
+  async markAllAsRead(userId: string, type?: string): Promise<void> {
+    const queryBuilder = this.announcementRepository
+      .createQueryBuilder()
+      .update()
+      .set({ isRead: true })
+      .where('userId = :userId', { userId });
+
+    if (type) {
+      queryBuilder.andWhere('type = :type', { type });
+    }
+
+    await queryBuilder.execute();
+  }
 
   // Xóa thông báo theo ID
   async remove(id: string): Promise<void> {
