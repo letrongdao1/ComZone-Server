@@ -13,6 +13,12 @@ import { PaymentGatewayEnum } from './dto/provider.enum';
 import { WalletDepositStatusEnum } from './dto/status.enum';
 import { TransactionsService } from '../transactions/transactions.service';
 import { TransactionStatusEnum } from '../transactions/dto/transaction-status.enum';
+import { EventsGateway } from '../socket/event.gateway';
+import CurrencySplitter from 'src/utils/currency-spliter/CurrencySplitter';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @Injectable()
 export class WalletDepositService extends BaseService<WalletDeposit> {
@@ -22,6 +28,7 @@ export class WalletDepositService extends BaseService<WalletDeposit> {
 
     private readonly usersService: UsersService,
     private readonly transactionsService: TransactionsService,
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(walletDepositRepository);
   }
@@ -81,9 +88,19 @@ export class WalletDepositService extends BaseService<WalletDeposit> {
         walletDeposit.amount,
       );
 
-      await this.transactionsService.createWalletDepositTransaction(
+      const transaction =
+        await this.transactionsService.createWalletDepositTransaction(
+          walletDeposit.user.id,
+          walletDeposit.id,
+        );
+
+      await this.eventsGateway.notifyUser(
         walletDeposit.user.id,
-        walletDeposit.id,
+        `Nạp thành công ${CurrencySplitter(walletDeposit.amount)}đ vào ví ComZone.`,
+        { transactionId: transaction.id },
+        'Nạp tiền thành công',
+        AnnouncementType.TRANSACTION_ADD,
+        RecipientType.USER,
       );
     } else {
       await this.transactionsService.createWalletDepositTransaction(

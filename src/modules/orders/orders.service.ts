@@ -517,6 +517,23 @@ export class OrdersService extends BaseService<Order> {
     if (order.paymentMethod === 'WALLET') {
       const seller = await this.getSellerIdOfAnOrder(order.id);
       await this.usersService.updateBalance(order.user.id, order.totalPrice);
+      await this.transactionsService.createCancelledOrderTransaction(
+        order.user.id,
+        order.id,
+        'ADD',
+        order.totalPrice + order.delivery.deliveryFee,
+      );
+
+      await this.eventsGateway.notifyUser(
+        order.user.id,
+        `Bạn có một đơn hàng đã bị hủy do đơn vị vận chuyển không hỗ trợ tuyến đường vận chuyển từ bạn đến người bán. ${order.paymentMethod === 'WALLET' && 'Số tiền bạn thanh toán cho đơn hàng đã được hoàn lại vào ví của bạn.'}`,
+        { orderId: order.id },
+        'Đơn hàng được xác nhận',
+        AnnouncementType.ORDER_FAILED,
+        RecipientType.USER,
+        'SUCCESSFUL',
+      );
+
       await this.usersService.updateBalanceWithNonWithdrawableAmount(
         seller.id,
         -order.totalPrice,

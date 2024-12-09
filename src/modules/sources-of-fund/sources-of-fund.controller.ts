@@ -22,7 +22,8 @@ export class SourcesOfFundController {
     );
   }
 
-  @Get()
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
   getUserSourcesOfFund(@Req() req: any) {
     return this.sourcesOfFundService.getUserSourcesOfFund(req.user.id);
   }

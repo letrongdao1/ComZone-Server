@@ -21,8 +21,8 @@ export class WithdrawalController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  createNewWithdrawal(@Body() withdrawalDto: WithdrawalDTO) {
-    return this.withdrawalService.createWithdrawal(withdrawalDto);
+  createNewWithdrawal(@Req() req: any, @Body() withdrawalDto: WithdrawalDTO) {
+    return this.withdrawalService.createWithdrawal(req.user.id, withdrawalDto);
   }
 
   @UseGuards(JwtAuthGuard)
