@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Transaction } from 'src/entities/transactions.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { generateNumericCode } from '../../utils/generator/generators';
 import { TransactionStatusEnum } from './dto/transaction-status.enum';
@@ -18,6 +18,7 @@ import { WalletDeposit } from 'src/entities/wallet-deposit.entity';
 import { Exchange } from 'src/entities/exchange.entity';
 import { RefundRequest } from 'src/entities/refund-request.entity';
 import { Delivery } from 'src/entities/delivery.entity';
+import { OrderStatusEnum } from '../orders/dto/order-status.enum';
 
 @Injectable()
 export class TransactionsService extends BaseService<Transaction> {
@@ -276,6 +277,67 @@ export class TransactionsService extends BaseService<Transaction> {
         createdAt: 'DESC',
       },
     });
+  }
+
+  async getSellerTransactionsData(userId: string) {
+    const user = await this.usersService.getOne(userId);
+    if (!user) throw new NotFoundException('User cannot be found!');
+
+    const transactions = await this.transactionsRepository.find({
+      where: {
+        user: {
+          id: userId,
+        },
+        order: Not(IsNull()),
+        type: 'ADD',
+      },
+      relations: ['order'],
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+
+    console.log({ transactions });
+
+    const groups = transactions.reduce((groups, transaction) => {
+      const date = transaction.createdAt.toISOString().split('T')[0];
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(transaction);
+      return groups;
+    }, {});
+
+    const transactionGroupsByDate = Object.keys(groups).map((date) => {
+      const totalInDate = (groups[date] as Transaction[]).reduce(
+        (total, transaction) => total + transaction.amount,
+        0,
+      );
+      return {
+        date,
+        transactions: groups[date],
+        totalInDate,
+      };
+    });
+
+    const totalAmount = transactions.reduce(
+      (prev, current) => prev + current.amount,
+      0,
+    );
+
+    const totalUnavailableAmount = transactions.reduce((prev, current) => {
+      if (current.order.status !== OrderStatusEnum.SUCCESSFUL) {
+        return prev + current.amount;
+      }
+    }, 0);
+
+    return {
+      transactions,
+      transactionGroupsByDate: transactionGroupsByDate.reverse(),
+      total: transactions.length,
+      totalAmount,
+      totalUnavailableAmount,
+    };
   }
 
   async getTransactionByCode(code: string) {
