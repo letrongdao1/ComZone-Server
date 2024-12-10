@@ -830,4 +830,32 @@ export class OrdersService extends BaseService<Order> {
       })
       .then(() => this.getOne(order.id));
   }
+
+  async completeHangingDeliveredOrders() {
+    const orders = await this.ordersRepository.find({
+      where: {
+        status: OrderStatusEnum.DELIVERED,
+      },
+    });
+
+    return await Promise.all(
+      orders.map(async (order) => {
+        if (
+          order.updatedAt.getTime() + 7 * 24 * 60 * 60 * 1000 >
+          new Date().getTime()
+        ) {
+          await this.updateOrderStatus(order.id, OrderStatusEnum.SUCCESSFUL);
+
+          this.eventsGateway.notifyUser(
+            order.delivery.from.user.id,
+            `Đơn hàng #${order.code} đã được hệ thống xác nhận thành công. Bạn đã có thể sử dụng hoặc rút số tiền của đơn hàng.`,
+            { orderId: order.id },
+            'Đơn hàng đã hoàn tất',
+            AnnouncementType.ORDER_CONFIRMED,
+            RecipientType.SELLER,
+          );
+        }
+      }),
+    );
+  }
 }

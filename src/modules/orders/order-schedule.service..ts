@@ -12,7 +12,15 @@ export class OrdersScheduleService {
     disabled: true,
   })
   updateOrderStatus() {
-    this.logger.debug('Getting delivery status from GHN to update order...');
+    this.logger.debug('Auto updating order status...');
     this.ordersService.getAll();
+  }
+
+  @Cron(CronExpression.EVERY_12_HOURS, {
+    disabled: false,
+  })
+  updateDeliveredOrdersEveryHalfDay() {
+    this.logger.debug('Updating hang delivered order status...');
+    this.ordersService.completeHangingDeliveredOrders();
   }
 }
