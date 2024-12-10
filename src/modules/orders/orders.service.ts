@@ -175,10 +175,11 @@ export class OrdersService extends BaseService<Order> {
 
     if (
       [
+        OrderStatusEnum.DELIVERED,
         OrderStatusEnum.SUCCESSFUL,
         OrderStatusEnum.FAILED,
         OrderStatusEnum.CANCELED,
-      ].find((status) => status === order.status)
+      ].some((status) => status === order.status)
     )
       return;
 
@@ -308,16 +309,36 @@ export class OrdersService extends BaseService<Order> {
       .distinct(true)
       .execute();
 
-    const orderList = items.map((item) => {
+    const orderIdList = items.map((item) => {
       return item.order_id;
     });
 
-    return await Promise.all(
-      orderList.map(async (id) => {
+    const orderList = await Promise.all(
+      orderIdList.map(async (id) => {
         await this.autoUpdateOrderStatus(id);
         return await this.getOne(id);
       }),
     );
+
+    return orderList.sort((a, b) => {
+      const statusOrder = [
+        OrderStatusEnum.PENDING,
+        OrderStatusEnum.PACKAGING,
+        OrderStatusEnum.DELIVERING,
+        OrderStatusEnum.DELIVERED,
+        OrderStatusEnum.SUCCESSFUL,
+        OrderStatusEnum.CANCELED,
+        OrderStatusEnum.FAILED,
+      ];
+      if (a.status !== b.status) {
+        return (
+          statusOrder.findIndex((value) => value === a.status) -
+          statusOrder.findIndex((value) => value === b.status)
+        );
+      } else {
+        return new Date(a.updatedAt) < new Date(b.updatedAt) ? 1 : -1;
+      }
+    });
   }
 
   async getRecentOrdersBySeller(sellerId: string) {
@@ -363,15 +384,37 @@ export class OrdersService extends BaseService<Order> {
       ongoingGroup.includes(order.status as OrderStatusEnum),
     );
 
+    const filteredOngoingOrders = await Promise.all(
+      ongoingOrders.map(async (order) => {
+        const items = await this.orderItemsRepository.findAndCount({
+          where: { order: { id: order.id } },
+          relations: ['comics'],
+          take: 3,
+        });
+        return {
+          ...order,
+          items,
+        };
+      }),
+    );
+
+    const totalPendingAmount = ongoingOrders.reduce(
+      (total, order) => total + order.totalPrice,
+      0,
+    );
+
     const successfulOrders = orders.filter(
       (order) => order.status === OrderStatusEnum.SUCCESSFUL,
     );
 
     return {
       orders: orders,
+      ongoingOrders: filteredOngoingOrders.sort((a, b) => {
+        return new Date(a.createdAt) > new Date(b.createdAt) ? -1 : 1;
+      }),
       total: orders.length,
-      totalOngoing: ongoingOrders.length,
       totalSuccessful: successfulOrders.length,
+      totalPendingAmount,
     };
   }
 

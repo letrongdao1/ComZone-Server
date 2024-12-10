@@ -171,13 +171,27 @@ export class ComicService extends BaseService<Comic> {
 
     //UNAVAILABLE COMICS GO FIRST
     comics.sort((a, b) => {
-      if (
-        a.type === b.type ||
-        (a.type !== ComicsTypeEnum.NONE && b.type !== ComicsTypeEnum.NONE)
-      ) {
-        return new Date(a.updatedAt) < new Date(b.updatedAt) ? 1 : -1;
+      const statusOrder = [
+        ComicsStatusEnum.UNAVAILABLE,
+        ComicsStatusEnum.PRE_ORDER,
+        ComicsStatusEnum.AVAILABLE,
+        ComicsStatusEnum.SOLD,
+      ];
+
+      if (a.status !== b.status) {
+        return (
+          statusOrder.findIndex((value) => value === a.status) -
+          statusOrder.findIndex((value) => value === b.status)
+        );
       } else {
-        return a.type === ComicsTypeEnum.NONE ? -1 : 1;
+        if (
+          a.type === b.type ||
+          (a.type !== ComicsTypeEnum.NONE && b.type !== ComicsTypeEnum.NONE)
+        ) {
+          return new Date(a.updatedAt) < new Date(b.updatedAt) ? 1 : -1;
+        } else {
+          return a.type === ComicsTypeEnum.NONE ? -1 : 1;
+        }
       }
     });
 
@@ -207,11 +221,7 @@ export class ComicService extends BaseService<Comic> {
     const countAvailable = await this.comicRepository.count({
       where: {
         sellerId: { id: seller.id },
-        type: In([
-          ComicsTypeEnum.SELL,
-          ComicsTypeEnum.AUCTION,
-          ComicsTypeEnum.NONE,
-        ]),
+        type: In([ComicsTypeEnum.SELL, ComicsTypeEnum.AUCTION]),
         status: ComicsStatusEnum.AVAILABLE,
       },
     });
