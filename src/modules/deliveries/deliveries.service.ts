@@ -316,7 +316,13 @@ export class DeliveriesService extends BaseService<Delivery> {
 
   async autoUpdateGHNDeliveryStatus(deliveryId: string) {
     const delivery = await this.getOne(deliveryId);
+
     if (!delivery || !delivery.deliveryTrackingCode) return;
+    if (
+      delivery.overallStatus === DeliveryOverallStatusEnum.DELIVERED ||
+      delivery.overallStatus === DeliveryOverallStatusEnum.RETURN
+    )
+      return;
 
     const headers = {
       Token: process.env.GHN_TOKEN,

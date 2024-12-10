@@ -60,7 +60,7 @@ export class Order extends BaseEntity {
     enum: OrderStatusEnum,
     default: OrderStatusEnum.PENDING,
   })
-  status: string;
+  status: OrderStatusEnum;
 
   @Column({
     name: 'cancel_reason',

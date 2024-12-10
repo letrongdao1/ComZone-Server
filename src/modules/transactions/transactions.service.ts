@@ -301,10 +301,12 @@ export class TransactionsService extends BaseService<Transaction> {
 
     const groups = transactions.reduce((groups, transaction) => {
       const date = transaction.createdAt.toISOString().split('T')[0];
-      if (!groups[date]) {
-        groups[date] = [];
+      const formattedDate = date.split('-').reverse().join('-');
+
+      if (!groups[formattedDate]) {
+        groups[formattedDate] = [];
       }
-      groups[date].push(transaction);
+      groups[formattedDate].push(transaction);
       return groups;
     }, {});
 

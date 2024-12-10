@@ -33,6 +33,12 @@ export class AuctionController {
   async findAll(): Promise<Auction[]> {
     return this.auctionService.findAllAuctions();
   }
+
+  @Get('comics/:comics_id')
+  getByComicsId(@Param('comics_id') comicsId: string) {
+    return this.auctionService.getByComicsId(comicsId);
+  }
+
   @Get('check-ended-auctions')
   async checkEndedAuctions() {
     try {

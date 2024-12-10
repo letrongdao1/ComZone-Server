@@ -62,6 +62,13 @@ export class AuctionService {
     auction.currentPrice = auction.reservePrice;
     return this.auctionRepository.save(auction);
   }
+
+  async getByComicsId(comicsId: string) {
+    return await this.auctionRepository.findOneBy({
+      comics: { id: comicsId },
+    });
+  }
+
   async checkAndDeclareWinnersForEndedAuctions() {
     const now = new Date();
     console.log('now', now);

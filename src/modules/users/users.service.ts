@@ -195,9 +195,16 @@ export class UsersService extends BaseService<User> {
     return await this.userRepository.update(userId, { isActive: active });
   }
 
-  async updateUserProfile(userId: string, userProfileDto: UserProfileDTO) {
+  async updateUserProfile(userId: string, dto: UserProfileDTO) {
+    const user = await this.getOne(userId);
+    if (!user) throw new NotFoundException('User cannot be found!');
+
     return await this.userRepository
-      .update(userId, userProfileDto)
+      .update(userId, {
+        name: dto.name || user.name,
+        phone: dto.phone || user.phone,
+        avatar: dto.avatar || user.avatar,
+      })
       .then(() => this.getOne(userId));
   }
 
