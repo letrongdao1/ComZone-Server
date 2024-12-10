@@ -168,7 +168,7 @@ export class EventsGateway implements OnModuleInit {
         id: savedAnnouncement.id,
         message,
         auction: ids.auctionId,
-        order: ids.orderId,
+        order: savedAnnouncement.order,
         exchange: ids.exchangeId,
         transaction: ids.transactionId,
         title,

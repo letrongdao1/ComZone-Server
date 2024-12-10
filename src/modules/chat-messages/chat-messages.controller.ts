@@ -16,6 +16,12 @@ export class ChatMessagesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('unread')
+  getUnreadListByChatRoom(@Req() req: any) {
+    return this.chatMessagesService.getUnreadList(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('chat-room/is-read/:chat_room_id')
   updateIsReadByChatRoom(
     @Req() req: any,

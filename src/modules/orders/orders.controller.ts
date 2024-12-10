@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -55,6 +56,29 @@ export class OrdersController {
     return this.ordersService.getAllOrdersOfSeller(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('search/user')
+  userSearchByComicsSellerAndCode(
+    @Req() req: any,
+    @Query('search') key: string,
+  ) {
+    return this.ordersService.userSearchByComicsSellerAndCode(req.user.id, key);
+  }
+
+  @Roles(Role.SELLER)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Get('search/seller')
+  sellerSearchByComicsBuyerAndCode(
+    @Req() req: any,
+    @Query('search') key: string,
+  ) {
+    return this.ordersService.sellerSearchByComicsSellerAndCode(
+      req.user.id,
+      key,
+    );
+  }
+
   @Get('recent/seller/:id')
   getRecentOrdersBySeller(@Param('id') sellerId: string) {
     return this.ordersService.getRecentOrdersBySeller(sellerId);
@@ -69,15 +93,15 @@ export class OrdersController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/delivery-tracking-code/:code')
+  @Get('delivery-tracking-code/:code')
   getOrderByCode(@Param('code') code: string) {
     return this.ordersService.getOrderByDeliveryTrackingCode(code);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/:orderId')
+  @Get(':orderId')
   getOrderById(@Param('orderId') orderId: string) {
-    return this.ordersService.getOne(orderId);
+    return this.ordersService.getById(orderId);
   }
 
   @Roles(Role.SELLER)

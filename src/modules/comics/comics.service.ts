@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindManyOptions, ILike, In, Not, Repository } from 'typeorm';
+import { FindManyOptions, ILike, In, IsNull, Not, Repository } from 'typeorm';
 
 import { CreateComicDto, UpdateComicDto } from './dto/comic.dto';
 import { Comic } from 'src/entities/comics.entity';
@@ -14,6 +14,7 @@ import { ComicsStatusEnum } from './dto/comic-status.enum';
 import { ComicsTypeEnum } from './dto/comic-type.enum';
 import { SellerDetailsService } from '../seller-details/seller-details.service';
 import { BaseService } from 'src/common/service.base';
+import { Auction } from 'src/entities/auction.entity';
 
 @Injectable()
 export class ComicService extends BaseService<Comic> {
@@ -24,6 +25,8 @@ export class ComicService extends BaseService<Comic> {
     private readonly genreRepository: Repository<Genre>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Auction)
+    private readonly auctionsRepository: Repository<Auction>,
 
     private readonly sellerDetailsService: SellerDetailsService,
   ) {
@@ -409,6 +412,76 @@ export class ComicService extends BaseService<Comic> {
     return query.getMany();
   }
 
+  async searchAll(key: string) {
+    const comicsResult = await this.comicRepository.find({
+      where: [
+        {
+          title: ILike(`%${key}%`),
+          status: ComicsStatusEnum.AVAILABLE,
+          type: ComicsTypeEnum.SELL,
+          onSaleSince: Not(IsNull()),
+        },
+        {
+          author: ILike(`%${key}%`),
+          status: ComicsStatusEnum.AVAILABLE,
+          type: ComicsTypeEnum.SELL,
+          onSaleSince: Not(IsNull()),
+        },
+        {
+          description: ILike(`%${key}%`),
+          status: ComicsStatusEnum.AVAILABLE,
+          type: ComicsTypeEnum.SELL,
+          onSaleSince: Not(IsNull()),
+        },
+      ],
+      take: 20,
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+
+    console.log('comicsResult: ', comicsResult);
+
+    const sellersResult = await this.userRepository.find({
+      where: { name: ILike(`%${key}%`) },
+      take: 10,
+      order: { last_active: 'DESC' },
+    });
+
+    const bindComicsToSeller = await Promise.all(
+      sellersResult.map(async (seller) => {
+        return {
+          seller,
+          comics: await this.comicRepository.find({
+            where: {
+              sellerId: { id: seller.id },
+              type: ComicsTypeEnum.SELL,
+              status: ComicsStatusEnum.AVAILABLE,
+            },
+            take: 5,
+          }),
+        };
+      }),
+    );
+
+    const auctionsResult = await this.auctionsRepository.find({
+      where: {
+        comics: {
+          title: ILike(`%${key}%`),
+          type: ComicsTypeEnum.AUCTION,
+          status: ComicsStatusEnum.AVAILABLE,
+        },
+      },
+      take: 20,
+    });
+
+    return {
+      comics: comicsResult,
+      sellers: bindComicsToSeller,
+      auctions: auctionsResult,
+    };
+  }
+
   async updateStatus(
     comicsId: string,
     status: ComicsStatusEnum,
@@ -476,13 +549,12 @@ export class ComicService extends BaseService<Comic> {
       throw new NotFoundException('Comic not found');
     }
 
-    comic.status = ComicsStatusEnum.UNAVAILABLE;
-    comic.type = ComicsTypeEnum.NONE;
-    comic.onSaleSince = null;
-    await this.comicRepository.save(comic);
-
-    console.log(comic);
-
-    return comic;
+    return await this.comicRepository
+      .update(comicsId, {
+        status: ComicsStatusEnum.UNAVAILABLE,
+        type: ComicsTypeEnum.NONE,
+        onSaleSince: null,
+      })
+      .then(() => this.getOne(comicsId));
   }
 }

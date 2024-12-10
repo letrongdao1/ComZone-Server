@@ -10,14 +10,17 @@ import { DeliveriesModule } from '../deliveries/deliveries.module';
 import { OrdersScheduleService } from './order-schedule.service.';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { EventsModule } from '../socket/event.module';
+import { RefundRequest } from 'src/entities/refund-request.entity';
+import { VietNamAddressModule } from '../viet-nam-address/viet-nam-address.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order, OrderItem, RefundRequest]),
     ComicModule,
     UserAddressesModule,
     DeliveriesModule,
     TransactionsModule,
+    VietNamAddressModule,
     forwardRef(() => EventsModule),
   ],
   controllers: [OrdersController],
