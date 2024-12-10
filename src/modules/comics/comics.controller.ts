@@ -17,7 +17,7 @@ import {
   UpdateComicDto,
   UpdateComicStatusDto,
 } from './dto/comic.dto';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Comic } from 'src/entities/comics.entity';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
@@ -157,6 +157,12 @@ export class ComicController {
   @Get('/exchange/:user_id')
   findOfferedExchangeComicsByUser(@Param('user_id') userId: string) {
     return this.comicsExchangeService.getAvailableExchangeComicsOfUser(userId);
+  }
+
+  @ApiQuery({ name: 'key', type: 'string', example: 'the vendor' })
+  @Get('search/home')
+  searchAll(@Query('key') key: string) {
+    return this.comicService.searchAll(key);
   }
 
   @Get(':id')

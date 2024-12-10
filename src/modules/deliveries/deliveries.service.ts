@@ -333,6 +333,8 @@ export class DeliveriesService extends BaseService<Delivery> {
       )
       .then(async (res) => {
         const deliveryStatus: OrderDeliveryStatusEnum = res.data.data.status;
+        if (delivery.status === deliveryStatus) return;
+
         await this.deliveriesRepository.update(deliveryId, {
           status: deliveryStatus,
         });
@@ -457,50 +459,44 @@ export class DeliveriesService extends BaseService<Delivery> {
       if (checkExchangeAnnouncement) return;
     }
 
-    console.log('ANNOUNCE: ', delivery.deliveryTrackingCode);
+    console.log('Sent delivery announcement to deliveryId: ', deliveryId);
 
     const getAnnouncementData = () => {
       switch (type) {
         case AnnouncementType.DELIVERY_PICKING:
           return {
             title: 'Đơn hàng đang được lấy để giao',
-            message:
-              'Chúng tôi đang trên đường lấy đơn hàng của bạn để giao. Hãy đảm bảo bạn đã hoàn tất đóng gói trước khi nhân viên giao hàng của chúng tôi đến!',
+            message: `${order && `(#${order.code}) `}Chúng tôi đang trên đường lấy đơn hàng của bạn để giao. Hãy đảm bảo bạn đã hoàn tất đóng gói trước khi nhân viên giao hàng của chúng tôi đến!`,
           };
         case AnnouncementType.DELIVERY_ONGOING:
           return {
             title: 'Đơn hàng đang được giao đến bạn',
-            message: 'Bạn có một đơn hàng đang trên đường giao đến bạn.',
+            message: `${order && `(#${order.code}) `}Đơn hàng đang trên đường giao đến bạn.`,
           };
         case AnnouncementType.DELIVERY_FINISHED_RECEIVE:
           return {
             title: 'Đơn hàng đã nhận thành công',
-            message:
-              'Bạn có một đơn hàng đã được hoàn tất nhận hàng. Hãy đảm bảo bạn đã nhận được truyện nguyên vẹn từ nhân viên giao hàng của chúng tôi trước khi xác nhận giao hàng thành công!',
+            message: `${order && `(#${order.code}) `}Đơn hàng đã được hoàn tất nhận hàng. Hãy đảm bảo bạn đã nhận được truyện nguyên vẹn từ nhân viên giao hàng của chúng tôi trước khi xác nhận giao hàng thành công!`,
           };
         case AnnouncementType.DELIVERY_FINISHED_SEND:
           return {
             title: 'Đơn hàng đã giao thành công',
-            message:
-              'Một đơn hàng của bạn đã được giao thành công. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận giao hàng thành công!',
+            message: `${order && `(#${order.code}) `}Đơn hàng của bạn đã được giao thành công. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận giao hàng thành công!`,
           };
         case AnnouncementType.DELIVERY_FAILED_RECEIVE:
           return {
             title: 'Đơn hàng đã giao thất bại',
-            message:
-              'Giao hàng thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với bạn và đơn hàng sẽ được hoàn trả!',
+            message: `${order && `(#${order.code}) `}Giao hàng thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với bạn và đơn hàng sẽ được hoàn trả!`,
           };
         case AnnouncementType.DELIVERY_FAILED_SEND:
           return {
             title: 'Đơn hàng đã giao thất bại',
-            message:
-              'Bạn có một đơn hàng được ghi nhận đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với người nhận. Hệ thống sẽ gửi thông báo cho bạn khi đơn hàng được hoàn trả!',
+            message: `${order && `(#${order.code}) `}Đơn hàng của bạn được ghi nhận đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với người nhận. Hệ thống sẽ gửi thông báo cho bạn khi đơn hàng được hoàn trả!`,
           };
         case AnnouncementType.DELIVERY_RETURN:
           return {
             title: 'Đơn hàng được hoàn trả',
-            message:
-              'Bạn có một đơn hàng được được hoàn trả do không giao thành công đến người nhận!',
+            message: `${order && `(#${order.code}) `}Bạn có một đơn hàng được được hoàn trả do không giao thành công đến người nhận!`,
           };
       }
     };
@@ -732,8 +728,6 @@ export class DeliveriesService extends BaseService<Delivery> {
   async getFullAddressString(info: DeliveryInformation) {
     if (info)
       return (
-        info.address +
-        ', ' +
         (await this.vnAddressService.getWardById(info.districtId, info.wardId))
           .name +
         ', ' +

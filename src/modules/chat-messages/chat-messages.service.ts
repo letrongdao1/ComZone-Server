@@ -36,8 +36,9 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
 
     return await Promise.all(
       chatRoomList.map(async (chatRoom) => {
+        if (client.rooms.has(chatRoom.id)) return;
+
         client.join(chatRoom.id);
-        console.log(`${userId} joined ${chatRoom.id}`);
       }),
     );
   }

@@ -7,10 +7,11 @@ import { Genre } from 'src/entities/genres.entity';
 import { User } from 'src/entities/users.entity';
 import { ComicsExchangeService } from './comics.exchange.service';
 import { SellerDetailsModule } from '../seller-details/seller-details.module';
+import { Auction } from 'src/entities/auction.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Comic, Genre, User]),
+    TypeOrmModule.forFeature([Comic, Genre, User, Auction]),
     SellerDetailsModule,
   ],
   controllers: [ComicController],

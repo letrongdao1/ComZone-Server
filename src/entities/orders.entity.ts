@@ -28,6 +28,12 @@ export class Order extends BaseEntity {
   delivery: Delivery;
 
   @Column({
+    type: 'varchar',
+    unique: true,
+  })
+  code: string;
+
+  @Column({
     name: 'total_price',
     type: 'float',
     precision: 2,

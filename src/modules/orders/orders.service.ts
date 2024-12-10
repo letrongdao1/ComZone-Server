@@ -34,6 +34,10 @@ import {
   AnnouncementType,
   RecipientType,
 } from 'src/entities/announcement.entity';
+import { generateNumericAndUppercaseCode } from 'src/utils/generator/generators';
+import { RefundRequest } from 'src/entities/refund-request.entity';
+import { VietNamAddressService } from '../viet-nam-address/viet-nam-address.service';
+import { DeliveryInformation } from 'src/entities/delivery-information.entity';
 dotenv.config();
 
 @Injectable()
@@ -43,12 +47,15 @@ export class OrdersService extends BaseService<Order> {
     private readonly ordersRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private readonly orderItemsRepository: Repository<OrderItem>,
+    @InjectRepository(RefundRequest)
+    private readonly refundRequestsRepository: Repository<RefundRequest>,
 
     private readonly usersService: UsersService,
     private readonly deliveriesService: DeliveriesService,
     private readonly comicsService: ComicService,
     private readonly addressesService: UserAddressesService,
     private readonly transactionsService: TransactionsService,
+    private readonly vnAddressesService: VietNamAddressService,
     @Inject(forwardRef(() => EventsGateway))
     private readonly eventsGateway: EventsGateway,
   ) {
@@ -86,9 +93,12 @@ export class OrdersService extends BaseService<Order> {
     if (checkDuplicatedDelivery)
       throw new ConflictException('Duplicated delivery!');
 
+    const newCode = generateNumericAndUppercaseCode(8, '');
+
     const newOrder = this.ordersRepository.create({
       user,
       delivery,
+      code: newCode,
       totalPrice: createOrderDto.totalPrice,
       paymentMethod: createOrderDto.paymentMethod,
       note: createOrderDto.note,
@@ -142,7 +152,7 @@ export class OrdersService extends BaseService<Order> {
 
       await this.eventsGateway.notifyUser(
         createOrderDto.sellerId,
-        `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
+        `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng ${newCode}. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
         { transactionId: sellerTransaction.id },
         'Nhận tiền đơn hàng',
         AnnouncementType.TRANSACTION_ADD,
@@ -153,7 +163,7 @@ export class OrdersService extends BaseService<Order> {
 
     await this.eventsGateway.notifyUser(
       createOrderDto.sellerId,
-      `Bạn có một đơn hàng từ tài khoản ${user.name} trị giá ${newOrder.totalPrice.toLocaleString('vi-VN')}đ`,
+      `Bạn nhận được đơn hàng #${newCode} từ tài khoản ${user.name} trị giá ${newOrder.totalPrice.toLocaleString('vi-VN')}đ`,
       { orderId: newOrder.id },
       'Đơn hàng mới',
       AnnouncementType.ORDER_NEW,
@@ -161,6 +171,11 @@ export class OrdersService extends BaseService<Order> {
       'SUCCESSFUL',
     );
     return await this.getOne(newOrder.id);
+  }
+
+  async getById(orderId: string) {
+    await this.autoUpdateOrderStatus(orderId);
+    return await this.getOrderFullAddress(orderId);
   }
 
   async autoUpdateOrderStatus(orderId: string) {
@@ -234,6 +249,51 @@ export class OrdersService extends BaseService<Order> {
     }
   }
 
+  async getOrderFullAddress(orderId: string) {
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+      relations: ['delivery', 'delivery.from', 'delivery.to'],
+    });
+
+    if (!order || !order.delivery)
+      throw new NotFoundException('Order delivery cannot be found!');
+
+    const getFullAddressString = async (info: DeliveryInformation) => {
+      return (
+        (
+          await this.vnAddressesService.getWardById(
+            info.districtId,
+            info.wardId,
+          )
+        ).name +
+        ', ' +
+        (
+          await this.vnAddressesService.getDistrictById(
+            info.provinceId,
+            info.districtId,
+          )
+        ).name +
+        ', ' +
+        (await this.vnAddressesService.getProvinceById(info.provinceId)).name
+      );
+    };
+
+    return {
+      ...order,
+      delivery: {
+        ...order.delivery,
+        from: {
+          ...order.delivery.from,
+          fullAddress: await getFullAddressString(order.delivery.from),
+        },
+        to: {
+          ...order.delivery.to,
+          fullAddress: await getFullAddressString(order.delivery.to),
+        },
+      },
+    };
+  }
+
   async getSellerIdOfAnOrder(orderId: string): Promise<User> {
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: orderId } },
@@ -249,7 +309,7 @@ export class OrdersService extends BaseService<Order> {
     return orderItemList[0].comics.sellerId;
   }
 
-  async getAllOrdersOfUser(userId: string): Promise<Order[]> {
+  async getAllOrdersOfUser(userId: string) {
     const user = await this.usersService.getOne(userId);
     if (!user) throw new NotFoundException('User cannot be found!');
 
@@ -271,28 +331,34 @@ export class OrdersService extends BaseService<Order> {
       }),
     );
 
-    return await this.ordersRepository.find({
+    const updatedOrders = await this.ordersRepository.find({
       where: {
         user: {
           id: userId,
         },
       },
       order: {
-        createdAt: 'DESC',
+        updatedAt: 'DESC',
       },
     });
+
+    return await Promise.all(
+      updatedOrders.map(
+        async (order) => await this.getOrderFullAddress(order.id),
+      ),
+    );
   }
 
   async getAllOrdersByListOfIDs(orderIds: string[]) {
     return await Promise.all(
       orderIds.map(async (id) => {
         await this.autoUpdateOrderStatus(id);
-        return await this.getOne(id);
+        return await this.getOrderFullAddress(id);
       }),
     );
   }
 
-  async getAllOrdersOfSeller(sellerId: string): Promise<Order[]> {
+  async getAllOrdersOfSeller(sellerId: string) {
     const seller = await this.usersService.getOne(sellerId);
     if (!seller) throw new NotFoundException('Seller cannot be found!');
 
@@ -316,7 +382,103 @@ export class OrdersService extends BaseService<Order> {
     const orderList = await Promise.all(
       orderIdList.map(async (id) => {
         await this.autoUpdateOrderStatus(id);
-        return await this.getOne(id);
+        return await this.getOrderFullAddress(id);
+      }),
+    );
+
+    return orderList.sort((a, b) => {
+      const statusOrder = [
+        OrderStatusEnum.PENDING,
+        OrderStatusEnum.PACKAGING,
+        OrderStatusEnum.DELIVERING,
+        OrderStatusEnum.DELIVERED,
+        OrderStatusEnum.SUCCESSFUL,
+        OrderStatusEnum.CANCELED,
+        OrderStatusEnum.FAILED,
+      ];
+      if (a.status !== b.status) {
+        return (
+          statusOrder.findIndex((value) => value === a.status) -
+          statusOrder.findIndex((value) => value === b.status)
+        );
+      } else {
+        return new Date(a.updatedAt) < new Date(b.updatedAt) ? 1 : -1;
+      }
+    });
+  }
+
+  async userSearchByComicsSellerAndCode(userId: string, key: string) {
+    if (key.length === 0) return;
+
+    const orderIdList: { order_id: string }[] = await this.orderItemsRepository
+      .createQueryBuilder('order_item')
+      .leftJoinAndSelect('order_item.comics', 'comics')
+      .leftJoinAndSelect('order_item.order', 'order')
+      .leftJoinAndSelect('comics.sellerId', 'seller')
+      .leftJoinAndSelect('order.delivery', 'delivery')
+      .leftJoinAndSelect('delivery.from', 'from')
+      .leftJoinAndSelect('delivery.to', 'to')
+      .where(
+        'LOWER(seller.name) LIKE :key OR LOWER(comics.title) LIKE :key OR LOWER(order.code) LIKE :key OR LOWER(delivery.deliveryTrackingCode) LIKE :key',
+        {
+          key: `%${key.toLowerCase()}%`,
+        },
+      )
+      .andWhere('order.user.id = :userId', { userId })
+      .select('order.id')
+      .distinct(true)
+      .execute();
+
+    const orders = await Promise.all(
+      orderIdList.map(async (item) => {
+        return await this.getOrderFullAddress(item.order_id);
+      }),
+    );
+
+    return await Promise.all(
+      orders.map(async (order) => {
+        const orderItems = await this.orderItemsRepository.find({
+          where: {
+            order: { id: order.id },
+          },
+          relations: ['comics', 'order'],
+        });
+
+        const refundRequest = await this.refundRequestsRepository.findOne({
+          where: { order: { id: order.id } },
+        });
+        return {
+          ...order,
+          items: orderItems,
+          refundRequest,
+          rejectReason: refundRequest?.rejectedReason || null,
+        };
+      }),
+    );
+  }
+
+  async sellerSearchByComicsSellerAndCode(sellerId: string, key: string) {
+    const items: { order_id: string }[] = await this.orderItemsRepository
+      .createQueryBuilder('order_item')
+      .leftJoinAndSelect('order_item.comics', 'comics')
+      .leftJoinAndSelect('order_item.order', 'order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('comics.sellerId', 'seller')
+      .leftJoinAndSelect('order.delivery', 'delivery')
+      .leftJoinAndSelect('delivery.from', 'from')
+      .leftJoinAndSelect('delivery.to', 'to')
+      .where('seller.id = :sellerId', { sellerId })
+      .andWhere(
+        'LOWER(user.name) LIKE :key OR LOWER(comics.title) LIKE :key OR LOWER(order.code) LIKE :key OR LOWER(delivery.deliveryTrackingCode) LIKE :key',
+        { key: `%${key.toLowerCase()}%` },
+      )
+      .select('order.id')
+      .distinct(true)
+      .execute();
+
+    const orderList = await Promise.all(
+      items.map(async (item) => {
+        return await this.getOrderFullAddress(item.order_id);
       }),
     );
 
@@ -418,13 +580,13 @@ export class OrdersService extends BaseService<Order> {
     };
   }
 
-  async getOrderByDeliveryTrackingCode(code: string): Promise<Order> {
+  async getOrderByDeliveryTrackingCode(code: string) {
     const order = await this.ordersRepository.findOne({
       where: { delivery: { deliveryTrackingCode: code } },
     });
 
     await this.autoUpdateOrderStatus(order.id);
-    return await this.getOne(order.id);
+    return await this.getOrderFullAddress(order.id);
   }
 
   async cancelDeliveryOrder(cancelOrderDto: CancelOrderDTO) {
@@ -490,7 +652,7 @@ export class OrdersService extends BaseService<Order> {
 
     await this.eventsGateway.notifyUser(
       order.user.id,
-      `Bạn có một đơn hàng đã được người bán xác nhận. Hệ thống sẽ thông báo cho bạn khi người bán hoàn tất bàn giao truyện để giao.`,
+      `Đơn hàng #${order.code} đã được người bán xác nhận. Hệ thống sẽ thông báo cho bạn khi người bán hoàn tất bàn giao truyện để giao.`,
       { orderId: orderId },
       'Đơn hàng được xác nhận',
       AnnouncementType.ORDER_CONFIRMED,
@@ -595,7 +757,7 @@ export class OrdersService extends BaseService<Order> {
 
       await this.eventsGateway.notifyUser(
         order.user.id,
-        `Bạn có một đơn hàng đã bị hủy do đơn vị vận chuyển không hỗ trợ tuyến đường vận chuyển từ bạn đến người bán. ${order.paymentMethod === 'WALLET' && 'Số tiền bạn thanh toán cho đơn hàng đã được hoàn lại vào ví của bạn.'}`,
+        `Đơn hàng #${order.code} đã bị hủy do đơn vị vận chuyển không hỗ trợ tuyến đường vận chuyển từ bạn đến người bán. ${order.paymentMethod === 'WALLET' && 'Số tiền bạn thanh toán cho đơn hàng đã được hoàn lại vào ví của bạn.'}`,
         { orderId: order.id },
         'Đơn hàng được xác nhận',
         AnnouncementType.ORDER_FAILED,
@@ -638,7 +800,7 @@ export class OrdersService extends BaseService<Order> {
 
     await this.eventsGateway.notifyUser(
       seller.id,
-      `Bạn có một đơn hàng đã được người mua xác nhận thành công. Bạn đã có thể sử dụng hoặc rút số tiền của đơn hàng.`,
+      `Đơn hàng #${order.code} đã được người mua xác nhận thành công. Bạn đã có thể sử dụng hoặc rút số tiền của đơn hàng.`,
       { orderId: order.id },
       'Đơn hàng đã hoàn tất',
       AnnouncementType.ORDER_CONFIRMED,

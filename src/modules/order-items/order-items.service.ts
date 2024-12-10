@@ -73,7 +73,7 @@ export class OrderItemsService extends BaseService<OrderItem> {
       throw new BadRequestException('Price cannot be null!');
     }
 
-    await this.comicsService.updateStatus(
+    const updatedStatusComics = await this.comicsService.updateStatus(
       fetchedComics.id,
       ComicsStatusEnum.PRE_ORDER,
     );
@@ -81,7 +81,7 @@ export class OrderItemsService extends BaseService<OrderItem> {
     // Save order item
     return await this.orderItemsRepository.save({
       order: fetchedOrder,
-      comics: fetchedComics,
+      comics: updatedStatusComics,
       price: resolvedPrice,
     });
   }
