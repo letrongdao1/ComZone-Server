@@ -20,7 +20,12 @@ import { SellerDetailsService } from '../seller-details/seller-details.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { DepositsService } from '../deposits/deposits.service';
 import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
-import { DepositStatusEnum } from '../deposits/dto/deposit-status.enum';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
+import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
 
 @Injectable()
 export class RefundRequestsService extends BaseService<RefundRequest> {
@@ -34,6 +39,8 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     private readonly sellerDetailsService: SellerDetailsService,
     private readonly transactionsService: TransactionsService,
     private readonly depositsService: DepositsService,
+    private readonly comicsService: ExchangeComicsService,
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(refundRequestsRepository);
   }
@@ -154,6 +161,15 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       'ADD',
     );
 
+    await this.eventsGateway.notifyUser(
+      refundRequest.user.id,
+      'Yêu cầu hoàn tiền đơn hàng của bạn đã được hệ thống chấp thuận. Bạn có thể kiểm tra số tiền được hoàn lại từ đơn hàng trong lịch sử giao dịch.',
+      { orderId: order.id },
+      'Hoàn tiền thành công',
+      AnnouncementType.REFUND_APPROVE,
+      RecipientType.USER,
+    );
+
     const seller = await this.ordersService.getSellerIdOfAnOrder(order.id);
 
     await this.usersService.updateBalanceWithNonWithdrawableAmount(
@@ -189,7 +205,25 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
 
     if (!refundRequest) throw new NotFoundException();
 
+    const order = await this.ordersService.getOne(orderId);
+
+    const orderSeller = await this.ordersService.getSellerIdOfAnOrder(orderId);
+
+    await this.usersService.updateNWBalanceAfterOrder(
+      orderSeller.id,
+      order.totalPrice,
+    );
+
     await this.ordersService.updateOrderStatus(orderId, OrderStatusEnum.FAILED);
+
+    await this.eventsGateway.notifyUser(
+      refundRequest.user.id,
+      `Yêu cầu hoàn tiền đơn hàng của bạn đã bị từ chối. Lí do: "${rejectedReason}"`,
+      { orderId: orderId },
+      'Yêu càu hoàn tiền thất bại',
+      AnnouncementType.REFUND_REJECT,
+      RecipientType.USER,
+    );
 
     return await this.refundRequestsRepository
       .update(refundRequest.id, {
@@ -208,11 +242,12 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       throw new NotFoundException('Refund request cannot be found!');
 
     const exchange = refundRequest.exchange;
+
     const totalRefundAmount =
       exchange.compensateUser &&
       exchange.compensateUser.id === refundRequest.user.id
-        ? exchange.compensationAmount + exchange.depositAmount * 2
-        : exchange.depositAmount * 2;
+        ? exchange.compensationAmount + exchange.depositAmount
+        : exchange.depositAmount;
 
     await this.usersService.updateBalance(
       refundRequest.user.id,
@@ -223,6 +258,15 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       refundRequest.user.id,
       refundRequest.id,
       'ADD',
+    );
+
+    await this.eventsGateway.notifyUser(
+      refundRequest.user.id,
+      'Yêu cầu hoàn tiền trao đổi của bạn đã được hệ thống chấp thuận. Bạn có thể kiểm tra số tiền được hoàn lại và bù cọc từ đơn hàng trong lịch sử giao dịch.',
+      { exchangeId: exchange.id },
+      'Hoàn và bù tiền thành công',
+      AnnouncementType.REFUND_APPROVE,
+      RecipientType.USER,
     );
 
     const violateUser =
@@ -240,14 +284,20 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       (deposit) => !deposit.mine,
     );
 
-    await this.depositsService.updateStatus(
-      compensatedUserDeposit.id,
-      DepositStatusEnum.REFUNDED,
-    );
+    await this.depositsService.refundDepositToAUser(compensatedUserDeposit.id);
 
     await this.depositsService.seizeADeposit(
       violateUserDeposit.id,
       'Bồi thường tiền cho trao đổi',
+    );
+
+    await this.eventsGateway.notifyUser(
+      violateUser.id,
+      'Hệ thống đã nhận được báo cáo từ người thực hiện trao đổi với bạn và xác nhận rằng bạn đã vi phạm trong quá trình trao đổi. Hệ thống đã sử dụng số tiền cọc và tiền bù của bạn để chuyển cho người trao đổi với bạn.',
+      { exchangeId: exchange.id },
+      'Vi phạm trao đổi',
+      AnnouncementType.EXCHANGE_REJECTED,
+      RecipientType.USER,
     );
 
     await this.exchangesService.updateExchangeStatus(
@@ -270,11 +320,29 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       id: refundRequestId,
     });
 
-    if (!refundRequest) throw new NotFoundException();
+    if (!refundRequest || !refundRequest.exchange)
+      throw new NotFoundException();
+
+    await this.eventsGateway.notifyUser(
+      refundRequest.user.id,
+      `Yêu cầu hoàn tiền trao đổi của bạn đã bị từ chối. Lí do: "${rejectedReason}"`,
+      { exchangeId: refundRequest.exchange.id },
+      'Yêu càu hoàn tiền thất bại',
+      AnnouncementType.REFUND_REJECT,
+      RecipientType.USER,
+    );
+
+    await this.depositsService.refundAllDepositsOfAnExchange(
+      refundRequest.exchange.id,
+    );
+    await this.exchangesService.transferCompensationAmount(
+      refundRequest.exchange.id,
+    );
+    await this.comicsService.completeExchangeComics(refundRequest.exchange.id);
 
     await this.exchangesService.updateExchangeStatus(
       refundRequest.exchange.id,
-      ExchangeStatusEnum.FAILED,
+      ExchangeStatusEnum.SUCCESSFUL,
     );
 
     return await this.refundRequestsRepository

@@ -96,6 +96,19 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
 
     if (!sellerDetails) throw new NotFoundException();
 
+    const user = await this.usersService.getOne(userId);
+
+    if (type === 'GAIN') {
+      if (user.balance < amount) {
+        await this.sellerDetailsRepository.update(sellerDetails.id, {
+          debt: sellerDetails.debt + amount,
+          status: 'DISABLED',
+        });
+      } else {
+        await this.usersService.updateBalance(userId, -amount);
+      }
+    }
+
     return await this.sellerDetailsRepository.update(sellerDetails.id, {
       debt:
         type === 'PAY'

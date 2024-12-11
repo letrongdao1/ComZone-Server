@@ -450,16 +450,18 @@ export class ComicService extends BaseService<Comic> {
 
     const bindComicsToSeller = await Promise.all(
       sellersResult.map(async (seller) => {
+        const sellerComicsList = await this.comicRepository.find({
+          where: {
+            sellerId: { id: seller.id },
+            type: ComicsTypeEnum.SELL,
+            status: ComicsStatusEnum.AVAILABLE,
+          },
+          take: 5,
+        });
+
         return {
           seller,
-          comics: await this.comicRepository.find({
-            where: {
-              sellerId: { id: seller.id },
-              type: ComicsTypeEnum.SELL,
-              status: ComicsStatusEnum.AVAILABLE,
-            },
-            take: 5,
-          }),
+          comics: sellerComicsList,
         };
       }),
     );

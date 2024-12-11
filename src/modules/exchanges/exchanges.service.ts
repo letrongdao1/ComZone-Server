@@ -28,6 +28,7 @@ import {
   AnnouncementType,
   RecipientType,
 } from 'src/entities/announcement.entity';
+import CurrencySplitter from 'src/utils/currency-spliter/CurrencySplitter';
 
 @Injectable()
 export class ExchangesService extends BaseService<Exchange> {
@@ -331,9 +332,23 @@ export class ExchangesService extends BaseService<Exchange> {
 
     await this.usersService.updateBalance(userId, -fullPrice);
 
-    return await this.transactionsService
-      .createExchangeTransaction(userId, exchangeId, fullPrice)
-      .then(() => this.getOne(exchangeId));
+    const transaction =
+      await this.transactionsService.createExchangeTransaction(
+        userId,
+        exchangeId,
+        fullPrice,
+      );
+
+    await this.eventsGateway.notifyUser(
+      userId,
+      `Bạn đã thanh toán thành công tổng số tiền ${CurrencySplitter(fullPrice)}đ cho một cuộc trao đổi.`,
+      { transactionId: transaction.id },
+      'Thanh toán thành công',
+      AnnouncementType.TRANSACTION_SUBTRACT,
+      RecipientType.USER,
+    );
+
+    return await this.getOne(exchangeId);
   }
 
   async registerGHNDeliveryForExchange(exchangeId: string) {

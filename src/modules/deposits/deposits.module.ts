@@ -7,6 +7,7 @@ import { UsersModule } from '../users/users.module';
 import { AuctionModule } from '../auction/auction.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { EventsModule } from '../socket/event.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     forwardRef(() => AuctionModule),
     forwardRef(() => ExchangesModule),
     TransactionsModule,
+    forwardRef(() => EventsModule),
   ],
   controllers: [DepositsController],
   providers: [DepositsService],
