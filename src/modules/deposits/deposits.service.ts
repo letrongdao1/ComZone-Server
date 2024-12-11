@@ -16,6 +16,12 @@ import { AuctionService } from '../auction/auction.service';
 import { DepositStatusEnum } from './dto/deposit-status.enum';
 import { ExchangesService } from '../exchanges/exchanges.service';
 import { TransactionsService } from '../transactions/transactions.service';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
+import CurrencySplitter from 'src/utils/currency-spliter/CurrencySplitter';
 
 @Injectable()
 export class DepositsService extends BaseService<Deposit> {
@@ -27,6 +33,8 @@ export class DepositsService extends BaseService<Deposit> {
     private auctionService: AuctionService,
     @Inject(forwardRef(() => ExchangesService))
     private readonly exchangesService: ExchangesService,
+    @Inject(forwardRef(() => EventsGateway))
+    private readonly eventsGateway: EventsGateway,
     @Inject(TransactionsService)
     private readonly transactionsService: TransactionsService,
   ) {
@@ -115,6 +123,15 @@ export class DepositsService extends BaseService<Deposit> {
       newDeposit.id,
     );
 
+    await this.eventsGateway.notifyUser(
+      userId,
+      `Bạn đã đặt cọc thành công số tiền ${CurrencySplitter(exchange.depositAmount)}đ cho một cuộc trao đổi.`,
+      { exchangeId: exchange.id },
+      'Đặt cọc thành công',
+      AnnouncementType.TRANSACTION_SUBTRACT,
+      RecipientType.USER,
+    );
+
     //Auto create 2 GHN deliveries after finishing placing deposits
     const foundDeposit = await this.depositsRepository.find({
       where: { exchange: { id: dto.exchange } },
@@ -182,10 +199,19 @@ export class DepositsService extends BaseService<Deposit> {
 
     await this.usersService.updateBalance(deposit.user.id, deposit.amount);
 
-    await this.transactionsService.createDepositTransaction(
+    const transaction = await this.transactionsService.createDepositTransaction(
       deposit.user.id,
       deposit.id,
       'ADD',
+    );
+
+    await this.eventsGateway.notifyUser(
+      deposit.user.id,
+      `Hệ thống đã hoàn số tiền cọc ${CurrencySplitter(deposit.amount)}đ vào ví của bạn.`,
+      { transactionId: transaction.id },
+      'Hoàn cọc thành công',
+      AnnouncementType.TRANSACTION_ADD,
+      RecipientType.USER,
     );
 
     return await this.depositsRepository

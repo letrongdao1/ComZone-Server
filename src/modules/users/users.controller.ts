@@ -7,7 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
@@ -83,6 +83,22 @@ export class UsersController {
   @Patch('active-status/offline')
   updateUserActiveStatusOffline(@Req() req: any) {
     return this.usersService.updateUserIsActive(req.user.id, false);
+  }
+
+  @ApiBody({
+    schema: {
+      properties: {
+        phone: {
+          nullable: false,
+          example: '0987654321',
+        },
+      },
+    },
+  })
+  @UseGuards(JwtAuthGuard)
+  @Patch('phone/verify')
+  verifyPhoneNumber(@Req() req: any, @Body() data: { phone: string }) {
+    return this.usersService.updatePhoneNumber(req.user.id, data.phone);
   }
 
   @Patch(':id/ban')

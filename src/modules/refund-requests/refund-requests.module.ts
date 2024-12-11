@@ -9,16 +9,21 @@ import { ExchangesModule } from '../exchanges/exchanges.module';
 import { SellerDetailsModule } from '../seller-details/seller-details.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { DepositsModule } from '../deposits/deposits.module';
+import { EventsModule } from '../socket/event.module';
+import { Comic } from 'src/entities/comics.entity';
+import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RefundRequest]),
+    TypeOrmModule.forFeature([RefundRequest, Comic]),
     UsersModule,
     OrdersModule,
     ExchangesModule,
     SellerDetailsModule,
     TransactionsModule,
     DepositsModule,
+    ExchangeComicsModule,
+    EventsModule,
   ],
   controllers: [RefundRequestsController],
   providers: [RefundRequestsService],

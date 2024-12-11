@@ -211,6 +211,21 @@ export class UsersService extends BaseService<User> {
   async updatePassword(userId: string, password: string) {
     return await this.userRepository.update(userId, { password });
   }
+
+  async updatePhoneNumber(userId: string, phone: string) {
+    const user = await this.getOne(userId);
+    if (!user) throw new NotFoundException('User cannot be found!');
+
+    if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(phone))
+      throw new BadRequestException('Invalid phone number!');
+
+    return await this.userRepository
+      .update(userId, {
+        phone,
+      })
+      .then(() => this.getOne(userId));
+  }
+
   async banUser(userId: string) {
     const user = await this.getOne(userId);
     if (!user) {

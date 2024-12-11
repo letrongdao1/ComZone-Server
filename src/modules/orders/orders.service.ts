@@ -50,9 +50,11 @@ export class OrdersService extends BaseService<Order> {
     @InjectRepository(RefundRequest)
     private readonly refundRequestsRepository: Repository<RefundRequest>,
 
+    @Inject(forwardRef(() => ComicService))
+    private readonly comicsService: ComicService,
+
     private readonly usersService: UsersService,
     private readonly deliveriesService: DeliveriesService,
-    private readonly comicsService: ComicService,
     private readonly addressesService: UserAddressesService,
     private readonly transactionsService: TransactionsService,
     private readonly vnAddressesService: VietNamAddressService,
@@ -152,7 +154,7 @@ export class OrdersService extends BaseService<Order> {
 
       await this.eventsGateway.notifyUser(
         createOrderDto.sellerId,
-        `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng ${newCode}. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
+        `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng #${newCode}. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
         { transactionId: sellerTransaction.id },
         'Nhận tiền đơn hàng',
         AnnouncementType.TRANSACTION_ADD,
