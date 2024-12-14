@@ -843,7 +843,7 @@ export class OrdersService extends BaseService<Order> {
     return await Promise.all(
       orders.map(async (order) => {
         if (
-          order.updatedAt.getTime() + 7 * 24 * 60 * 60 * 1000 >
+          order.updatedAt.getTime() + 7 * 24 * 60 * 60 * 1000 <
           new Date().getTime()
         ) {
           await this.updateOrderStatus(order.id, OrderStatusEnum.SUCCESSFUL);

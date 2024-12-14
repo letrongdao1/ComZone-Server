@@ -487,7 +487,7 @@ export class DeliveriesService extends BaseService<Delivery> {
         case AnnouncementType.DELIVERY_FINISHED_SEND:
           return {
             title: 'Đơn hàng đã giao thành công',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} đã được giao thành công. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận giao hàng thành công!`,
+            message: `Đơn hàng ${order ? `#${order.code}` : ''} đã được giao thành công đến người nhận. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận đã nhận được hàng.`,
           };
         case AnnouncementType.DELIVERY_FAILED_RECEIVE:
           return {
