@@ -341,7 +341,7 @@ export class ExchangesService extends BaseService<Exchange> {
 
     await this.eventsGateway.notifyUser(
       userId,
-      `Bạn đã thanh toán thành công tổng số tiền ${CurrencySplitter(fullPrice)}đ cho một cuộc trao đổi.`,
+      `Bạn đã thanh toán thành công tổng số tiền ${CurrencySplitter(fullPrice)}đ cho cuộc trao đổi.`,
       { transactionId: transaction.id },
       'Thanh toán thành công',
       AnnouncementType.TRANSACTION_SUBTRACT,
