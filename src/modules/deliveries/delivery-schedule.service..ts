@@ -8,9 +8,14 @@ export class DeliveriesScheduleService {
 
   constructor(private readonly deliveriesService: DeliveriesService) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS, {
-    disabled: false,
-  })
+  @Cron(
+    process.env.CRON_TEST_INTERVAL && Boolean(process.env.CRON_TEST_INTERVAL)
+      ? CronExpression.EVERY_10_SECONDS
+      : CronExpression.EVERY_MINUTE,
+    {
+      disabled: Boolean(process.env.CRON_DISABLED),
+    },
+  )
   updateDeliveryStatus() {
     this.logger.debug(
       'Getting delivery status from GHN to update deliveries...',

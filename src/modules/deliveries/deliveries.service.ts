@@ -22,7 +22,6 @@ import { Comic } from 'src/entities/comics.entity';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 import { Order } from 'src/entities/orders.entity';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
-import { UsersService } from '../users/users.service';
 import { DeliveryOverallStatusEnum } from './dto/overall-status.enum';
 import { DeliveryInformation } from 'src/entities/delivery-information.entity';
 import { Exchange } from 'src/entities/exchange.entity';
@@ -47,7 +46,6 @@ export class DeliveriesService extends BaseService<Delivery> {
     @InjectRepository(Announcement)
     private readonly announcementsRepository: Repository<Announcement>,
 
-    private readonly usersService: UsersService,
     @Inject(ExchangeComicsService)
     private readonly exchangeComicsService: ExchangeComicsService,
     @Inject(DeliveryInformationService)
@@ -487,7 +485,7 @@ export class DeliveriesService extends BaseService<Delivery> {
         case AnnouncementType.DELIVERY_FINISHED_SEND:
           return {
             title: 'Đơn hàng đã giao thành công',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} đã được giao thành công. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận giao hàng thành công!`,
+            message: `Đơn hàng ${order ? `#${order.code}` : ''} đã được giao thành công đến người nhận. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận đã nhận được hàng.`,
           };
         case AnnouncementType.DELIVERY_FAILED_RECEIVE:
           return {
@@ -575,9 +573,10 @@ export class DeliveriesService extends BaseService<Delivery> {
     ];
 
     if (pickingGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.PICKING,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.PICKING)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.PICKING,
+        });
 
       if (checkStatus === OrderDeliveryStatusEnum.PICKING) {
         await this.sendDeliveryAnnouncement(
@@ -588,9 +587,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         );
       }
     } else if (deliveringGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.DELIVERING,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.DELIVERING)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.DELIVERING,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
@@ -599,9 +599,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         RecipientType.USER,
       );
     } else if (deliveredGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.DELIVERED,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.DELIVERED)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.DELIVERED,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
@@ -617,9 +618,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
       );
     } else if (failedGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.FAILED,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.FAILED)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.FAILED,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
@@ -635,9 +637,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
       );
     } else if (returnGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.RETURN,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.RETURN)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.RETURN,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,

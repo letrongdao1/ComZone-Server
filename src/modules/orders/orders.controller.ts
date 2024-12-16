@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
 import { PermissionsGuard } from '../authorization/permission.guard';
@@ -112,12 +112,29 @@ export class OrdersController {
     return this.ordersService.sellerStartsPackaging(orderId);
   }
 
+  @ApiBody({
+    schema: {
+      properties: {
+        packageImages: {
+          type: 'array',
+          nullable: false,
+          example: ['image.jpg'],
+        },
+      },
+    },
+  })
   @Roles(Role.SELLER)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post('status/finish-packaging/:orderId')
-  sellerFinishesPackaging(@Param('orderId') orderId: string) {
-    return this.ordersService.sellerFinishesPackaging(orderId);
+  sellerFinishesPackaging(
+    @Param('orderId') orderId: string,
+    @Body() data: { packageImages: string[] },
+  ) {
+    return this.ordersService.sellerFinishesPackaging(
+      orderId,
+      data.packageImages,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
