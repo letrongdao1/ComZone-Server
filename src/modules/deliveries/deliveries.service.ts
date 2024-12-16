@@ -575,9 +575,10 @@ export class DeliveriesService extends BaseService<Delivery> {
     ];
 
     if (pickingGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.PICKING,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.PICKING)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.PICKING,
+        });
 
       if (checkStatus === OrderDeliveryStatusEnum.PICKING) {
         await this.sendDeliveryAnnouncement(
@@ -588,9 +589,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         );
       }
     } else if (deliveringGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.DELIVERING,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.DELIVERING)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.DELIVERING,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
@@ -599,9 +601,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         RecipientType.USER,
       );
     } else if (deliveredGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.DELIVERED,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.DELIVERED)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.DELIVERED,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
@@ -617,9 +620,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
       );
     } else if (failedGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.FAILED,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.FAILED)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.FAILED,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
@@ -635,9 +639,10 @@ export class DeliveriesService extends BaseService<Delivery> {
         delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
       );
     } else if (returnGroup.some((status) => status === checkStatus)) {
-      await this.deliveriesRepository.update(delivery.id, {
-        overallStatus: DeliveryOverallStatusEnum.RETURN,
-      });
+      if (delivery.overallStatus !== DeliveryOverallStatusEnum.RETURN)
+        await this.deliveriesRepository.update(delivery.id, {
+          overallStatus: DeliveryOverallStatusEnum.RETURN,
+        });
 
       await this.sendDeliveryAnnouncement(
         delivery.id,
