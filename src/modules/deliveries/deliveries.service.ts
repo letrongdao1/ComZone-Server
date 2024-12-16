@@ -22,7 +22,6 @@ import { Comic } from 'src/entities/comics.entity';
 import { GetDeliveryFeeDTO } from './dto/get-delivery-fee.dto';
 import { Order } from 'src/entities/orders.entity';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
-import { UsersService } from '../users/users.service';
 import { DeliveryOverallStatusEnum } from './dto/overall-status.enum';
 import { DeliveryInformation } from 'src/entities/delivery-information.entity';
 import { Exchange } from 'src/entities/exchange.entity';
@@ -47,7 +46,6 @@ export class DeliveriesService extends BaseService<Delivery> {
     @InjectRepository(Announcement)
     private readonly announcementsRepository: Repository<Announcement>,
 
-    private readonly usersService: UsersService,
     @Inject(ExchangeComicsService)
     private readonly exchangeComicsService: ExchangeComicsService,
     @Inject(DeliveryInformationService)

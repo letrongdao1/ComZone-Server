@@ -15,6 +15,7 @@ import { ComicsTypeEnum } from './dto/comic-type.enum';
 import { SellerDetailsService } from '../seller-details/seller-details.service';
 import { BaseService } from 'src/common/service.base';
 import { Auction } from 'src/entities/auction.entity';
+import { Role } from '../authorization/role.enum';
 
 @Injectable()
 export class ComicService extends BaseService<Comic> {
@@ -443,7 +444,7 @@ export class ComicService extends BaseService<Comic> {
     console.log('comicsResult: ', comicsResult);
 
     const sellersResult = await this.userRepository.find({
-      where: { name: ILike(`%${key}%`) },
+      where: { name: ILike(`%${key}%`), role: Role.SELLER },
       take: 10,
       order: { last_active: 'DESC' },
     });

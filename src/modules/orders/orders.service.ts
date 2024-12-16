@@ -668,10 +668,13 @@ export class OrdersService extends BaseService<Order> {
     ).then(() => this.getOne(orderId));
   }
 
-  async sellerFinishesPackaging(orderId: string) {
+  async sellerFinishesPackaging(orderId: string, packageImages: string[]) {
     const order = await this.getOne(orderId);
     if (order.status !== OrderStatusEnum.PACKAGING)
       throw new ForbiddenException('Only packaging orders are accepted!');
+
+    if (!packageImages || packageImages.length === 0)
+      throw new ForbiddenException('No package images provided!');
 
     const orderItemList = await this.orderItemsRepository.find({
       where: { order: { id: orderId } },
@@ -682,6 +685,10 @@ export class OrdersService extends BaseService<Order> {
 
     const comicsList = orderItemList.map((item) => {
       return item.comics;
+    });
+
+    await this.ordersRepository.update(orderId, {
+      packageImages,
     });
 
     await this.deliveriesService.registerNewGHNDelivery(

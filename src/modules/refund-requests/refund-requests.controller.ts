@@ -95,7 +95,7 @@ export class RefundRequestsController {
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Patch('reject/order/:order_id')
-  rejectRefundRequest(
+  rejectOrderRefundRequest(
     @Param('order_id') orderId: string,
     @Body() dto: RejectReasonDTO,
   ) {

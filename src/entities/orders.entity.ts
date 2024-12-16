@@ -82,6 +82,12 @@ export class Order extends BaseEntity {
   note: string;
 
   @Column({
+    type: 'simple-json',
+    nullable: true,
+  })
+  packageImages: string[];
+
+  @Column({
     name: 'is_feedback',
     type: 'boolean',
     nullable: true,
