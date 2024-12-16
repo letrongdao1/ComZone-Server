@@ -41,6 +41,7 @@ import { ExchangeConfirmationModule } from './modules/exchange-confirmation/exch
 import { ExchangePostsModule } from './modules/exchange-posts/exchange-posts.module';
 import { RefundRequestsModule } from './modules/refund-requests/refund-requests.module';
 import { SpeedSmsModule } from './modules/speed-sms/speed-sms.module';
+import { PushNotificationModule } from './modules/push-notification/push-notification.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { SpeedSmsModule } from './modules/speed-sms/speed-sms.module';
     ComicModule,
     GenreModule,
     FileUploadModule,
+    PushNotificationModule,
     OrdersModule,
     OrderItemsModule,
     VnpayModule,

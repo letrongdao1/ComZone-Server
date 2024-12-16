@@ -81,6 +81,11 @@ export class AuctionController {
   getActiveAuctionsBySeller(@Param('id') sellerId: string): Promise<Auction[]> {
     return this.auctionService.getActiveAuctionsBySeller(sellerId);
   }
+  @Get('most-bids')
+  async findAuctionWithMostBids(): Promise<Auction[]> {
+    const auctions = await this.auctionService.findAuctionWithMostBids();
+    return auctions;
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('user/joined')

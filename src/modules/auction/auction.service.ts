@@ -471,5 +471,15 @@ export class AuctionService {
     }
   }
 
-  // Other methods as needed
+  async findAuctionWithMostBids(): Promise<Auction[]> {
+    const auctions = await this.auctionRepository.find({
+      relations: ['bids'],
+    });
+
+    if (auctions.length === 0) {
+      throw new NotFoundException('No auctions found');
+    }
+
+    return auctions; // Return the sorted array of auctions
+  }
 }
