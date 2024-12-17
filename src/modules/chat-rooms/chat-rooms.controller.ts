@@ -11,6 +11,7 @@ import {
 import { ChatRoomsService } from './chat-rooms.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import {
+  createChatRoomWithSellerDTO,
   CreateComicsChatRoomDTO,
   CreateExchangeChatRoomDTO,
 } from './create-chat-room.dto';
@@ -43,6 +44,18 @@ export class ChatRoomsController {
     return this.chatRoomsService.createChatRoomForExchange(
       req.user.id,
       createChatRoomDto,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('seller')
+  createNewChatRoomWithSeller(
+    @Req() req: any,
+    @Body() createChatRoomDto: createChatRoomWithSellerDTO,
+  ) {
+    return this.chatRoomsService.createChatRoomWithSeller(
+      req.user.id,
+      createChatRoomDto.sellerId,
     );
   }
 

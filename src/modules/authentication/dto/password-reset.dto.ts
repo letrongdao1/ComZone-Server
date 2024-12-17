@@ -10,3 +10,11 @@ export class PasswordResetDTO {
   @ApiProperty()
   newPassword: string;
 }
+
+export class ChangePasswordDTO {
+  @ApiProperty()
+  oldPassword: string;
+
+  @ApiProperty()
+  newPassword: string;
+}

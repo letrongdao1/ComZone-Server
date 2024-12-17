@@ -27,7 +27,7 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshAuthGuard } from './guards/refresh-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
-import { PasswordResetDTO } from './dto/password-reset.dto';
+import { ChangePasswordDTO, PasswordResetDTO } from './dto/password-reset.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -92,6 +92,16 @@ export class AuthController {
     return this.authService.resetPassword(
       passwordResetDto.userId,
       passwordResetDto,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('change-password')
+  changePassword(@Req() req: any, @Body() dto: ChangePasswordDTO) {
+    return this.authService.changePassword(
+      req.user.id,
+      dto.oldPassword,
+      dto.newPassword,
     );
   }
 

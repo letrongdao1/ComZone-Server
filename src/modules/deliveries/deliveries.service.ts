@@ -470,37 +470,37 @@ export class DeliveriesService extends BaseService<Delivery> {
         case AnnouncementType.DELIVERY_PICKING:
           return {
             title: 'Đơn hàng đang được lấy để giao',
-            message: `Chúng tôi đang trên đường lấy đơn hàng ${order ? `#${order.code}` : ''} của bạn để giao. Hãy đảm bảo bạn đã hoàn tất đóng gói trước khi nhân viên giao hàng của chúng tôi đến!`,
+            message: `Chúng tôi đang trên đường lấy đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} của bạn để giao. Hãy đảm bảo bạn đã hoàn tất đóng gói trước khi nhân viên giao hàng của chúng tôi đến!`,
           };
         case AnnouncementType.DELIVERY_ONGOING:
           return {
             title: 'Đơn hàng đang được giao đến bạn',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} đang trên đường giao đến bạn.`,
+            message: `Đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} đang trên đường giao đến bạn.`,
           };
         case AnnouncementType.DELIVERY_FINISHED_RECEIVE:
           return {
             title: 'Đơn hàng đã nhận thành công',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} được xác nhận đã nhận hàng thành công. Hãy đảm bảo bạn đã nhận được truyện nguyên vẹn từ nhân viên giao hàng của chúng tôi trước khi xác nhận giao hàng thành công!`,
+            message: `Đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} được xác nhận đã nhận hàng thành công. Hãy đảm bảo bạn đã nhận được truyện nguyên vẹn từ nhân viên giao hàng của chúng tôi trước khi xác nhận giao hàng thành công!`,
           };
         case AnnouncementType.DELIVERY_FINISHED_SEND:
           return {
             title: 'Đơn hàng đã giao thành công',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} đã được giao thành công đến người nhận. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận đã nhận được hàng.`,
+            message: `Đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} đã được giao thành công đến người nhận. Hệ thống sẽ cập nhật trạng thái đơn hàng sau khi người nhận xác nhận đã nhận được hàng.`,
           };
         case AnnouncementType.DELIVERY_FAILED_RECEIVE:
           return {
             title: 'Đơn hàng đã giao thất bại',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với bạn và đơn hàng sẽ được hoàn trả!`,
+            message: `Đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với bạn và đơn hàng sẽ được hoàn trả!`,
           };
         case AnnouncementType.DELIVERY_FAILED_SEND:
           return {
             title: 'Đơn hàng đã giao thất bại',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} được ghi nhận đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với người nhận. Hệ thống sẽ gửi thông báo cho bạn khi đơn hàng được hoàn trả!`,
+            message: `Đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} được ghi nhận đã giao thất bại. Nhân viên giao hàng của chúng tôi đã không liên lạc được với người nhận. Hệ thống sẽ gửi thông báo cho bạn khi đơn hàng được hoàn trả!`,
           };
         case AnnouncementType.DELIVERY_RETURN:
           return {
             title: 'Đơn hàng được hoàn trả',
-            message: `Đơn hàng ${order ? `#${order.code}` : ''} đang được hoàn trả do không giao thành công đến người nhận!`,
+            message: `Đơn hàng ${order ? `#${order.code}` : `${delivery.deliveryTrackingCode}`} đang được hoàn trả do không giao thành công đến người nhận!`,
           };
       }
     };

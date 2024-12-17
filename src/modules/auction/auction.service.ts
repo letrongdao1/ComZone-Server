@@ -244,6 +244,9 @@ export class AuctionService {
         status: Not(In(['FAILED', 'CANCELED'])),
       },
       relations: ['comics', 'comics.genres'],
+      order: {
+        updatedAt: 'DESC',
+      },
     });
   }
 

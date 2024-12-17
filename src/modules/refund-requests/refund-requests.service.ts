@@ -163,7 +163,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
 
     await this.eventsGateway.notifyUser(
       refundRequest.user.id,
-      'Yêu cầu hoàn tiền đơn hàng của bạn đã được hệ thống chấp thuận. Bạn có thể kiểm tra số tiền được hoàn lại từ đơn hàng trong lịch sử giao dịch.',
+      `Yêu cầu hoàn tiền đơn hàng #${order.code} đã được hệ thống chấp thuận. Bạn có thể kiểm tra số tiền được hoàn lại từ đơn hàng trong lịch sử giao dịch.`,
       { orderId: order.id },
       'Hoàn tiền thành công',
       AnnouncementType.REFUND_APPROVE,
@@ -172,7 +172,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
 
     const seller = await this.ordersService.getSellerIdOfAnOrder(order.id);
 
-    await this.usersService.updateBalanceWithNonWithdrawableAmount(
+    await this.usersService.updateNonWithdrawableAmount(
       seller.id,
       -order.totalPrice,
     );
@@ -187,6 +187,15 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       seller.id,
       order.delivery.deliveryFee,
       'GAIN',
+    );
+
+    await this.eventsGateway.notifyUser(
+      seller.id,
+      `Đơn hàng #${order.code} đã bị người mua gửi yêu cầu hoàn tiền với lý do "${refundRequest.reason}". Yêu cầu đã được hệ thống phê duyệt và hoàn toàn bộ số tiền đơn hàng cho người mua.`,
+      { orderId: order.id },
+      'Hoàn trả đơn hàng',
+      AnnouncementType.REFUND_REJECT,
+      RecipientType.SELLER,
     );
 
     await this.ordersService.updateOrderStatus(orderId, OrderStatusEnum.FAILED);

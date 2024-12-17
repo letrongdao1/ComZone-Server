@@ -123,7 +123,7 @@ export class OrdersService extends BaseService<Order> {
         -(createOrderDto.totalPrice + delivery.deliveryFee),
       );
 
-      await this.usersService.updateBalanceWithNonWithdrawableAmount(
+      await this.usersService.updateNonWithdrawableAmount(
         createOrderDto.sellerId,
         createOrderDto.totalPrice,
       );
@@ -144,7 +144,7 @@ export class OrdersService extends BaseService<Order> {
 
       await this.eventsGateway.notifyUser(
         userId,
-        `Thanh toán số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ bằng ví ComZone thành công.`,
+        `Thanh toán đơn hàng #${newCode} với số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ thành công.`,
         { transactionId: userTransaction.id },
         'Thanh toán thành công',
         AnnouncementType.TRANSACTION_SUBTRACT,
@@ -774,7 +774,7 @@ export class OrdersService extends BaseService<Order> {
         'SUCCESSFUL',
       );
 
-      await this.usersService.updateBalanceWithNonWithdrawableAmount(
+      await this.usersService.updateNonWithdrawableAmount(
         seller.id,
         -order.totalPrice,
       );
