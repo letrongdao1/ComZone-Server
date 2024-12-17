@@ -340,6 +340,25 @@ export class AuctionService {
 
     return updatedAuction;
   }
+  async updateAuctionStatusWithCurrentPriceToCompleted(
+    id: string,
+  ): Promise<Auction> {
+    const auction = await this.auctionRepository.findOne({
+      where: { id },
+      relations: ['comics', 'bids', 'bids.user'],
+    });
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${id} not found`);
+    }
+
+    // Update auction status and winner
+    auction.status = 'COMPLETED';
+    auction.isPaid = true;
+
+    const updatedAuction = await this.auctionRepository.save(auction);
+
+    return updatedAuction;
+  }
 
   async startAuctionsThatShouldBeginNow(): Promise<{
     success: boolean;

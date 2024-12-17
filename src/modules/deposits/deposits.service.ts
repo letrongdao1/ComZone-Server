@@ -269,10 +269,18 @@ export class DepositsService extends BaseService<Deposit> {
       winnerDeposit.amount,
     );
 
-    await this.transactionsService.createDepositTransaction(
+    const transaction = await this.transactionsService.createDepositTransaction(
       winnerDeposit.user.id,
       winnerDeposit.id,
       'ADD',
+    );
+    await this.eventsGateway.notifyUser(
+      winnerDeposit.user.id,
+      `Hệ thống đã hoàn số tiền cọc ${CurrencySplitter(winnerDeposit.amount)}đ vào ví của bạn.`,
+      { transactionId: transaction.id },
+      'Hoàn cọc thành công',
+      AnnouncementType.TRANSACTION_ADD,
+      RecipientType.USER,
     );
 
     await this.depositsRepository.update(winnerDeposit.id, {

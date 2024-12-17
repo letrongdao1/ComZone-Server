@@ -105,7 +105,7 @@ export class EventsGateway implements OnModuleInit {
   ) {
     const { auctionId, currentPrice, user, type } = data;
     console.log('data', data);
-
+    let updatedAuction;
     if (type === 'maxPrice') {
       const bid = await this.bidService.create({
         userId: user.id,
@@ -114,13 +114,18 @@ export class EventsGateway implements OnModuleInit {
         type,
       });
       console.log('11111', bid);
+      updatedAuction = await this.auctionService.updateAuctionStatusToCompleted(
+        auctionId,
+        user,
+      );
+      console.log('12312', updatedAuction);
     }
-
-    const updatedAuction =
-      await this.auctionService.updateAuctionStatusToCompleted(auctionId, user);
-    console.log('12312', updatedAuction);
-
-    // Call refund logic
+    if (type === 'currentPrice') {
+      updatedAuction =
+        await this.auctionService.updateAuctionStatusWithCurrentPriceToCompleted(
+          auctionId,
+        );
+    }
 
     await this.depositsService.refundDepositToWinner(auctionId);
 
