@@ -122,6 +122,7 @@ export class AuctionService {
         RecipientType.USER,
         'SUCCESSFUL',
       );
+
       this.eventsGateway.notifyUser(
         auction.comics.sellerId.id,
         `Buổi đấu giá ${auction.comics.title} đã diễn ra thành công.`,
@@ -139,13 +140,6 @@ export class AuctionService {
             .map((bid) => bid.user.id),
         ),
       );
-      console.log('loser', losingUserIds);
-
-      await this.depositsService.refundAllDepositsExceptWinner(
-        auctionId,
-        latestBid.user.id,
-      );
-      // Create Announcements for Losing Bidders and Notify Them
       await this.eventsGateway.notifyUsers(
         losingUserIds,
         `Bạn đã đấu giá ${auction.comics.title} thất bại. Tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')} đã được hoàn trả.`,
@@ -155,6 +149,13 @@ export class AuctionService {
         'FAILED',
         RecipientType.USER,
       );
+      console.log('loser', losingUserIds);
+
+      await this.depositsService.refundAllDepositsExceptWinner(
+        auctionId,
+        latestBid.user.id,
+      );
+      // Create Announcements for Losing Bidders and Notify Them
     } else {
       // No bids, so the auction failed
       auction.status = 'CANCELED';
