@@ -37,8 +37,7 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
     return await Promise.all(
       chatRoomList.map(async (chatRoom) => {
         if (client.rooms.has(chatRoom.id)) return;
-
-        client.join(chatRoom.id);
+        else client.join(chatRoom.id);
       }),
     );
   }
@@ -82,15 +81,17 @@ export class ChatMessagesService extends BaseService<ChatMessage> {
       repliedToMessage: repliedToMessage || null,
     });
 
-    return await this.chatMessagesRepository
-      .save(newMessage)
-      .then(async (res) => {
-        await this.chatRoomsService.updateLastMessage(
-          createMessageDto.chatRoom,
-          res.id,
-        );
-      })
-      .then(() => this.getOne(newMessage.id));
+    await this.chatMessagesRepository.save(newMessage).then(async (res) => {
+      await this.chatRoomsService.updateLastMessage(
+        createMessageDto.chatRoom,
+        res.id,
+      );
+    });
+
+    return await this.chatMessagesRepository.findOne({
+      where: { id: newMessage.id },
+      relations: ['chatRoom', 'chatRoom.firstUser', 'chatRoom.secondUser'],
+    });
   }
 
   groupMessageByDate = (

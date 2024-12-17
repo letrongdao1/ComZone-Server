@@ -12,6 +12,13 @@ export class ExchangeConfirmation extends BaseEntity {
   user: User;
 
   @Column({
+    name: 'packaging_images',
+    type: 'simple-json',
+    nullable: true,
+  })
+  packagingImages: string[];
+
+  @Column({
     name: 'dealing_confirm',
     type: 'boolean',
     nullable: true,

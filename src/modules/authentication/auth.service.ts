@@ -165,7 +165,7 @@ export class AuthService {
   }
 
   async resetPassword(userId: string, passwordResetDto: PasswordResetDTO) {
-    const user = await this.usersService.getOne(userId);
+    const user = await this.usersService.getOneWithPassword(userId);
 
     if (!bcrypt.compareSync(passwordResetDto.oldPassword, user.password)) {
       throw new UnauthorizedException('Incorrect password!');
@@ -173,6 +173,22 @@ export class AuthService {
 
     return await this.usersService
       .updatePassword(userId, bcrypt.hashSync(passwordResetDto.newPassword, 10))
+      .then(() => this.usersService.getOne(userId));
+  }
+
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.usersService.getOneWithPassword(userId);
+
+    if (!bcrypt.compareSync(oldPassword, user.password)) {
+      throw new BadRequestException('Incorrect password!');
+    }
+
+    return await this.usersService
+      .updatePassword(userId, bcrypt.hashSync(newPassword, 10))
       .then(() => this.usersService.getOne(userId));
   }
 

@@ -7,10 +7,10 @@ import { Exchange } from './exchange.entity';
 
 @Entity('chat-room')
 export class ChatRoom extends BaseEntity {
-  @ManyToOne(() => User, (user) => user.firstChatRooms)
+  @ManyToOne(() => User, (user) => user.firstChatRooms, { eager: true })
   firstUser: User;
 
-  @ManyToOne(() => User, (user) => user.secondChatRooms)
+  @ManyToOne(() => User, (user) => user.secondChatRooms, { eager: true })
   secondUser: User;
 
   @ManyToOne(() => Comic, (comics) => comics.chatRooms)

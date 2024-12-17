@@ -6,6 +6,7 @@ import { SellerSubscription } from 'src/entities/seller-subscription.entity';
 import { UsersModule } from '../users/users.module';
 import { SellerSubsPlansModule } from '../seller-subs-plans/seller-subs-plans.module';
 import { TransactionsModule } from '../transactions/transactions.module';
+import { EventsModule } from '../socket/event.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { TransactionsModule } from '../transactions/transactions.module';
     UsersModule,
     SellerSubsPlansModule,
     TransactionsModule,
+    EventsModule,
   ],
   controllers: [SellerSubscriptionsController],
   providers: [SellerSubscriptionsService],

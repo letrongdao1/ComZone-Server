@@ -52,9 +52,13 @@ export class UsersService extends BaseService<User> {
       ],
     });
 
-    user.balance -= user.nonWithdrawableAmount;
-
     return user;
+  }
+
+  async getOneWithPassword(id: string): Promise<User> {
+    return await this.userRepository.findOne({
+      where: { id },
+    });
   }
 
   async getUserByEmail(email: string) {
@@ -115,7 +119,7 @@ export class UsersService extends BaseService<User> {
     if (!user) throw new NotFoundException('User cannot be found!');
 
     await this.userRepository.update(userId, {
-      last_active: new Date().toLocaleString(),
+      last_active: new Date(),
     });
   }
 
@@ -168,12 +172,11 @@ export class UsersService extends BaseService<User> {
       .then(() => this.getOne(userId));
   }
 
-  async updateBalanceWithNonWithdrawableAmount(userId: string, amount: number) {
+  async updateNonWithdrawableAmount(userId: string, amount: number) {
     const user = await this.getOne(userId);
 
     return await this.userRepository
       .update(userId, {
-        balance: user.balance + amount,
         nonWithdrawableAmount: user.nonWithdrawableAmount + amount,
       })
       .then(() => this.getOne(userId));
@@ -184,6 +187,7 @@ export class UsersService extends BaseService<User> {
 
     return await this.userRepository
       .update(userId, {
+        balance: user.balance + amount,
         nonWithdrawableAmount: user.nonWithdrawableAmount - amount,
       })
       .then(() => this.getOne(userId));

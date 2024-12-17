@@ -56,7 +56,6 @@ export class EventsGateway implements OnModuleInit {
       socket.onAny((event, data) => {
         console.log(`Event received: ${event}`, data); // Logs every event received from any client
       });
-      console.log('123123', socket.handshake.query.user);
 
       // Handle socket disconnection
       socket.on('disconnect', (reason) => {

@@ -79,6 +79,15 @@ export class DepositsService extends BaseService<Deposit> {
       savedDeposit.id,
     );
 
+    await this.eventsGateway.notifyUser(
+      userId,
+      `Bạn đã đặt cọc thành công số tiền ${CurrencySplitter(amount)}đ cho cuộc đấu giá.`,
+      { auctionId: auction },
+      'Đặt cọc thành công',
+      AnnouncementType.TRANSACTION_SUBTRACT,
+      RecipientType.USER,
+    );
+
     console.log('Transaction:', transaction);
 
     return savedDeposit;

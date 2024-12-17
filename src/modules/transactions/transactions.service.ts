@@ -298,9 +298,11 @@ export class TransactionsService extends BaseService<Transaction> {
       },
     });
 
-    console.log({ transactions });
+    const filteredSuccessfulOrders = transactions.filter(
+      (trans) => trans.order.status === OrderStatusEnum.SUCCESSFUL,
+    );
 
-    const groups = transactions.reduce((groups, transaction) => {
+    const groups = filteredSuccessfulOrders.reduce((groups, transaction) => {
       const date = transaction.createdAt.toISOString().split('T')[0];
       const formattedDate = date.split('-').reverse().join('-');
 

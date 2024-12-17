@@ -12,6 +12,12 @@ import { UsersService } from '../users/users.service';
 import { SellerSubsPlansService } from '../seller-subs-plans/seller-subs-plans.service';
 import { SellerSubscriptionDTO } from './dto/seller-subscription.dto';
 import { TransactionsService } from '../transactions/transactions.service';
+import { EventsGateway } from '../socket/event.gateway';
+import CurrencySplitter from 'src/utils/currency-spliter/CurrencySplitter';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @Injectable()
 export class SellerSubscriptionsService extends BaseService<SellerSubscription> {
@@ -24,6 +30,8 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     private readonly transactionsService: TransactionsService,
     @Inject(SellerSubsPlansService)
     private readonly sellerSubsPlansService: SellerSubsPlansService,
+
+    private readonly eventsGateway: EventsGateway,
   ) {
     super(sellerSubscriptionsRepository);
   }
@@ -116,9 +124,19 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     if (sellerSubsPlan.price > 0) {
       await this.usersService.updateBalance(userId, -sellerSubsPlan.price);
 
-      await this.transactionsService.createSellerSubscriptionTransaction(
+      const transaction =
+        await this.transactionsService.createSellerSubscriptionTransaction(
+          userId,
+          newSubscription.id,
+        );
+
+      await this.eventsGateway.notifyUser(
         userId,
-        newSubscription.id,
+        `Thanh toán mua gói đăng ký người bán thành công với số tiền ${CurrencySplitter(sellerSubsPlan.price)}đ.`,
+        { transactionId: transaction.id },
+        'Thanh toán thành công',
+        AnnouncementType.TRANSACTION_SUBTRACT,
+        RecipientType.SELLER,
       );
     } else {
       await this.updateTrialUsed(userId);

@@ -7,7 +7,6 @@ import {
   Max,
   Min,
   IsBoolean,
-  isBoolean,
 } from 'class-validator';
 
 export class CreateSellerFeedbackDto {

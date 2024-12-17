@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ChatRoom } from 'src/entities/chat-room.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import {
   CreateComicsChatRoomDTO,
@@ -153,6 +153,50 @@ export class ChatRoomsService extends BaseService<ChatRoom> {
     });
 
     return await this.chatRoomsRepository.save(newChatRoom);
+  }
+
+  async createChatRoomWithSeller(userId: string, sellerId: string) {
+    const user = await this.usersService.getOne(userId);
+    if (!user) throw new NotFoundException('User cannot be found!');
+
+    const seller = await this.usersService.getOne(sellerId);
+    if (!seller) throw new NotFoundException('Seller cannot be found!');
+
+    const checkExistedRoom = await this.chatRoomsRepository.findOne({
+      where: [
+        {
+          firstUser: { id: userId },
+          secondUser: { id: sellerId },
+          comics: IsNull(),
+          exchange: IsNull(),
+        },
+        {
+          firstUser: { id: sellerId },
+          secondUser: { id: userId },
+          comics: IsNull(),
+          exchange: IsNull(),
+        },
+      ],
+    });
+
+    if (checkExistedRoom) {
+      await this.chatRoomsRepository.update(checkExistedRoom.id, {
+        updatedAt: new Date(),
+      });
+      return checkExistedRoom;
+    }
+
+    const newChatRoom = this.chatRoomsRepository.create({
+      firstUser: user,
+      secondUser: seller,
+    });
+
+    return await this.chatRoomsRepository.save(newChatRoom).then((res) =>
+      this.chatRoomsRepository.findOne({
+        where: { id: res.id },
+        relations: ['firstUser', 'secondUser', 'lastMessage'],
+      }),
+    );
   }
 
   async getChatRoomByUserId(userId: string) {
