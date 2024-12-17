@@ -139,6 +139,8 @@ export class AuctionService {
             .map((bid) => bid.user.id),
         ),
       );
+      console.log('loser', losingUserIds);
+
       await this.depositsService.refundAllDepositsExceptWinner(
         auctionId,
         latestBid.user.id,
