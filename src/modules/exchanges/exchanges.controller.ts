@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ExchangesService } from './exchanges.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { StatusQueryEnum } from './dto/status-query.enum';
 import { Roles } from '../authorization/roles.decorator';
 import { Role } from '../authorization/role.enum';
@@ -45,6 +45,17 @@ export class ExchangesController {
     return this.exchangesService.getOne(id);
   }
 
+  @ApiBody({
+    schema: {
+      properties: {
+        packagingImages: {
+          type: 'array',
+          nullable: true,
+          example: ['images.jpg'],
+        },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard)
   @Patch('accept/:id')
   acceptExchangeRequest(@Req() req: any, @Param('id') id: string) {
