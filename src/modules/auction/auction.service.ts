@@ -459,6 +459,14 @@ export class AuctionService {
               AnnouncementType.AUCTION,
               RecipientType.SELLER,
             );
+            this.eventsGateway.notifyUser(
+              auction.winner.id,
+              `Bạn đã bị mất tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')}đ vì không thanh toán đúng hẹn.`,
+              { auctionId: auction },
+              'Thông báo đấu giá',
+              AnnouncementType.AUCTION,
+              RecipientType.USER,
+            );
           }
 
           // Save the updated auction status
