@@ -110,7 +110,7 @@ export class AuctionService {
       );
       auction.status = 'SUCCESSFUL';
       auction.winner = latestBid.user;
-      await this.auctionRepository.save(auction);
+      const updatedAuction = await this.auctionRepository.save(auction);
 
       // Notify the winning bidder in real-time
       this.eventsGateway.notifyUser(
@@ -149,7 +149,7 @@ export class AuctionService {
       await this.eventsGateway.notifyUsers(
         losingUserIds,
         `Bạn đã đấu giá ${auction.comics.title} thất bại. Tiền cọc ${auction.depositAmount.toLocaleString('vi-VN')} đã được hoàn trả.`,
-        { id: auction },
+        { id: updatedAuction },
         'Kết quả đấu giá',
         AnnouncementType.AUCTION,
         'FAILED',
