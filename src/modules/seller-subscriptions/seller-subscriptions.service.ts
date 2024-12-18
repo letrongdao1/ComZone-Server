@@ -190,6 +190,19 @@ export class SellerSubscriptionsService extends BaseService<SellerSubscription> 
     });
   }
 
+  async updateAfterStopAuctioning(userId: string, quantity: number) {
+    const sellerSub = await this.getSellerSubsOfUser(userId);
+
+    if (!sellerSub)
+      throw new NotFoundException('Seller subscription cannot be found!');
+
+    if (sellerSub.plan.auctionTime === 0 && sellerSub.isActive) return;
+
+    return await this.sellerSubscriptionsRepository.update(sellerSub.id, {
+      remainingAuctionTime: sellerSub.remainingAuctionTime + quantity,
+    });
+  }
+
   async updateTrialUsed(userId: string) {
     const sellerSubs = await this.sellerSubscriptionsRepository.findOneBy({
       user: { id: userId },

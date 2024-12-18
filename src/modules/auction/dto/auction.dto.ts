@@ -46,6 +46,10 @@ export class CreateAuctionDto {
 
 export class UpdateAuctionDto {
   @IsOptional()
+  @IsString()
+  comicsId?: string;
+
+  @IsOptional()
   @IsNumber()
   reservePrice?: number;
 
@@ -74,6 +78,7 @@ export class UpdateAuctionDto {
     'UPCOMING',
     'CANCELED',
     'COMPLETED',
+    'STOPPED',
   ])
   status?: string;
 }

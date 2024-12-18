@@ -292,14 +292,6 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     const compensatedUserDeposit = exchangeDeposits.find(
       (deposit) => !deposit.mine,
     );
-
-    await this.depositsService.refundDepositToAUser(compensatedUserDeposit.id);
-
-    await this.depositsService.seizeADeposit(
-      violateUserDeposit.id,
-      'Bồi thường tiền cho trao đổi',
-    );
-
     await this.eventsGateway.notifyUser(
       violateUser.id,
       'Hệ thống đã nhận được báo cáo từ người thực hiện trao đổi với bạn và xác nhận rằng bạn đã vi phạm trong quá trình trao đổi. Hệ thống đã sử dụng số tiền cọc và tiền bù của bạn để chuyển cho người trao đổi với bạn.',
@@ -307,6 +299,13 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       'Vi phạm trao đổi',
       AnnouncementType.EXCHANGE_REJECTED,
       RecipientType.USER,
+    );
+
+    await this.depositsService.refundDepositToAUser(compensatedUserDeposit.id);
+
+    await this.depositsService.seizeADeposit(
+      violateUserDeposit.id,
+      'Bồi thường tiền cho trao đổi',
     );
 
     await this.exchangesService.updateExchangeStatus(

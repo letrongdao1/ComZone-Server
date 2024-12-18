@@ -80,4 +80,15 @@ export class SellerSubscriptionsController {
       dto.quantity,
     );
   }
+  @UseGuards(JwtAuthGuard)
+  @Patch('auction/stop')
+  updateAfterStopAuctioning(
+    @Req() req: any,
+    @Body() dto: UpdateRemainingTimeDTO,
+  ) {
+    return this.sellerSubscriptionsService.updateAfterStopAuctioning(
+      req.user.id,
+      dto.quantity,
+    );
+  }
 }

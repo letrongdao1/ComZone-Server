@@ -65,6 +65,7 @@ export class Auction extends BaseEntity {
       'FAILED',
       'CANCELED',
       'COMPLETED',
+      'STOPPED',
     ],
   })
   status: string;

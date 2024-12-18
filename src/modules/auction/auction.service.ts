@@ -230,6 +230,7 @@ export class AuctionService {
         comics: {
           sellerId: { id: sellerId },
         },
+        status: Not('STOPPED'), // Exclude auctions with status "STOPPED"
       },
       relations: ['comics', 'comics.genres'],
     });
@@ -244,9 +245,6 @@ export class AuctionService {
         status: Not(In(['FAILED', 'CANCELED'])),
       },
       relations: ['comics', 'comics.genres'],
-      order: {
-        updatedAt: 'DESC',
-      },
     });
   }
 
@@ -417,6 +415,55 @@ export class AuctionService {
   async updateAuction(id: string, data: UpdateAuctionDto): Promise<Auction> {
     await this.auctionRepository.update(id, data);
     return this.findAuctionById(id); // Return the updated auction
+  }
+  async updateAuctionToStart(
+    id: string,
+    data: UpdateAuctionDto,
+  ): Promise<Auction> {
+    console.log('auction', data);
+    const auction = await this.auctionRepository.findOne({
+      where: { id },
+      relations: ['comics'],
+    });
+
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${id} not found`);
+    }
+
+    const comic = auction.comics;
+
+    comic.status = ComicsStatusEnum.AVAILABLE;
+    comic.type = ComicsTypeEnum.AUCTION;
+    comic.onSaleSince = new Date(Date.now());
+    await this.comicRepository.save(comic);
+
+    await this.auctionRepository.update(id, data);
+    return this.findAuctionById(id);
+  }
+
+  async stopAuctioning(auctionId: string): Promise<Auction> {
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+      relations: ['comics'],
+    });
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found for the given comic');
+    }
+
+    // Update the comic status to "UNAVAILABLE"
+    const comic = auction.comics;
+    if (comic) {
+      await this.comicRepository.update(comic.id, {
+        status: ComicsStatusEnum.UNAVAILABLE,
+        type: ComicsTypeEnum.NONE,
+        onSaleSince: null,
+      });
+    }
+
+    // Update the auction status to "STOPPED"
+    auction.status = 'STOPPED';
+    return await this.auctionRepository.save(auction);
   }
 
   // Delete an auction

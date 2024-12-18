@@ -113,6 +113,13 @@ export class AuctionController {
     return this.auctionService.cancelAuction(id);
   }
 
+  @Patch(':id/stop-auction')
+  async stopAuctioning(@Param('id') id: string): Promise<Auction> {
+    console.log('1', id);
+
+    return this.auctionService.stopAuctioning(id);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Auction> {
     return this.auctionService.findAuctionById(id);
@@ -125,6 +132,13 @@ export class AuctionController {
     @Body() data: UpdateAuctionDto,
   ): Promise<Auction> {
     return this.auctionService.updateAuction(id, data);
+  }
+  @Put(':id/start')
+  async updateAuctionToStart(
+    @Param('id') id: string,
+    @Body() data: UpdateAuctionDto,
+  ): Promise<Auction> {
+    return this.auctionService.updateAuctionToStart(id, data);
   }
 
   // Delete an auction
