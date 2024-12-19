@@ -159,28 +159,6 @@ export class ExchangeConfirmationService extends BaseService<ExchangeConfirmatio
     return await this.getOne(exchangeConfirmation.id);
   }
 
-  async updatePackagingImages(
-    userId: string,
-    exchangeId: string,
-    packagingImages: string[],
-  ) {
-    const exchangeConfirmation = await this.excConfirmationRepository.findOne({
-      where: {
-        user: { id: userId },
-        exchange: { id: exchangeId },
-      },
-    });
-
-    if (!exchangeConfirmation)
-      throw new NotFoundException('Exchange confirmation cannot be found!');
-
-    return await this.excConfirmationRepository
-      .update(exchangeConfirmation.id, {
-        packagingImages,
-      })
-      .then(() => this.getOne(exchangeConfirmation.id));
-  }
-
   async failedDeliveryMark(userId: string, exchangeId: string) {
     const exchange = await this.exchangesService.getOne(exchangeId);
 

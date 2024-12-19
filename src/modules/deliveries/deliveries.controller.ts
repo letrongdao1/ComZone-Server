@@ -3,13 +3,14 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { DeliveriesService } from './deliveries.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import {
   CreateExchangeDeliveryDTO,
   CreateOrderDeliveryDTO,
@@ -88,5 +89,28 @@ export class DeliveriesController {
   @Get('exchange/to-user/:exchange_id')
   getByExchangeAndToUser(@Req() req: any, @Param('exchange_id') id: string) {
     return this.deliveriesService.getByExchangeAndToUser(req.user.id, id);
+  }
+
+  @ApiBody({
+    schema: {
+      properties: {
+        packagingImages: {
+          type: 'array',
+          nullable: true,
+          example: ['images.jpg'],
+        },
+      },
+    },
+  })
+  @UseGuards(JwtAuthGuard)
+  @Patch('packaging-images/:delivery_id')
+  updatePackagingImages(
+    @Param('delivery_id') deliveryId: string,
+    @Body() data: { packagingImages: string[] },
+  ) {
+    return this.deliveriesService.updatePackagingImages(
+      deliveryId,
+      data.packagingImages,
+    );
   }
 }

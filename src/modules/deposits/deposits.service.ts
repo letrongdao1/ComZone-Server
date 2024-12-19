@@ -141,15 +141,10 @@ export class DepositsService extends BaseService<Deposit> {
       RecipientType.USER,
     );
 
-    //Auto create 2 GHN deliveries after finishing placing deposits
-    const foundDeposit = await this.depositsRepository.find({
-      where: { exchange: { id: dto.exchange } },
-    });
-    if (foundDeposit.length < 2) return await this.getOne(newDeposit.id);
-    else
-      return await this.exchangesService
-        .registerGHNDeliveryForExchange(dto.exchange)
-        .then(() => this.getOne(newDeposit.id));
+    await this.exchangesService.updateExchangeDeliveryConfirmExpiration(
+      userId,
+      dto.exchange,
+    );
   }
 
   async getAllDepositOfUser(userId: string) {
@@ -317,6 +312,21 @@ export class DepositsService extends BaseService<Deposit> {
         message: `Deposits of the exchange are successfully refunded to ${depositList.length} user(s).`,
       };
     });
+  }
+
+  async refundExpiredExchange(userId: string, exchangeId: string) {
+    const exchange = await this.exchangesService.getOne(exchangeId);
+
+    if (!exchange) throw new NotFoundException();
+
+    await this.refundAllDepositsOfAnExchange(exchangeId);
+
+    await this.exchangesService.revertCompensationAmount(
+      exchangeId,
+      'Trao đổi bị hủy do người thực hiện trao đổi không xác nhận bàn giao truyện đúng hạn',
+    );
+
+    await this.exchangesService.updateAfterExchangeExpired(userId, exchangeId);
   }
 
   async seizeADeposit(depositId: string, seizedReason: string) {

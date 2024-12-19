@@ -66,6 +66,20 @@ export class Delivery extends BaseEntity {
   overallStatus: DeliveryOverallStatusEnum;
 
   @Column({
+    name: 'packaging_images',
+    type: 'simple-json',
+    nullable: true,
+  })
+  packagingImages: string[];
+
+  @Column({
+    name: 'expired_at',
+    type: 'datetime',
+    nullable: true,
+  })
+  expiredAt: Date;
+
+  @Column({
     type: 'text',
     nullable: true,
   })

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { ExchangePost } from 'src/entities/exchange-post.entity';
-import { Not, Repository } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { CreateExchangePostDTO } from './dto/post.dto';
 import { ExchangePostStatusEnum } from './dto/post-status.enum';
@@ -53,7 +53,9 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
           where: {
             post: { id: post.id },
             requestUser: { id: userId },
-            status: Not(ExchangeStatusEnum.REJECTED),
+            status: Not(
+              In([ExchangeStatusEnum.REJECTED, ExchangeStatusEnum.FAILED]),
+            ),
           },
         });
 
