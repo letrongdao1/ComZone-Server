@@ -26,6 +26,7 @@ import {
   RecipientType,
 } from 'src/entities/announcement.entity';
 import { ExchangeComicsService } from '../exchange-comics/exchange-comics.service';
+import { DeliveriesService } from '../deliveries/deliveries.service';
 
 @Injectable()
 export class RefundRequestsService extends BaseService<RefundRequest> {
@@ -41,6 +42,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
     private readonly depositsService: DepositsService,
     private readonly comicsService: ExchangeComicsService,
     private readonly eventsGateway: EventsGateway,
+    private readonly deliveriesService: DeliveriesService,
   ) {
     super(refundRequestsRepository);
   }
@@ -87,7 +89,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
   }
 
   async getAllRefundRequest() {
-    return await this.refundRequestsRepository
+    const refundRequests = await this.refundRequestsRepository
       .createQueryBuilder('refund')
       .leftJoinAndSelect('refund.user', 'user')
       .leftJoinAndSelect('refund.order', 'order')
@@ -97,6 +99,30 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       )
       .orderBy('refund.updatedAt', 'DESC')
       .getMany();
+
+    if (refundRequests.length === 0) return;
+
+    return await Promise.all(
+      refundRequests.map(async (request) => {
+        if (!request.exchange) return request;
+
+        const exchangeDelivery =
+          await this.deliveriesService.getByExchangeAndToUser(
+            request.user.id,
+            request.exchange.id,
+          );
+
+        if (!exchangeDelivery) return request;
+        else
+          return {
+            ...request,
+            exchange: {
+              ...request.exchange,
+              delivery: exchangeDelivery,
+            },
+          };
+      }),
+    );
   }
 
   async getAllOrderRefundRequest() {

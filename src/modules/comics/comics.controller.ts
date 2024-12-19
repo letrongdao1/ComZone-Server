@@ -80,6 +80,13 @@ export class ComicController {
     return this.comicService.findBySeller(sellerId);
   }
 
+  @Get('seller/available/:seller_id')
+  async getAllAvailableBySeller(
+    @Param('seller_id') sellerId: string,
+  ): Promise<Comic[]> {
+    return this.comicService.getAllAvailableBySeller(sellerId);
+  }
+
   @Get('search/available/seller/:seller_id')
   async searchSellerAvailableComics(
     @Param('seller_id') sellerId: string,
