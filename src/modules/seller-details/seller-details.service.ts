@@ -33,6 +33,11 @@ export class SellerDetailsService extends BaseService<SellerDetails> {
       user,
     });
 
+    await this.usersService.updatePhoneNumber(
+      userId,
+      sellerDetailsDto.verifiedPhone,
+    );
+
     return await this.sellerDetailsRepository
       .save(newSellerInfo)
       .then(() => this.getByUserId(userId));
