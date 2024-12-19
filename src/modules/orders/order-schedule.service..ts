@@ -9,11 +9,12 @@ export class OrdersScheduleService {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Cron(
-    process.env.CRON_TEST_INTERVAL && Boolean(process.env.CRON_TEST_INTERVAL)
+    process.env.CRON_TEST_INTERVAL && process.env.CRON_TEST_INTERVAL === 'TRUE'
       ? CronExpression.EVERY_10_SECONDS
       : CronExpression.EVERY_MINUTE,
     {
-      disabled: Boolean(process.env.CRON_DISABLED),
+      disabled:
+        process.env.CRON_DISABLED && process.env.CRON_DISABLED === 'TRUE',
     },
   )
   updateDeliveredOrdersEveryHalfDay() {
