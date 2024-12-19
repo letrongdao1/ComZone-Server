@@ -161,7 +161,6 @@ export class ComicService extends BaseService<Comic> {
       throw new Error('Seller not found');
     }
 
-    // Modify the find query to sort by createdAt in descending order
     const comics = await this.comicRepository.find({
       where: {
         sellerId: { id: seller.id },
@@ -200,6 +199,27 @@ export class ComicService extends BaseService<Comic> {
     });
 
     return comics;
+  }
+
+  async getAllAvailableBySeller(sellerId: string): Promise<Comic[]> {
+    const seller = await this.userRepository.findOne({
+      where: { id: sellerId },
+    });
+
+    if (!seller) {
+      throw new Error('Seller not found');
+    }
+
+    return await this.comicRepository.find({
+      where: {
+        sellerId: { id: seller.id },
+        type: ComicsTypeEnum.SELL,
+        status: ComicsStatusEnum.AVAILABLE,
+      },
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
   }
 
   async getSellerComicsData(sellerId: string) {
