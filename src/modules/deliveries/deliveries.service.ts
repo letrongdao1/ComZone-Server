@@ -336,13 +336,6 @@ export class DeliveriesService extends BaseService<Delivery> {
       .then(async (res) => {
         const deliveryStatus: OrderDeliveryStatusEnum = res.data.data.status;
 
-        if (
-          [DeliveryOverallStatusEnum.DELIVERED].some(
-            (status) => status === delivery.overallStatus,
-          )
-        )
-          return;
-
         await this.deliveriesRepository.update(deliveryId, {
           status: deliveryStatus,
         });
