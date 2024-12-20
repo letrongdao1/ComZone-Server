@@ -9,11 +9,12 @@ export class DeliveriesScheduleService {
   constructor(private readonly deliveriesService: DeliveriesService) {}
 
   @Cron(
-    process.env.CRON_TEST_INTERVAL && Boolean(process.env.CRON_TEST_INTERVAL)
+    process.env.CRON_TEST_INTERVAL && process.env.CRON_TEST_INTERVAL === 'TRUE'
       ? CronExpression.EVERY_10_SECONDS
       : CronExpression.EVERY_MINUTE,
     {
-      disabled: Boolean(process.env.CRON_DISABLED),
+      disabled:
+        process.env.CRON_DISABLED && process.env.CRON_DISABLED === 'TRUE',
     },
   )
   updateDeliveryStatus() {
@@ -21,5 +22,19 @@ export class DeliveriesScheduleService {
       'Getting delivery status from GHN to update deliveries...',
     );
     this.deliveriesService.getAll();
+  }
+
+  @Cron(
+    process.env.CRON_TEST_INTERVAL && process.env.CRON_TEST_INTERVAL === 'TRUE'
+      ? CronExpression.EVERY_10_SECONDS
+      : CronExpression.EVERY_MINUTE,
+    {
+      disabled:
+        process.env.CRON_DISABLED && process.env.CRON_DISABLED === 'TRUE',
+    },
+  )
+  checkExpiredExchangeDelivery() {
+    this.logger.debug('Checking for expired exchange delivery...');
+    this.deliveriesService.checkForExpiredDelivery();
   }
 }

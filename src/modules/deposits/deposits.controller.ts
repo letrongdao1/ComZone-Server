@@ -75,4 +75,13 @@ export class DepositsController {
   ) {
     return this.depositsService.getDepositsByExchange(req.user.id, exchangeId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('exchange/expired/:exchange_id')
+  refundExpiredExchange(
+    @Req() req: any,
+    @Param('exchange_id') exchangeId: string,
+  ) {
+    return this.depositsService.refundExpiredExchange(req.user.id, exchangeId);
+  }
 }

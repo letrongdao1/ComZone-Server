@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Delivery } from 'src/entities/delivery.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import {
   CreateExchangeDeliveryDTO,
   CreateOrderDeliveryDTO,
@@ -31,6 +31,8 @@ import {
   AnnouncementType,
   RecipientType,
 } from 'src/entities/announcement.entity';
+import { DepositsService } from '../deposits/deposits.service';
+import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
 
 dotenv.config();
 
@@ -54,6 +56,8 @@ export class DeliveriesService extends BaseService<Delivery> {
     private readonly vnAddressService: VietNamAddressService,
     @Inject(EventsGateway)
     private readonly eventsGateway: EventsGateway,
+    @Inject(DepositsService)
+    private readonly depositsService: DepositsService,
   ) {
     super(deliveriesRepository);
   }
@@ -331,13 +335,6 @@ export class DeliveriesService extends BaseService<Delivery> {
       )
       .then(async (res) => {
         const deliveryStatus: OrderDeliveryStatusEnum = res.data.data.status;
-
-        if (
-          [DeliveryOverallStatusEnum.DELIVERED].some(
-            (status) => status === delivery.overallStatus,
-          )
-        )
-          return;
 
         await this.deliveriesRepository.update(deliveryId, {
           status: deliveryStatus,
@@ -887,5 +884,131 @@ export class DeliveriesService extends BaseService<Delivery> {
           }
         : null,
     };
+  }
+
+  async updateExpiredAt(deliveryId: string, expiredAt?: Date) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: { id: deliveryId },
+    });
+
+    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    const expiredAfterDuration = 3 * 24 * 60 * 60 * 1000;
+
+    const finalExpiredAt = new Date(
+      (expiredAt ? expiredAt.getTime() : new Date().getTime()) +
+        expiredAfterDuration,
+    );
+
+    return await this.deliveriesRepository
+      .update(deliveryId, {
+        expiredAt: finalExpiredAt,
+      })
+      .then(() => this.getOne(deliveryId));
+  }
+
+  async updatePackagingImages(deliveryId: string, packagingImages: string[]) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: {
+        id: deliveryId,
+      },
+      relations: ['exchange'],
+    });
+
+    if (!delivery) throw new NotFoundException('Delivery cannot be found!');
+
+    await this.deliveriesRepository.update(deliveryId, {
+      packagingImages,
+    });
+
+    if (delivery.exchange) {
+      await this.registerNewGHNDelivery(delivery.id);
+
+      await this.eventsGateway.notifyUser(
+        delivery.to.user.id,
+        'Người thực hiện trao đổi với bạn đã hoàn tất quá trình đóng gói và xác nhận giao truyện. Đơn hàng sẽ sớm được bắt đầu giao.',
+        { exchangeId: delivery.exchange.id },
+        'Hoàn tất đóng gói',
+        AnnouncementType.DELIVERY_PICKING,
+        RecipientType.USER,
+      );
+    }
+
+    return await this.getOne(deliveryId);
+  }
+
+  async checkForExpiredDelivery() {
+    const deliveries = await this.deliveriesRepository.find({
+      where: {
+        deliveryTrackingCode: IsNull(),
+      },
+      relations: ['exchange'],
+    });
+
+    if (deliveries.length === 0) return;
+
+    await Promise.all(
+      deliveries.map(async (delivery) => {
+        if (!delivery.exchange || !delivery.expiredAt) return;
+
+        if (delivery.exchange.status !== ExchangeStatusEnum.DEALING) return;
+
+        if (
+          delivery.expiredAt.getTime() - 1 * 24 * 60 * 60 * 1000 <
+          new Date().getTime()
+        ) {
+          if (delivery.expiredAt < new Date()) {
+            await this.depositsService.refundExpiredExchange(
+              delivery.from.user.id,
+              delivery.exchange.id,
+            );
+
+            console.log('Expired delivery: ', delivery.id);
+          } else {
+            const checkAnnouncement =
+              await this.announcementsRepository.findOne({
+                where: {
+                  user: { id: delivery.from.user.id },
+                  exchange: { id: delivery.exchange.id },
+                  type: AnnouncementType.WARNING,
+                },
+              });
+
+            if (checkAnnouncement) return;
+
+            await this.eventsGateway.notifyUser(
+              delivery.from.user.id,
+              'Bạn có một cuộc trao đổi sắp hết hạn xác nhận giao truyện. Vui lòng hoàn tất đóng gói và xác nhận bàn giao truyện sớm nhất có thể!',
+              { exchangeId: delivery.exchange.id },
+              'Trao đổi sắp hết hạn',
+              AnnouncementType.WARNING,
+              RecipientType.USER,
+            );
+          }
+        }
+      }),
+    );
+  }
+
+  async returnDelivery(deliveryId: string) {
+    const delivery = await this.deliveriesRepository.findOneBy({
+      id: deliveryId,
+    });
+
+    if (!delivery) throw new NotFoundException();
+
+    await this.deliveriesRepository.update(deliveryId, {
+      status: OrderDeliveryStatusEnum.RETURN,
+      overallStatus: DeliveryOverallStatusEnum.RETURN,
+    });
+
+    await this.eventsGateway.notifyUser(
+      delivery.from.user.id,
+      'Bạn có một đơn vận chuyển đang được hoàn trả do không giao thành công đến người nhận hoặc quá trình thực hiện mua bán, trao đổi bị gián đoạn.',
+      { exchangeId: delivery.exchange ? delivery.exchange.id : null },
+      'Đơn hàng được hoàn trả',
+      AnnouncementType.DELIVERY_RETURN,
+      delivery.exchange ? RecipientType.USER : RecipientType.SELLER,
+    );
   }
 }

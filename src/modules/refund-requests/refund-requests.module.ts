@@ -12,6 +12,7 @@ import { DepositsModule } from '../deposits/deposits.module';
 import { EventsModule } from '../socket/event.module';
 import { Comic } from 'src/entities/comics.entity';
 import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module';
+import { DeliveriesModule } from '../deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ExchangeComicsModule } from '../exchange-comics/exchange-comics.module'
     DepositsModule,
     ExchangeComicsModule,
     EventsModule,
+    DeliveriesModule,
   ],
   controllers: [RefundRequestsController],
   providers: [RefundRequestsService],

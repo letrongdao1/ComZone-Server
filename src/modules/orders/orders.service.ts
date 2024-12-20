@@ -192,7 +192,6 @@ export class OrdersService extends BaseService<Order> {
 
     if (
       [
-        OrderStatusEnum.DELIVERED,
         OrderStatusEnum.SUCCESSFUL,
         OrderStatusEnum.FAILED,
         OrderStatusEnum.CANCELED,

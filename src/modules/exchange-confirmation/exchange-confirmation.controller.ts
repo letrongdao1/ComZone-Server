@@ -11,7 +11,7 @@ import {
 import { ExchangeConfirmationService } from './exchange-confirmation.service';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { CreateConfirmationDTO } from './dto/exc-confirmation.dto';
-import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @ApiTags('Exchange Confirmation')
@@ -86,31 +86,6 @@ export class ExchangeConfirmationController {
     return this.exchangeConfirmationService.cancelExchange(
       req.user.id,
       exchangeId,
-    );
-  }
-
-  @ApiBody({
-    schema: {
-      properties: {
-        packagingImages: {
-          type: 'array',
-          nullable: true,
-          example: ['images.jpg'],
-        },
-      },
-    },
-  })
-  @UseGuards(JwtAuthGuard)
-  @Patch('packaging-images/:exchange_id')
-  updatePackagingImages(
-    @Req() req: any,
-    @Param('exchange_id') exchangeId: string,
-    @Body() data: { packagingImages: string[] },
-  ) {
-    return this.exchangeConfirmationService.updatePackagingImages(
-      req.user.id,
-      exchangeId,
-      data.packagingImages,
     );
   }
 }

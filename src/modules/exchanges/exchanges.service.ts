@@ -416,7 +416,7 @@ export class ExchangesService extends BaseService<Exchange> {
     );
   }
 
-  async revertCompensationAmount(exchangeId: string) {
+  async revertCompensationAmount(exchangeId: string, reason: string) {
     const exchange = await this.exchangesRepository.findOneBy({
       id: exchangeId,
     });
@@ -435,6 +435,68 @@ export class ExchangesService extends BaseService<Exchange> {
       exchange.compensationAmount,
       'ADD',
     );
+
+    await this.eventsGateway.notifyUser(
+      exchange.compensateUser.id,
+      `Bạn có một cuốc trao đổi truyện được hoàn tiền bù với lí do: ${reason}.`,
+      { exchangeId: exchangeId },
+      'Hoàn tiền bù trao đổi',
+      AnnouncementType.TRANSACTION_ADD,
+      RecipientType.USER,
+    );
+  }
+
+  async revertExchangeDeliveryFee(userId: string, exchangeId: string) {
+    const exchange = await this.exchangesRepository.findOne({
+      where: { id: exchangeId },
+    });
+
+    if (!exchange) throw new NotFoundException();
+
+    const userDelivery = await this.deliveriesRepository.findOne({
+      where: { from: { user: { id: userId } }, exchange: { id: exchangeId } },
+      relations: ['exchange'],
+    });
+
+    if (!userDelivery.deliveryFee) return;
+
+    await this.usersService.updateBalance(userId, userDelivery.deliveryFee);
+
+    const transaction =
+      await this.transactionsService.createExchangeTransaction(
+        userId,
+        exchangeId,
+        userDelivery.deliveryFee,
+        'ADD',
+      );
+
+    await this.eventsGateway.notifyUser(
+      userId,
+      'Phí giao hàng của cuộc trao đổi đã được hoàn vào ví của bạn vì người thực hiện trao đổi với bạn không xác nhận bàn giao truyện trao đổi đúng hạn.',
+      { transactionId: transaction.id },
+      'Hoàn phí giao hàng',
+      AnnouncementType.TRANSACTION_ADD,
+      RecipientType.USER,
+    );
+
+    const pickingGroup = [
+      OrderDeliveryStatusEnum.READY_TO_PICK,
+      OrderDeliveryStatusEnum.PICKING,
+      OrderDeliveryStatusEnum.MONEY_COLLECT_PICKING,
+    ];
+
+    if (pickingGroup.some((status) => status === userDelivery.status)) {
+      await this.eventsGateway.notifyUser(
+        userId,
+        'Người thực hiện trao đổi với bạn đã không xác nhận bàn giao vận chuyển truyện trao đổi đúng hạn nên cuộc trao đổi đã bị hủy bỏ. Toàn bộ khoản phí của cuộc trao đổi đã được hoàn vào ví của bạn. Vui lòng kiểm tra số dư mới!',
+        { transactionId: transaction.id },
+        'Hủy đơn vận chuyển trao đổi',
+        AnnouncementType.DELIVERY_FAILED_RECEIVE,
+        RecipientType.USER,
+      );
+    } else {
+      await this.deliveriesService.returnDelivery(userDelivery.id);
+    }
   }
 
   async updateExchangeStatus(exchangeId: string, status: ExchangeStatusEnum) {
@@ -443,6 +505,59 @@ export class ExchangesService extends BaseService<Exchange> {
         status,
       })
       .then(() => this.getOne(exchangeId));
+  }
+
+  async updateExchangeDeliveryConfirmExpiration(
+    userId: string,
+    exchangeId: string,
+  ) {
+    const delivery = await this.deliveriesRepository.findOne({
+      where: {
+        from: { user: { id: userId } },
+        exchange: { id: exchangeId },
+      },
+    });
+
+    return await this.deliveriesService.updateExpiredAt(delivery.id);
+  }
+
+  async updateAfterExchangeExpired(userId: string, exchangeId: string) {
+    const userDelivery = await this.deliveriesRepository.findOne({
+      where: { from: { user: { id: userId } }, exchange: { id: exchangeId } },
+      relations: ['exchange'],
+    });
+
+    if (!userDelivery)
+      throw new NotFoundException('User delivery cannot be found!');
+
+    const exchange = await this.exchangesRepository.findOne({
+      where: { id: exchangeId },
+    });
+
+    const violatedUser =
+      exchange.requestUser.id === userId
+        ? exchange.requestUser
+        : exchange.post.user;
+
+    const otherUser =
+      exchange.requestUser.id === userId
+        ? exchange.post.user
+        : exchange.requestUser;
+
+    await this.eventsGateway.notifyUser(
+      violatedUser.id,
+      'Thời hạn chờ xác nhận bàn giao truyện trao đổi đã quá hạn. Cuộc trao đổi đã bị dừng lại và hệ thống đã tiến hành hoàn trả các khoản tiền (trừ phí giao hàng) vào ví của bạn.',
+      { exchangeId: exchangeId },
+      'Quá hạn xác nhận giao hàng trao đổi',
+      AnnouncementType.EXCHANGE_FAILED,
+      RecipientType.USER,
+    );
+
+    await this.revertExchangeDeliveryFee(otherUser.id, exchangeId);
+
+    await this.exchangesRepository.update(exchangeId, {
+      status: ExchangeStatusEnum.FAILED,
+    });
   }
 
   async rejectExchangeRequest(userId: string, exchangeId: string) {

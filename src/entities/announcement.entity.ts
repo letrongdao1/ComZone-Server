@@ -36,6 +36,7 @@ export enum AnnouncementType {
   TRANSACTION_ADD = 'TRANSACTION_ADD',
   REFUND_APPROVE = 'REFUND_APPROVE',
   REFUND_REJECT = 'REFUND_REJECT',
+  WARNING = 'WARNING',
 }
 
 @Entity('announcement')

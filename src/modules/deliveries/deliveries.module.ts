@@ -14,6 +14,7 @@ import { Exchange } from 'src/entities/exchange.entity';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 import { EventsModule } from '../socket/event.module';
 import { Announcement } from 'src/entities/announcement.entity';
+import { DepositsModule } from '../deposits/deposits.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { Announcement } from 'src/entities/announcement.entity';
     ComicModule,
     forwardRef(() => ExchangesModule),
     EventsModule,
+    DepositsModule,
   ],
   controllers: [DeliveriesController],
   providers: [DeliveriesService, DeliveriesScheduleService],
