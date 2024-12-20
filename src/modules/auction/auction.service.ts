@@ -583,4 +583,24 @@ export class AuctionService {
         .endTime,
     };
   }
+
+  async adjustPaymentDeadlineToBeSooner(auctionId: string) {
+    const auction = await this.auctionRepository.findOneBy({ id: auctionId });
+
+    if (!auction) throw new NotFoundException('Auction cannot be found!');
+
+    if (auction.status !== 'SUCCESSFUL')
+      throw new BadRequestException('Only for SUCCESSFUL auctions!');
+
+    await this.auctionRepository.update(auctionId, {
+      paymentDeadline: new Date(),
+    });
+
+    return {
+      auction: auctionId,
+      newPaymentDeadline: (
+        await this.auctionRepository.findOneBy({ id: auctionId })
+      ).paymentDeadline,
+    };
+  }
 }
