@@ -100,7 +100,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
       .orderBy('refund.updatedAt', 'DESC')
       .getMany();
 
-    if (refundRequests.length === 0) return;
+    if (refundRequests.length === 0) return [];
 
     return await Promise.all(
       refundRequests.map(async (request) => {
