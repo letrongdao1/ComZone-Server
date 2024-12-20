@@ -280,7 +280,7 @@ export class RefundRequestsService extends BaseService<RefundRequest> {
 
     const totalRefundAmount =
       exchange.compensateUser &&
-      exchange.compensateUser.id === refundRequest.user.id
+      exchange.compensateUser.id !== refundRequest.user.id
         ? exchange.compensationAmount + exchange.depositAmount
         : exchange.depositAmount;
 
