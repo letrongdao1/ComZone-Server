@@ -146,6 +146,11 @@ export class AuctionController {
     return this.auctionService.adjustEndTimeToBeSooner(auctionId);
   }
 
+  @Patch('payment-deadline/now/:auction_id')
+  adjustPaymentDeadlineToBeSooner(@Param('auction_id') auctionId: string) {
+    return this.auctionService.adjustPaymentDeadlineToBeSooner(auctionId);
+  }
+
   // Delete an auction
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<void> {
