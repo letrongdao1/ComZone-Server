@@ -9,16 +9,28 @@ export class AuctionSchedulerService {
   constructor(private readonly auctionsService: AuctionService) {}
 
   // Runs cron job every minute to check for ended auctionsa
-  @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: process.env.CRON_USED === 'TRUE',
-  })
+  @Cron(
+    process.env.CRON_TEST_INTERVAL && process.env.CRON_TEST_INTERVAL === 'TRUE'
+      ? CronExpression.EVERY_10_SECONDS
+      : CronExpression.EVERY_MINUTE,
+    {
+      disabled:
+        process.env.CRON_DISABLED && process.env.CRON_DISABLED === 'TRUE',
+    },
+  )
   async handleAuctionEndCheck() {
     this.logger.debug('Checking for ended auctions every minute...');
     await this.auctionsService.checkAndDeclareWinnersForEndedAuctions();
   }
-  @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: process.env.CRON_USED === 'TRUE',
-  })
+  @Cron(
+    process.env.CRON_TEST_INTERVAL && process.env.CRON_TEST_INTERVAL === 'TRUE'
+      ? CronExpression.EVERY_10_SECONDS
+      : CronExpression.EVERY_MINUTE,
+    {
+      disabled:
+        process.env.CRON_DISABLED && process.env.CRON_DISABLED === 'TRUE',
+    },
+  )
   async handleAuctionStartCheck() {
     this.logger.debug('Checking for auctions to start every minute...');
     const result = await this.auctionsService.startAuctionsThatShouldBeginNow();
@@ -33,9 +45,15 @@ export class AuctionSchedulerService {
       );
     }
   }
-  @Cron(CronExpression.EVERY_MINUTE, {
-    disabled: process.env.CRON_USED === 'TRUE',
-  })
+  @Cron(
+    process.env.CRON_TEST_INTERVAL && process.env.CRON_TEST_INTERVAL === 'TRUE'
+      ? CronExpression.EVERY_10_SECONDS
+      : CronExpression.EVERY_MINUTE,
+    {
+      disabled:
+        process.env.CRON_DISABLED && process.env.CRON_DISABLED === 'TRUE',
+    },
+  )
   async handleAuctionPayCheck() {
     this.logger.debug('Checking for paid auctions daily...');
     await this.auctionsService.checkPaidAuction();

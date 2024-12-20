@@ -3,6 +3,7 @@ import {
   NotFoundException,
   Inject,
   forwardRef,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
@@ -199,7 +200,8 @@ export class AuctionService {
   // Get all auctions
   async findAllAuctions(): Promise<Auction[]> {
     return this.auctionRepository.find({
-      relations: ['comics', 'comics.genres'], // Add 'comics.genres' to retrieve genres
+      relations: ['comics', 'comics.genres'],
+      order: { updatedAt: 'DESC' },
     });
   }
   // Get a single auction by ID
@@ -561,5 +563,24 @@ export class AuctionService {
     }
 
     return auctions; // Return the sorted array of auctions
+  }
+
+  async adjustEndTimeToBeSooner(auctionId: string) {
+    const auction = await this.auctionRepository.findOneBy({ id: auctionId });
+
+    if (!auction) throw new NotFoundException('Auction cannot be found!');
+
+    if (auction.status !== 'ONGOING')
+      throw new BadRequestException('Only for ONGOING auctions!');
+
+    await this.auctionRepository.update(auctionId, {
+      endTime: new Date(new Date().getTime() + 30 * 1000),
+    });
+
+    return {
+      auction: auctionId,
+      newEndTime: (await this.auctionRepository.findOneBy({ id: auctionId }))
+        .endTime,
+    };
   }
 }
