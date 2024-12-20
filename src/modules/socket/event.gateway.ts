@@ -44,43 +44,24 @@ export class EventsGateway implements OnModuleInit {
   private activeUsers = new Map<string, Set<string>>(); // Track user sockets
 
   onModuleInit() {
+    // Setting up the WebSocket connection
     this.server.on('connection', (socket) => {
-      console.log(`Socket connected: ${socket.id}`);
+      console.log(`Socket connected1: ${socket.id}`);
 
       // Listen for 'joinRoom' event and join the room
       socket.on('joinRoom', (userId) => {
-        // If user already has active sockets, join the room without disconnecting
-        if (!this.activeUsers.has(userId)) {
-          this.activeUsers.set(userId, new Set());
-        }
-
-        // Add socket to the set of active sockets
-        this.activeUsers.get(userId)?.add(socket.id);
         socket.join(userId);
-        console.log(`User ${userId} joined room: ${socket.rooms}`);
-      });
-
-      socket.onAny((event, data) => {
-        console.log(`Event received: ${event}`, data); // Logs every event received from any client
+        console.log(`User ${userId} joined room:, socket.rooms`);
       });
 
       // Handle socket disconnection
       socket.on('disconnect', (reason) => {
-        // Remove socket from the active user list
-        this.activeUsers.forEach((userSockets, userId) => {
-          if (userSockets.has(socket.id)) {
-            userSockets.delete(socket.id);
-            if (userSockets.size === 0) {
-              // All sockets for this user disconnected, mark user as inactive
-              this.activeUsers.delete(userId);
-              this.userService.updateUserIsActive(userId, false); // Mark as inactive
-              console.log(`User ${userId} is now inactive`);
-            }
-            console.log(
-              `Socket ${socket.id} disconnected for user ${userId}: ${reason}`,
-            );
-          }
-        });
+        if (typeof socket.handshake.query.user === 'string')
+          this.userService.updateUserIsActive(
+            socket.handshake.query.user,
+            false,
+          );
+        console.log(`Socket ${socket.id} disconnected: ${reason}`);
       });
     });
   }
