@@ -573,8 +573,25 @@ export class AuctionService {
     if (auction.status !== 'ONGOING')
       throw new BadRequestException('Only for ONGOING auctions!');
 
+    const currentTime = new Date();
+    const newTimeInMs = currentTime.getTime() + 30 * 1000;
+    const newTime = new Date(newTimeInMs);
+
+    const seconds = newTime.getSeconds();
+    const roundSeconds = [10, 20, 30, 40, 50, 0];
+    let nextRoundSecond = roundSeconds.find((val) => val > seconds);
+
+    if (nextRoundSecond === undefined) {
+      nextRoundSecond = 0;
+      newTime.setMinutes(newTime.getMinutes() + 1);
+    }
+
+    // Set the time precisely
+    newTime.setSeconds(nextRoundSecond);
+    newTime.setMilliseconds(0);
+
     await this.auctionRepository.update(auctionId, {
-      endTime: new Date(new Date().getTime() + 30 * 1000),
+      endTime: newTime,
     });
 
     return {

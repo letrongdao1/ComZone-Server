@@ -51,7 +51,7 @@ export class EventsGateway implements OnModuleInit {
       // Listen for 'joinRoom' event and join the room
       socket.on('joinRoom', (userId) => {
         socket.join(userId);
-        console.log(`User ${userId} joined room:, socket.rooms`);
+        console.log(`User ${userId} joined room`, socket.rooms);
       });
 
       // Handle socket disconnection
