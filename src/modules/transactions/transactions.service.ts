@@ -246,10 +246,11 @@ export class TransactionsService extends BaseService<Transaction> {
 
     const exchangeRefundAmount = () => {
       if (!refundRequest.exchange) return;
+
       const exchange = refundRequest.exchange;
-      if (exchange.compensateUser && exchange.compensateUser.id !== userId) {
-        return exchange.compensationAmount + exchange.depositAmount;
-      } else return exchange.depositAmount;
+      return exchange.compensateUser && exchange.compensationAmount
+        ? exchange.compensationAmount + exchange.depositAmount
+        : exchange.depositAmount;
     };
 
     const newTransaction = this.transactionsRepository.create({
