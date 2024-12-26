@@ -42,6 +42,7 @@ import { ExchangePostsModule } from './modules/exchange-posts/exchange-posts.mod
 import { RefundRequestsModule } from './modules/refund-requests/refund-requests.module';
 import { SpeedSmsModule } from './modules/speed-sms/speed-sms.module';
 import { PushNotificationModule } from './modules/push-notification/push-notification.module';
+import { AuctionConfigModule } from './modules/auction-config/auction-config.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { PushNotificationModule } from './modules/push-notification/push-notific
     ZalopayModule,
     VietNamAddressModule,
     TransactionsModule,
+    AuctionConfigModule,
     ExchangesModule,
     UserAddressesModule,
     OtpModule,
