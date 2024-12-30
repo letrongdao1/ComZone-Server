@@ -43,10 +43,11 @@ import { RefundRequestsModule } from './modules/refund-requests/refund-requests.
 import { SpeedSmsModule } from './modules/speed-sms/speed-sms.module';
 import { PushNotificationModule } from './modules/push-notification/push-notification.module';
 import { AuctionConfigModule } from './modules/auction-config/auction-config.module';
+import { AiIntegrationModule } from './modules/ai-integration/ai-integration.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -100,6 +101,7 @@ import { AuctionConfigModule } from './modules/auction-config/auction-config.mod
     ExchangePostsModule,
     RefundRequestsModule,
     SpeedSmsModule,
+    AiIntegrationModule,
   ],
   controllers: [AppController],
   providers: [
