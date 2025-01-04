@@ -1,6 +1,5 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, ManyToOne } from 'typeorm';
-import { AuctionCriteria } from './auction-criteria.entity';
+import { Column, Entity } from 'typeorm';
 
 @Entity('editions')
 export class Edition extends BaseEntity {
@@ -10,6 +9,6 @@ export class Edition extends BaseEntity {
   @Column({ nullable: false })
   description: string;
 
-  @ManyToOne(() => AuctionCriteria, (criteria) => criteria.disallowedEdition)
-  disallowedCriteria: AuctionCriteria;
+  @Column({ default: false })
+  auctionDisabled: boolean;
 }

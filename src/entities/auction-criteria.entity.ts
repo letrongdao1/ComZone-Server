@@ -1,11 +1,9 @@
 import {
   Column,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Edition } from './edition.entity';
 
 @Entity('auction-criteria')
 export class AuctionCriteria {
@@ -23,6 +21,6 @@ export class AuctionCriteria {
   @Column({ name: 'condition_level', type: 'int', nullable: false })
   conditionLevel: number;
 
-  @OneToMany(() => Edition, (edition) => edition.disallowedCriteria)
-  disallowedEdition: Edition[];
+  @Column({ name: 'edition_restricted', type: 'boolean', nullable: false })
+  editionRestricted: boolean;
 }

@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseService } from 'src/common/service.base';
 import { Edition } from 'src/entities/edition.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { CreateEditionDTO, EditEditionDTO } from './dto/edition.dto';
 
 @Injectable()
@@ -52,5 +52,21 @@ export class EditionsService extends BaseService<Edition> {
 
   async editEdition(id: string, dto: EditEditionDTO) {
     return this.editionsRepository.update(id, dto).then(() => this.getOne(id));
+  }
+
+  async disableEditionFromAuction(id: string) {
+    const edition = await this.getOne(id);
+    if (!edition) throw new NotFoundException('Edition cannot be found!');
+
+    await this.editionsRepository.update(
+      { id: Not(id) },
+      { auctionDisabled: false },
+    );
+
+    return await this.editionsRepository
+      .update(id, {
+        auctionDisabled: true,
+      })
+      .then(() => this.getOne(id));
   }
 }
