@@ -18,10 +18,11 @@ import {
   UpdateAnnouncementDto,
 } from './dto/announcement.dto';
 import { Announcement } from '../../entities/announcement.entity';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
-@ApiTags('announcements')
+@ApiBearerAuth()
+@ApiTags('Announcements')
 @Controller('announcements')
 export class AnnouncementController {
   constructor(private readonly announcementService: AnnouncementService) {}
@@ -37,6 +38,7 @@ export class AnnouncementController {
   async findAll(): Promise<Announcement[]> {
     return this.announcementService.findAll();
   }
+
   @UseGuards(JwtAuthGuard)
   @Get('/auction/:auctionId/unread')
   async getUnreadAnnouncementForAuction(
@@ -64,11 +66,13 @@ export class AnnouncementController {
   //   await this.announcementService.markAllAsRead(req.user.id);
   //   return { message: 'All announcements marked as read' };
   // }
+
   @UseGuards(JwtAuthGuard)
   @Get('/user')
   async findAnnouncementsByUser(@Req() req: any) {
     return this.announcementService.findByUserId(req.user.id);
   }
+
   @UseGuards(JwtAuthGuard)
   @Get('/user/unread-count')
   async getUnreadCount(@Req() req: any) {
@@ -90,6 +94,7 @@ export class AnnouncementController {
   ): Promise<Announcement> {
     return this.announcementService.update(id, updateAnnouncementDto);
   }
+
   @UseGuards(JwtAuthGuard)
   @Post(':announcementId/read/')
   async markAnnouncementAsRead(
