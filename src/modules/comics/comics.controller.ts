@@ -118,9 +118,9 @@ export class ComicController {
     return this.comicService.findByStatus(status);
   }
 
-  @Get('available/random')
-  getSomeAvailable() {
-    return this.comicService.getSomeAvailableComics();
+  @Get('available/latest')
+  getLatestAvailableComics() {
+    return this.comicService.getLatestAvailableComics();
   }
 
   @Get('count/status/:status')

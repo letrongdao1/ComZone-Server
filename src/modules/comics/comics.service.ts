@@ -152,16 +152,13 @@ export class ComicService extends BaseService<Comic> {
     await this.comicRepository.delete(id);
   }
 
-  async getSomeAvailableComics() {
-    return await this.comicRepository
-      .createQueryBuilder('comics')
-      .where('comics.type = :type AND comics.status = :status', {
-        type: ComicsTypeEnum.SELL,
-        status: ComicsStatusEnum.AVAILABLE,
-      })
-      .orderBy('RAND()')
-      .take(10)
-      .getMany();
+  async getLatestAvailableComics() {
+    return await this.comicRepository.find({
+      where: { type: ComicsTypeEnum.SELL, status: ComicsStatusEnum.AVAILABLE },
+      relations: ['sellerId'],
+      order: { onSaleSince: 'DESC' },
+      take: 10,
+    });
   }
 
   async findBySeller(sellerId: string): Promise<Comic[]> {
