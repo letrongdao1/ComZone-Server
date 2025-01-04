@@ -6,10 +6,18 @@ export class CreateGenreDto {
   @ApiProperty()
   @IsNotEmpty()
   name: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  description: string;
 }
 
 export class UpdateGenreDto {
   @ApiProperty()
   @IsNotEmpty()
   name?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  description?: string;
 }
