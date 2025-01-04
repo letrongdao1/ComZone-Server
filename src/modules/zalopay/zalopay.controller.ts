@@ -15,7 +15,7 @@ import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { ZaloPayRequest } from './dto/zalopay-payment-url-request';
 
 @ApiBearerAuth()
-@ApiTags('Zalopay - (ZaloPay QR only)')
+@ApiTags('Zalopay')
 @Controller('zalopay')
 export class ZalopayController {
   constructor(private readonly zalopayService: ZalopayService) {}

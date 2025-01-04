@@ -44,6 +44,8 @@ import { SpeedSmsModule } from './modules/speed-sms/speed-sms.module';
 import { PushNotificationModule } from './modules/push-notification/push-notification.module';
 import { AuctionConfigModule } from './modules/auction-config/auction-config.module';
 import { AiIntegrationModule } from './modules/ai-integration/ai-integration.module';
+import { AuctionCriteriaModule } from './modules/auction-criteria/auction-criteria.module';
+import { EditionsModule } from './modules/editions/editions.module';
 
 @Module({
   imports: [
@@ -102,6 +104,8 @@ import { AiIntegrationModule } from './modules/ai-integration/ai-integration.mod
     RefundRequestsModule,
     SpeedSmsModule,
     AiIntegrationModule,
+    AuctionCriteriaModule,
+    EditionsModule,
   ],
   controllers: [AppController],
   providers: [

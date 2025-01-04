@@ -13,7 +13,7 @@ import { BidService } from './bid.service';
 import { CreateBidDto, UpdateBidDto } from './dto/bid.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
-@ApiTags('bids')
+@ApiTags('Bids')
 @Controller('bids')
 export class BidController {
   constructor(private readonly bidService: BidService) {}
