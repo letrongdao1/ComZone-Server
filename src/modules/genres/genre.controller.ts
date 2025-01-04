@@ -1,4 +1,3 @@
-// src/modules/genre/genre.controller.ts
 import {
   Controller,
   Post,
@@ -24,7 +23,7 @@ import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -42,7 +41,7 @@ export class GenreController {
     return this.genreService.findOne(id);
   }
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Put(':id')
@@ -53,7 +52,7 @@ export class GenreController {
     return this.genreService.update(id, updateGenreDto);
   }
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Delete(':id')

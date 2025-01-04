@@ -1,11 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
+import { Entity, Column, ManyToMany } from 'typeorm';
 import { Comic } from './comics.entity';
+import { BaseEntity } from 'src/common/entity.base';
 
 @Entity('genres')
-export class Genre {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+export class Genre extends BaseEntity {
   @Column({
     unique: true,
   })
