@@ -1,4 +1,4 @@
-import { JwtModuleOptions, JwtSignOptions } from '@nestjs/jwt';
+import { JwtSignOptions } from '@nestjs/jwt';
 import { jwtConstants } from '../constants';
 import { registerAs } from '@nestjs/config';
 
