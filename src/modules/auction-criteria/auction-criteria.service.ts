@@ -26,23 +26,26 @@ export class AuctionCriteriaService {
         updatedAt: new Date(),
         isFullInfoFilled: false,
         conditionLevel: 4,
-        disallowedEdition: [],
+        editionRestricted: false,
       }))
     );
   }
 
   async updateAuctionCriteria(dto: UpdateAuctionCriteriaDTO) {
-    const editions = await Promise.all(
-      dto.disallowedEdition.map(async (id) => {
-        return await this.editionsService.getOne(id);
-      }),
-    );
+    if (dto.disallowedEdition && dto.disallowedEdition.length > 0)
+      await Promise.all(
+        dto.disallowedEdition.map(async (id) => {
+          await this.editionsService.disableEditionFromAuction(id);
+        }),
+      );
 
     return await this.auctionCriteriaRepository.update(
       { id: 1 },
       {
-        ...dto,
-        disallowedEdition: editions,
+        isFullInfoFilled: dto.isFullInfoFilled,
+        conditionLevel: dto.conditionLevel,
+        editionRestricted:
+          dto.disallowedEdition && dto.disallowedEdition.length > 0,
       },
     );
   }
