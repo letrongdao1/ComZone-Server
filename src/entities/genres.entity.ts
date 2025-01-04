@@ -11,6 +11,11 @@ export class Genre {
   })
   name: string;
 
+  @Column({
+    nullable: true,
+  })
+  description: string;
+
   @ManyToMany(() => Comic, (comic) => comic.genres)
   comics: Comic[];
 }

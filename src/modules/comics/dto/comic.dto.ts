@@ -11,7 +11,6 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ComicsStatusEnum } from './comic-status.enum';
-import { ComicsTypeEnum } from './comic-type.enum';
 
 export class CreateComicDto {
   @ApiProperty({

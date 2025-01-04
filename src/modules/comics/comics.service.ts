@@ -152,6 +152,18 @@ export class ComicService extends BaseService<Comic> {
     await this.comicRepository.delete(id);
   }
 
+  async getSomeAvailableComics() {
+    return await this.comicRepository
+      .createQueryBuilder('comics')
+      .where('comics.type = :type AND comics.status = :status', {
+        type: ComicsTypeEnum.SELL,
+        status: ComicsStatusEnum.AVAILABLE,
+      })
+      .orderBy('RAND()')
+      .take(10)
+      .getMany();
+  }
+
   async findBySeller(sellerId: string): Promise<Comic[]> {
     const seller = await this.userRepository.findOne({
       where: { id: sellerId },

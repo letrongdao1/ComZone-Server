@@ -118,6 +118,11 @@ export class ComicController {
     return this.comicService.findByStatus(status);
   }
 
+  @Get('available/random')
+  getSomeAvailable() {
+    return this.comicService.getSomeAvailableComics();
+  }
+
   @Get('count/status/:status')
   findByStatusAndCount(
     @Param('status') status: ComicsStatusEnum,
