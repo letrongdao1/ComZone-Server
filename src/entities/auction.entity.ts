@@ -45,20 +45,21 @@ export class Auction extends BaseEntity {
   @Column({
     name: 'start_time',
     type: 'datetime',
-    nullable: false,
+    nullable: true,
   })
   startTime: Date;
 
   @Column({
     name: 'end_time',
     type: 'datetime',
-    nullable: false,
+    nullable: true,
   })
   endTime: Date;
 
   @Column({
     type: 'enum',
     enum: [
+      'PENDING_APPROVAL',
       'UPCOMING',
       'ONGOING',
       'SUCCESSFUL',
@@ -93,6 +94,18 @@ export class Auction extends BaseEntity {
 
   @Column({ nullable: true })
   currentCondition: string;
+
+  @Column({
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  isApprove: boolean;
+
+  @Column({
+    nullable: false,
+  })
+  duration: number;
 
   @BeforeInsert()
   setDefaultCurrentPrice() {

@@ -29,6 +29,13 @@ export class AuctionController {
   async create(@Body() createAuctionDto: CreateAuctionDto) {
     return this.auctionService.createAuction(createAuctionDto);
   }
+  @Post('request')
+  async createAuctionRequest(
+    @Body() createAuctionDto: CreateAuctionDto,
+  ): Promise<Auction> {
+    return await this.auctionService.createAuctionRequest(createAuctionDto);
+  }
+
   @Get()
   async findAll(): Promise<Auction[]> {
     return this.auctionService.findAllAuctions();
@@ -37,6 +44,18 @@ export class AuctionController {
   @Get('comics/:comics_id')
   getByComicsId(@Param('comics_id') comicsId: string) {
     return this.auctionService.getByComicsId(comicsId);
+  }
+  @Put(':id/approve')
+  async approveAuctionRequest(
+    @Param('id') id: string,
+    @Body() updateAuctionDto: UpdateAuctionDto, // Bind the body using DTO
+  ): Promise<Auction> {
+    // Ensure `startTime` and `duration` exist in the DTO
+
+    return await this.auctionService.approveAuctionRequest(
+      id,
+      updateAuctionDto,
+    );
   }
 
   @Get('check-ended-auctions')

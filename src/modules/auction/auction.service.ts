@@ -63,6 +63,51 @@ export class AuctionService {
     auction.currentPrice = auction.reservePrice;
     return this.auctionRepository.save(auction);
   }
+  async approveAuctionRequest(
+    id: string,
+    data: UpdateAuctionDto,
+  ): Promise<Auction> {
+    const auction = await this.auctionRepository.findOne({ where: { id } });
+
+    if (!auction) {
+      throw new NotFoundException(`Auction with ID ${id} not found`);
+    }
+    const comic = await this.comicRepository.findOne({
+      where: { id: data.comicsId },
+    });
+    comic.onSaleSince = new Date(Date.now());
+    await this.comicRepository.save(comic);
+    auction.startTime = data.startTime;
+    auction.endTime = data.endTime;
+    auction.status = 'UPCOMING';
+
+    return this.auctionRepository.save(auction);
+  }
+
+  async createAuctionRequest(data: CreateAuctionDto): Promise<Auction> {
+    const comic = await this.comicRepository.findOne({
+      where: { id: data.comicsId },
+    });
+
+    if (!comic) {
+      throw new NotFoundException(`Comic with ID ${data.comicsId} not found`);
+    }
+    comic.status = ComicsStatusEnum.AVAILABLE;
+    comic.type = ComicsTypeEnum.AUCTION;
+    await this.comicRepository.save(comic);
+    if (data.duration <= 0) {
+      throw new Error(`Duration must be greater than 0`);
+    }
+    const auction = this.auctionRepository.create({
+      ...data,
+      comics: comic,
+      status: 'PENDING_APPROVAL',
+    });
+
+    auction.currentPrice = auction.reservePrice;
+
+    return this.auctionRepository.save(auction);
+  }
 
   async getByComicsId(comicsId: string) {
     return await this.auctionRepository.findOneBy({
@@ -76,10 +121,9 @@ export class AuctionService {
 
     const endedAuctions = await this.auctionRepository.find({
       where: { endTime: LessThanOrEqual(now), status: 'ONGOING' },
-      relations: ['bids', 'bids.user'], // Include bids with users
+      relations: ['bids', 'bids.user'],
     });
 
-    // Use Promise.all to handle each ended auction concurrently
     await Promise.all(
       endedAuctions.map(async (auction) => {
         await this.declareWinner(auction.id);
@@ -235,6 +279,9 @@ export class AuctionService {
         status: Not('STOPPED'), // Exclude auctions with status "STOPPED"
       },
       relations: ['comics', 'comics.genres'],
+      order: {
+        updatedAt: 'DESC', // Order by updatedAt in descending order
+      },
     });
   }
 

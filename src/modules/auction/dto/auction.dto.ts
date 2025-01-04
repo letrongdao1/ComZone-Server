@@ -24,16 +24,19 @@ export class CreateAuctionDto {
   @IsNumber()
   priceStep: number;
 
-  @IsNotEmpty()
-  @IsDate()
-  startTime: Date;
+  // @IsDate()
+  // startTime?: Date;
+
+  // @IsDate()
+  // endTime?: Date;
 
   @IsNotEmpty()
-  @IsDate()
-  endTime: Date;
+  @IsNumber()
+  duration: number;
 
   @IsOptional()
   @IsEnum([
+    'PENDING_APPROVAL',
     'ONGOING',
     'SUCCESSFUL',
     'FAILED',
@@ -60,6 +63,9 @@ export class UpdateAuctionDto {
   @IsOptional()
   @IsNumber()
   priceStep?: number;
+  @IsOptional()
+  @IsNumber()
+  duration?: number;
 
   @IsOptional()
   @IsDate()
@@ -72,6 +78,7 @@ export class UpdateAuctionDto {
 
   @IsOptional()
   @IsEnum([
+    'PENDING_APPROVAL',
     'ONGOING',
     'SUCCESSFUL',
     'FAILED',
