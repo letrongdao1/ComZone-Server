@@ -38,6 +38,8 @@ export class AuctionConfigService {
     auctionConfigId: string,
     updateAuctionConfigDto: UpdateAuctionConfigDto,
   ) {
+    console.log('3');
+
     const existingConfig = await this.auctionConfigRepository.findOne({
       where: { id: auctionConfigId },
     });

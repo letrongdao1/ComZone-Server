@@ -1,7 +1,8 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Comic } from './comics.entity';
 import { Auction } from './auction.entity';
+import { Announcement } from './announcement.entity';
 
 @Entity('auction_request')
 export class AuctionRequest extends BaseEntity {
@@ -11,6 +12,9 @@ export class AuctionRequest extends BaseEntity {
   @ManyToOne(() => Auction, (auction) => auction.requests, { nullable: true })
   @JoinColumn({ name: 'auction_id' })
   auction: Auction; // Liên kết với phiên đấu giá (cũ hoặc mới)
+
+  @OneToMany(() => Announcement, (announcement) => announcement.auctionRequest)
+  announcements: Announcement[];
 
   @Column({ nullable: false })
   reservePrice: number;

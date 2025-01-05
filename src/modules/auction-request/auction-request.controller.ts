@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Put } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Put, Patch } from '@nestjs/common';
 import { AuctionRequestService } from './auction-request.service';
 import {
   ApproveAuctionRequestDto,
@@ -50,6 +50,16 @@ export class AuctionRequestController {
     @Body() updateDto: UpdateAuctionRequestDto,
   ): Promise<AuctionRequest> {
     return this.auctionRequestService.update(id, updateDto);
+  }
+  @Patch(':id/reject')
+  async rejectAuctionRequest(
+    @Param('id') id: string,
+    @Body() body: { rejectionReason: string },
+  ) {
+    return this.auctionRequestService.rejectAuctionRequest(
+      id,
+      body.rejectionReason,
+    );
   }
 
   // Approve an auction request and create a new auction

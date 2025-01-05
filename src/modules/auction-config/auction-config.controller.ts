@@ -5,7 +5,7 @@ import {
   Put,
   Body,
   Param,
-  UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { AuctionConfigService } from './auction-config.service';
 import {
@@ -13,10 +13,10 @@ import {
   UpdateAuctionConfigDto,
 } from './dto/auction-config.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Roles } from '../authorization/roles.decorator';
-import { Role } from '../authorization/role.enum';
-import { PermissionsGuard } from '../authorization/permission.guard';
-import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
+// import { Roles } from '../authorization/roles.decorator';
+// import { Role } from '../authorization/role.enum';
+// import { PermissionsGuard } from '../authorization/permission.guard';
+// import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 
 @ApiBearerAuth()
 @ApiTags('Auction config')
@@ -34,9 +34,9 @@ export class AuctionConfigController {
     return await this.auctionConfigService.getConfig();
   }
 
-  @Roles(Role.ADMIN)
-  @UseGuards(PermissionsGuard)
-  @UseGuards(JwtAuthGuard)
+  // @Roles(Role.ADMIN)
+  // @UseGuards(PermissionsGuard)
+  // @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateConfig(
     @Param('id') auctionConfigId: string,

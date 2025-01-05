@@ -137,6 +137,7 @@ export class EventsGateway implements OnModuleInit {
       orderId?: string;
       auctionId?: Auction;
       transactionId?: string;
+      auctionRequestId?: string;
     },
     title: string,
     type: AnnouncementType,
@@ -151,6 +152,7 @@ export class EventsGateway implements OnModuleInit {
         orderId: ids.orderId,
         exchangeId: ids.exchangeId,
         transactionId: ids.transactionId,
+        auctionRequestId: ids.auctionRequestId,
         userId,
         message,
         title,
@@ -173,6 +175,7 @@ export class EventsGateway implements OnModuleInit {
         order: savedAnnouncement.order,
         exchange: ids.exchangeId,
         transaction: ids.transactionId,
+        auctionRequest: ids.auctionRequestId,
         title,
         type,
         recipientType,

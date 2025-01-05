@@ -5,6 +5,7 @@ import { Order } from './orders.entity';
 import { Auction } from './auction.entity';
 import { Exchange } from './exchange.entity';
 import { Transaction } from './transactions.entity';
+import { AuctionRequest } from './auction-request.entity';
 
 export enum RecipientType {
   USER = 'USER',
@@ -37,6 +38,8 @@ export enum AnnouncementType {
   REFUND_APPROVE = 'REFUND_APPROVE',
   REFUND_REJECT = 'REFUND_REJECT',
   WARNING = 'WARNING',
+  AUCTION_REQUEST = 'AUCTION_REQUEST',
+  AUCTION_REQUEST_FAIL = 'AUCTION_REQUEST_FAIL',
 }
 
 @Entity('announcement')
@@ -66,6 +69,14 @@ export class Announcement extends BaseEntity {
   })
   transaction: Transaction;
 
+  @ManyToOne(
+    () => AuctionRequest,
+    (auctionRequest) => auctionRequest.announcements,
+    {
+      nullable: true,
+    },
+  )
+  auctionRequest: AuctionRequest;
   @Column({
     type: 'varchar',
     nullable: false,

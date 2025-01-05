@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
@@ -12,6 +12,11 @@ import { AuctionRequest } from 'src/entities/auction-request.entity';
 import { Auction } from 'src/entities/auction.entity';
 import { ComicsStatusEnum } from '../comics/dto/comic-status.enum';
 import { ComicsTypeEnum } from '../comics/dto/comic-type.enum';
+import { EventsGateway } from '../socket/event.gateway';
+import {
+  AnnouncementType,
+  RecipientType,
+} from 'src/entities/announcement.entity';
 
 @Injectable()
 export class AuctionRequestService {
@@ -22,6 +27,8 @@ export class AuctionRequestService {
     private auctionRepository: Repository<Auction>,
     @InjectRepository(Comic)
     private comicRepository: Repository<Comic>,
+    @Inject(EventsGateway) // Correctly inject the gateway
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   // Create a new auction request
@@ -143,11 +150,46 @@ export class AuctionRequestService {
 
       // Save and link the auction to the request
       auction = await this.auctionRepository.save(auction);
-      auctionRequest.auction = auction; // Link auction to request
+      auctionRequest.auction = auction;
+      this.eventsGateway.notifyUser(
+        auctionRequest.comic.sellerId.id,
+        `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã được chấp thuận.`,
+        { auctionRequestId: auctionRequest.id },
+        'Yêu cầu đấu giá',
+        AnnouncementType.AUCTION_REQUEST,
+        RecipientType.SELLER,
+      );
     }
 
     await this.auctionRequestRepository.save(auctionRequest);
 
     return auction;
+  }
+  async rejectAuctionRequest(
+    id: string,
+    rejectionReason: string,
+  ): Promise<AuctionRequest> {
+    const auctionRequest = await this.auctionRequestRepository.findOne({
+      where: { id },
+    });
+
+    if (!auctionRequest) {
+      throw new Error('Auction Request not found');
+    }
+
+    auctionRequest.status = 'REJECTED';
+    auctionRequest.rejectionReason = rejectionReason;
+
+    // Optionally, notify the seller about the rejection
+    this.eventsGateway.notifyUser(
+      auctionRequest.comic.sellerId.id,
+      `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã bị từ chối. Lý do: ${rejectionReason}`,
+      { auctionRequestId: auctionRequest.id },
+      'Yêu cầu đấu giá',
+      AnnouncementType.AUCTION_REQUEST_FAIL,
+      RecipientType.SELLER,
+    );
+
+    return this.auctionRequestRepository.save(auctionRequest);
   }
 }
