@@ -6,7 +6,10 @@ import {
   UpdateAuctionRequestDto,
 } from './dto/auction-request.dto';
 import { AuctionRequest } from 'src/entities/auction-request.entity';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@ApiTags('Auction-request')
 @Controller('auction-request')
 export class AuctionRequestController {
   constructor(private readonly auctionRequestService: AuctionRequestService) {}
