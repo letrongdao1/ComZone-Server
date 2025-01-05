@@ -60,7 +60,7 @@ export class AuctionService {
       ...data,
       comics: comic,
     });
-    auction.currentPrice = auction.reservePrice;
+    // auction.currentPrice = auction.reservePrice;
     return this.auctionRepository.save(auction);
   }
   async approveAuctionRequest(
@@ -80,31 +80,6 @@ export class AuctionService {
     auction.startTime = data.startTime;
     auction.endTime = data.endTime;
     auction.status = 'UPCOMING';
-
-    return this.auctionRepository.save(auction);
-  }
-
-  async createAuctionRequest(data: CreateAuctionDto): Promise<Auction> {
-    const comic = await this.comicRepository.findOne({
-      where: { id: data.comicsId },
-    });
-
-    if (!comic) {
-      throw new NotFoundException(`Comic with ID ${data.comicsId} not found`);
-    }
-    comic.status = ComicsStatusEnum.AVAILABLE;
-    comic.type = ComicsTypeEnum.AUCTION;
-    await this.comicRepository.save(comic);
-    if (data.duration <= 0) {
-      throw new Error(`Duration must be greater than 0`);
-    }
-    const auction = this.auctionRepository.create({
-      ...data,
-      comics: comic,
-      status: 'PENDING_APPROVAL',
-    });
-
-    auction.currentPrice = auction.reservePrice;
 
     return this.auctionRepository.save(auction);
   }

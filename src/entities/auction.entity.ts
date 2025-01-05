@@ -1,27 +1,38 @@
 import { BaseEntity } from 'src/common/entity.base';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Comic } from './comics.entity';
+
 import { Bid } from './bid.entity';
 import { Deposit } from './deposit.entity';
 import { Announcement } from './announcement.entity';
 import { User } from './users.entity';
-
-import { BeforeInsert } from 'typeorm';
+import { AuctionRequest } from './auction-request.entity';
+import { Comic } from './comics.entity';
 
 @Entity('auction')
 export class Auction extends BaseEntity {
   @ManyToOne(() => Comic, (comic) => comic.auction, { eager: true })
   comics: Comic;
 
-  @Column({
-    name: 'reserve_price',
-    nullable: false,
-  })
-  reservePrice: number;
-
   @ManyToOne(() => User, { nullable: true, eager: true })
   @JoinColumn({ name: 'winner_id' })
   winner: User;
+
+  @OneToMany(() => AuctionRequest, (request) => request.auction)
+  requests: AuctionRequest[]; // Liên kết với nhiều yêu cầu đấu giá
+  @Column({ nullable: true })
+  reservePrice: number;
+
+  @Column({ nullable: true })
+  maxPrice: number;
+
+  @Column({ nullable: true })
+  priceStep: number;
+
+  @Column({
+    name: 'deposit_amount',
+    nullable: true,
+  })
+  depositAmount: number;
 
   @Column({
     name: 'current_price',
@@ -29,18 +40,6 @@ export class Auction extends BaseEntity {
     default: 0,
   })
   currentPrice: number;
-
-  @Column({
-    name: 'max_price',
-    nullable: false,
-  })
-  maxPrice: number;
-
-  @Column({
-    name: 'price_step',
-    nullable: false,
-  })
-  priceStep: number;
 
   @Column({
     name: 'start_time',
@@ -59,7 +58,6 @@ export class Auction extends BaseEntity {
   @Column({
     type: 'enum',
     enum: [
-      'PENDING_APPROVAL',
       'UPCOMING',
       'ONGOING',
       'SUCCESSFUL',
@@ -70,12 +68,6 @@ export class Auction extends BaseEntity {
     ],
   })
   status: string;
-
-  @Column({
-    name: 'deposit_amount',
-    nullable: false,
-  })
-  depositAmount: number;
 
   @OneToMany(() => Bid, (bid) => bid.auction)
   bids: Bid[];
@@ -94,24 +86,4 @@ export class Auction extends BaseEntity {
 
   @Column({ nullable: true })
   currentCondition: string;
-
-  @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-  })
-  isApprove: boolean;
-
-  @Column({
-    nullable: false,
-  })
-  duration: number;
-
-  @BeforeInsert()
-  setDefaultCurrentPrice() {
-    // Set currentPrice to reservePrice before the entity is inserted
-    if (this.currentPrice === 0) {
-      this.currentPrice = this.reservePrice;
-    }
-  }
 }

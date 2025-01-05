@@ -25,16 +25,16 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  @Post()
-  async create(@Body() createAuctionDto: CreateAuctionDto) {
-    return this.auctionService.createAuction(createAuctionDto);
-  }
-  @Post('request')
-  async createAuctionRequest(
-    @Body() createAuctionDto: CreateAuctionDto,
-  ): Promise<Auction> {
-    return await this.auctionService.createAuctionRequest(createAuctionDto);
-  }
+  // @Post()
+  // async create(@Body() createAuctionDto: CreateAuctionDto) {
+  //   return this.auctionService.createAuction(createAuctionDto);
+  // }
+  // @Post('request')
+  // async createAuctionRequest(
+  //   @Body() createAuctionDto: CreateAuctionDto,
+  // ): Promise<Auction> {
+  //   return await this.auctionService.createAuctionRequest(createAuctionDto);
+  // }
 
   @Get()
   async findAll(): Promise<Auction[]> {

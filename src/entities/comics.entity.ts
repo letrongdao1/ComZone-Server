@@ -10,13 +10,14 @@ import {
 import { User } from './users.entity';
 import { Genre } from './genres.entity';
 import { OrderItem } from './order-item.entity';
-import { Auction } from './auction.entity';
 import { ComicsReport } from './comics-report.entity';
 import { ChatRoom } from './chat-room.entity';
 import { ComicsStatusEnum } from 'src/modules/comics/dto/comic-status.enum';
 import { ChatMessage } from './chat-message.entity';
 import { ComicsTypeEnum } from 'src/modules/comics/dto/comic-type.enum';
 import { ExchangeComics } from './exchange-comics.entity';
+import { AuctionRequest } from './auction-request.entity';
+import { Auction } from './auction.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -110,9 +111,6 @@ export class Comic extends BaseEntity {
   })
   exchangeComics: ExchangeComics[];
 
-  @OneToMany(() => Auction, (auction) => auction.comics)
-  auction: Auction[];
-
   @OneToMany(() => OrderItem, (orderItem) => orderItem.comics)
   order_item: OrderItem[];
 
@@ -126,4 +124,9 @@ export class Comic extends BaseEntity {
     cascade: true,
   })
   messages: ChatMessage[];
+
+  @OneToMany(() => AuctionRequest, (request) => request.comic)
+  auctionRequests: AuctionRequest[];
+  @OneToMany(() => Auction, (auction) => auction.comics)
+  auction: Auction[];
 }

@@ -46,6 +46,7 @@ import { AuctionConfigModule } from './modules/auction-config/auction-config.mod
 import { AiIntegrationModule } from './modules/ai-integration/ai-integration.module';
 import { AuctionCriteriaModule } from './modules/auction-criteria/auction-criteria.module';
 import { EditionsModule } from './modules/editions/editions.module';
+import { AuctionRequestModule } from './modules/auction-request/auction-request.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { EditionsModule } from './modules/editions/editions.module';
     ExchangesModule,
     UserAddressesModule,
     OtpModule,
+    AuctionRequestModule,
     SellerDetailsModule,
     WalletDepositModule,
     WithdrawalModule,
