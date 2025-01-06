@@ -166,7 +166,7 @@ export class AuctionRequestService {
       this.eventsGateway.notifyUser(
         auctionRequest.comic.sellerId.id,
         `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã được chấp thuận.`,
-        { auctionRequestId: auctionRequest.id },
+        { auctionRequestId: auctionRequest },
         'Yêu cầu đấu giá',
         AnnouncementType.AUCTION_REQUEST,
         RecipientType.SELLER,
@@ -205,7 +205,7 @@ export class AuctionRequestService {
     this.eventsGateway.notifyUser(
       auctionRequest.comic.sellerId.id,
       `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã bị từ chối. Lý do: ${rejectionReason}`,
-      { auctionRequestId: auctionRequest.id },
+      { auctionRequestId: auctionRequest },
       'Yêu cầu đấu giá',
       AnnouncementType.AUCTION_REQUEST_FAIL,
       RecipientType.SELLER,

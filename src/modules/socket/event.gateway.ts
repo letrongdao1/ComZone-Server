@@ -19,6 +19,7 @@ import {
   RecipientType,
 } from 'src/entities/announcement.entity';
 import { Auction } from 'src/entities/auction.entity';
+import { AuctionRequest } from 'src/entities/auction-request.entity';
 
 @WebSocketGateway({
   cors: {
@@ -137,7 +138,7 @@ export class EventsGateway implements OnModuleInit {
       orderId?: string;
       auctionId?: Auction;
       transactionId?: string;
-      auctionRequestId?: string;
+      auctionRequestId?: AuctionRequest;
     },
     title: string,
     type: AnnouncementType,
@@ -152,7 +153,7 @@ export class EventsGateway implements OnModuleInit {
         orderId: ids.orderId,
         exchangeId: ids.exchangeId,
         transactionId: ids.transactionId,
-        auctionRequestId: ids.auctionRequestId,
+        auctionRequestId: ids.auctionRequestId?.id,
         userId,
         message,
         title,
