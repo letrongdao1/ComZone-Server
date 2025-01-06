@@ -42,7 +42,7 @@ export class AuctionRequestService {
       throw new Error('Comic not found');
     }
     comic.status = ComicsStatusEnum.AVAILABLE;
-    comic.type = ComicsTypeEnum.AUCTION;
+    comic.type = ComicsTypeEnum.AUCTION_REQUEST;
     // comic.onSaleSince = new Date(Date.now());
     await this.comicRepository.save(comic);
     const auctionRequest = this.auctionRequestRepository.create({
@@ -102,23 +102,29 @@ export class AuctionRequestService {
     startTime: Date,
     endTime: Date,
   ): Promise<Auction> {
+    // Fetch the auction request along with related auction and comic entities
     const auctionRequest = await this.auctionRequestRepository.findOne({
       where: { id },
-      relations: ['auction'], // Ensure related entities are fetched
+      relations: ['auction', 'comic', 'comic.sellerId'],
     });
 
     if (!auctionRequest) {
       throw new Error('Auction Request not found');
     }
+
+    // Validate the auction request status
     if (auctionRequest.status === 'REJECTED') {
       throw new Error('Auction Request was rejected and cannot be approved');
     }
+
+    // Update auction request status if not already approved
     if (auctionRequest.status !== 'APPROVED') {
       auctionRequest.status = 'APPROVED';
       auctionRequest.approvalDate = new Date();
       await this.auctionRequestRepository.save(auctionRequest);
     }
 
+    // Validate start and end times
     if (!startTime || !endTime || endTime <= startTime) {
       throw new Error('Invalid start time or end time');
     }
@@ -126,6 +132,7 @@ export class AuctionRequestService {
     let auction: Auction;
 
     if (auctionRequest.auction) {
+      // Handle reopening an existing auction
       auction = auctionRequest.auction;
 
       if (auction.status !== 'FAILED') {
@@ -133,7 +140,6 @@ export class AuctionRequestService {
       }
 
       // Update auction details
-
       auction.startTime = startTime;
       auction.endTime = endTime;
       auction.currentPrice = auctionRequest.reservePrice;
@@ -155,6 +161,8 @@ export class AuctionRequestService {
       // Save and link the auction to the request
       auction = await this.auctionRepository.save(auction);
       auctionRequest.auction = auction;
+
+      // Notify the seller about the approval
       this.eventsGateway.notifyUser(
         auctionRequest.comic.sellerId.id,
         `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã được chấp thuận.`,
@@ -165,22 +173,31 @@ export class AuctionRequestService {
       );
     }
 
+    // Update the `onSaleSince` property of the comic
+    auctionRequest.comic.onSaleSince = new Date();
+    await this.comicRepository.save(auctionRequest.comic);
+
+    // Save the updated auction request
     await this.auctionRequestRepository.save(auctionRequest);
 
     return auction;
   }
+
   async rejectAuctionRequest(
     id: string,
     rejectionReason: string,
   ): Promise<AuctionRequest> {
     const auctionRequest = await this.auctionRequestRepository.findOne({
       where: { id },
+      relations: ['comic'],
     });
 
     if (!auctionRequest) {
       throw new Error('Auction Request not found');
     }
-
+    auctionRequest.comic.status = ComicsStatusEnum.UNAVAILABLE;
+    auctionRequest.comic.type = ComicsTypeEnum.NONE;
+    await this.comicRepository.save(auctionRequest.comic);
     auctionRequest.status = 'REJECTED';
     auctionRequest.rejectionReason = rejectionReason;
 

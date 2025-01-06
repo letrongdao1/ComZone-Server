@@ -3,4 +3,5 @@ export enum ComicsTypeEnum {
   AUCTION = 'AUCTION',
   EXCHANGE = 'EXCHANGE',
   NONE = 'NONE',
+  AUCTION_REQUEST = 'AUCTION_REQUEST',
 }
