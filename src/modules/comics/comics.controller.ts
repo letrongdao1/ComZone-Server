@@ -55,7 +55,7 @@ export class ComicController {
     return this.comicsExchangeService.createExchangeComics(req.user.id, dto);
   }
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.MODERATOR, Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()

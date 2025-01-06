@@ -10,6 +10,9 @@ export class Edition extends BaseEntity {
   @Column({ nullable: false })
   description: string;
 
+  @Column({ nullable: true, default: false })
+  isSpecial: boolean;
+
   @Column({ default: false })
   auctionDisabled: boolean;
 

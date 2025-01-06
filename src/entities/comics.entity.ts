@@ -106,6 +106,9 @@ export class Comic extends BaseEntity {
   @JoinColumn()
   edition: Edition;
 
+  @Column({ name: 'edition_evidence', type: 'simple-json', nullable: true })
+  editionEvidence?: string[];
+
   @Column({ name: 'will_not_auction', type: 'boolean', default: false })
   willNotAuction: boolean;
 
