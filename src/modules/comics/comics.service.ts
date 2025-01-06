@@ -16,6 +16,8 @@ import { SellerDetailsService } from '../seller-details/seller-details.service';
 import { BaseService } from 'src/common/service.base';
 import { Auction } from 'src/entities/auction.entity';
 import { Role } from '../authorization/role.enum';
+import { EditionsService } from '../editions/editions.service';
+import { MerchandisesService } from '../merchandises/merchandises.service';
 
 @Injectable()
 export class ComicService extends BaseService<Comic> {
@@ -29,6 +31,8 @@ export class ComicService extends BaseService<Comic> {
     @InjectRepository(Auction)
     private readonly auctionsRepository: Repository<Auction>,
 
+    private readonly editionsService: EditionsService,
+    private readonly merchandisesService: MerchandisesService,
     private readonly sellerDetailsService: SellerDetailsService,
   ) {
     super(comicRepository);
@@ -49,30 +53,38 @@ export class ComicService extends BaseService<Comic> {
     return;
   }
 
-  async createComic(
-    createComicDto: CreateComicDto,
-    id: string,
-  ): Promise<Comic> {
-    const { genreIds, ...comicData } = createComicDto;
-
+  async createComic(dto: CreateComicDto, sellerId: string): Promise<Comic> {
     const seller = await this.userRepository.findOne({
-      where: { id: id },
+      where: { id: sellerId },
     });
 
     if (!seller) {
       throw new Error('Seller not found');
     }
 
-    await this.checkSellerAvailability(id);
+    await this.checkSellerAvailability(sellerId);
 
     const genres = await this.genreRepository.find({
-      where: genreIds.map((id) => ({ id })),
+      where: dto.genres.map((id) => ({ id })),
     });
 
+    const edition = await this.editionsService.getOne(dto.edition);
+
+    const merchandises =
+      dto.merchandises && dto.merchandises.length > 0
+        ? await Promise.all(
+            dto.merchandises.map(async (merchId) => {
+              return await this.merchandisesService.getOne(merchId);
+            }),
+          )
+        : null;
+
     const comic = this.comicRepository.create({
-      ...comicData,
+      ...dto,
       sellerId: seller,
       genres,
+      edition,
+      merchandises,
     });
 
     return await this.comicRepository.save(comic);

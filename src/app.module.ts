@@ -46,6 +46,7 @@ import { AuctionConfigModule } from './modules/auction-config/auction-config.mod
 import { AiIntegrationModule } from './modules/ai-integration/ai-integration.module';
 import { AuctionCriteriaModule } from './modules/auction-criteria/auction-criteria.module';
 import { EditionsModule } from './modules/editions/editions.module';
+import { MerchandisesModule } from './modules/merchandises/merchandises.module';
 import { AuctionRequestModule } from './modules/auction-request/auction-request.module';
 
 @Module({
@@ -108,6 +109,7 @@ import { AuctionRequestModule } from './modules/auction-request/auction-request.
     AiIntegrationModule,
     AuctionCriteriaModule,
     EditionsModule,
+    MerchandisesModule,
   ],
   controllers: [AppController],
   providers: [

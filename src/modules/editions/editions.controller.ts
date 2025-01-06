@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -40,5 +41,21 @@ export class EditionsController {
   @Patch(':id')
   editEdition(@Param('id') id: string, @Body() dto: EditEditionDTO) {
     return this.editionsService.editEdition(id, dto);
+  }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  deleteEdition(@Param('id') id: string) {
+    return this.editionsService.softDelete(id);
+  }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
+  @Delete('restore/:id')
+  undoDeleteEdition(@Param('id') id: string) {
+    return this.editionsService.restore(id);
   }
 }
