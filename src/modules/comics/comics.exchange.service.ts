@@ -7,6 +7,7 @@ import { BaseService } from 'src/common/service.base';
 import { ComicsTypeEnum } from './dto/comic-type.enum';
 import { CreateExchangeComicsDTO } from './dto/exchange-comics.dto';
 import { User } from 'src/entities/users.entity';
+import { EditionsService } from '../editions/editions.service';
 
 @Injectable()
 export class ComicsExchangeService extends BaseService<Comic> {
@@ -15,6 +16,7 @@ export class ComicsExchangeService extends BaseService<Comic> {
     private readonly comicsRepository: Repository<Comic>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly editionsService: EditionsService,
   ) {
     super(comicsRepository);
   }
@@ -29,9 +31,14 @@ export class ComicsExchangeService extends BaseService<Comic> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User cannot be found!');
 
+    const edition = await this.editionsService.getOne(dto.edition);
+
     const newExchangeComics = this.comicsRepository.create({
       sellerId: user,
       ...dto,
+      edition,
+      genres: null,
+      merchandises: null,
       type: ComicsTypeEnum.EXCHANGE,
       status: ComicsStatusEnum.AVAILABLE,
     });

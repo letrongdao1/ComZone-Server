@@ -1,5 +1,6 @@
 import { BaseEntity } from 'src/common/entity.base';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { Comic } from './comics.entity';
 
 @Entity('editions')
 export class Edition extends BaseEntity {
@@ -11,4 +12,7 @@ export class Edition extends BaseEntity {
 
   @Column({ default: false })
   auctionDisabled: boolean;
+
+  @OneToMany(() => Comic, (comic) => comic.edition)
+  comics: Comic[];
 }
