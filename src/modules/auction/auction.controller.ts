@@ -1,6 +1,6 @@
 import {
   Controller,
-  Post,
+  // Post,
   Body,
   Get,
   Param,
@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
 import { Auction } from '../../entities/auction.entity';
-import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
+import { UpdateAuctionDto } from './dto/auction.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';

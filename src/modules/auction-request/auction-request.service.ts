@@ -60,7 +60,11 @@ export class AuctionRequestService {
 
   // Get all auction requests
   async findAll(): Promise<AuctionRequest[]> {
-    return this.auctionRequestRepository.find();
+    return this.auctionRequestRepository.find({
+      order: {
+        updatedAt: 'DESC', // Order by updatedAt in descending order
+      },
+    });
   }
 
   // Get one auction request by ID
