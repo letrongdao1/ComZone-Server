@@ -172,6 +172,15 @@ export class CreateComicDto {
   edition: string;
 
   @ApiProperty({
+    example: ['Ảnh bìa', 'Trang truyện'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsString({ each: true })
+  editionEvidence?: string[];
+
+  @ApiProperty({
     example: false,
     default: false,
   })
@@ -186,7 +195,6 @@ export class CreateComicDto {
   coverImage: string;
 
   @ApiProperty({
-    description: 'Array of preview chapter URLs',
     example: [
       'https://example.com/preview1.jpg',
       'https://example.com/preview2.jpg',
