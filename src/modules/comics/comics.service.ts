@@ -64,9 +64,11 @@ export class ComicService extends BaseService<Comic> {
 
     await this.checkSellerAvailability(sellerId);
 
-    const genres = await this.genreRepository.find({
-      where: dto.genres.map((id) => ({ id })),
-    });
+    const genres = await Promise.all(
+      dto.genres.map(async (genre) => {
+        return await this.genreRepository.findOne({ where: { id: genre } });
+      }),
+    );
 
     const edition = await this.editionsService.getOne(dto.edition);
 
@@ -132,26 +134,31 @@ export class ComicService extends BaseService<Comic> {
       throw new Error('Comic cannot be found!');
     }
 
-    Object.assign(comic, dto);
-
-    const genres = await this.genreRepository.find({
-      where: dto.genres.map((id) => ({ id })),
-    });
-
-    Object.assign(comic, { genres });
-
+    const genres = await Promise.all(
+      dto.genres.map(async (genre) => {
+        return await this.genreRepository.findOne({ where: { id: genre } });
+      }),
+    );
     const merchandises = await Promise.all(
       dto.merchandises.map(async (merch) => {
         return await this.merchandisesService.getOne(merch);
       }),
     );
-    Object.assign(comic, { merchandises });
 
-    Object.assign(comic, {
-      edition: await this.editionsService.getOne(dto.edition),
-    });
+    const edition = await this.editionsService.getOne(dto.edition);
 
-    return await this.comicRepository.save(comic);
+    comic.genres = genres;
+    comic.edition = edition;
+    comic.merchandises = merchandises;
+
+    return await this.comicRepository
+      .save({
+        ...dto,
+        genres,
+        edition,
+        merchandises,
+      })
+      .then(() => this.getOne(id));
   }
 
   async remove(id: string): Promise<void> {
