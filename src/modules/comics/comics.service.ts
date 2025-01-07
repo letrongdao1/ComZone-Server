@@ -18,6 +18,7 @@ import { Auction } from 'src/entities/auction.entity';
 import { Role } from '../authorization/role.enum';
 import { EditionsService } from '../editions/editions.service';
 import { MerchandisesService } from '../merchandises/merchandises.service';
+import { ConditionsService } from '../conditions/conditions.service';
 
 @Injectable()
 export class ComicService extends BaseService<Comic> {
@@ -31,6 +32,7 @@ export class ComicService extends BaseService<Comic> {
     @InjectRepository(Auction)
     private readonly auctionsRepository: Repository<Auction>,
 
+    private readonly conditionsService: ConditionsService,
     private readonly editionsService: EditionsService,
     private readonly merchandisesService: MerchandisesService,
     private readonly sellerDetailsService: SellerDetailsService,
@@ -70,6 +72,10 @@ export class ComicService extends BaseService<Comic> {
       }),
     );
 
+    const condition = await this.conditionsService.getConditionByValue(
+      dto.condition,
+    );
+
     const edition = await this.editionsService.getOne(dto.edition);
 
     const merchandises =
@@ -85,6 +91,7 @@ export class ComicService extends BaseService<Comic> {
       ...dto,
       sellerId: seller,
       genres,
+      condition,
       edition,
       merchandises,
     });
@@ -125,6 +132,8 @@ export class ComicService extends BaseService<Comic> {
   }
 
   async update(id: string, dto: UpdateComicDto): Promise<Comic> {
+    const { genres, merchandises, condition, edition, ...otherDto } = dto;
+
     const comic = await this.comicRepository.findOne({
       where: { id },
       relations: ['genres', 'edition', 'merchandises'],
@@ -134,31 +143,29 @@ export class ComicService extends BaseService<Comic> {
       throw new Error('Comic cannot be found!');
     }
 
-    const genres = await Promise.all(
-      dto.genres.map(async (genre) => {
+    const fetchedGenres = await Promise.all(
+      genres.map(async (genre) => {
         return await this.genreRepository.findOne({ where: { id: genre } });
       }),
     );
-    const merchandises = await Promise.all(
-      dto.merchandises.map(async (merch) => {
+    const fetchedMerchandises = await Promise.all(
+      merchandises.map(async (merch) => {
         return await this.merchandisesService.getOne(merch);
       }),
     );
 
-    const edition = await this.editionsService.getOne(dto.edition);
+    const fetchedCondition =
+      await this.conditionsService.getConditionByValue(condition);
 
-    comic.genres = genres;
-    comic.edition = edition;
-    comic.merchandises = merchandises;
+    const fetchedEdition = await this.editionsService.getOne(edition);
 
-    return await this.comicRepository
-      .save({
-        ...dto,
-        genres,
-        edition,
-        merchandises,
-      })
-      .then(() => this.getOne(id));
+    Object.assign(comic, otherDto);
+    comic.genres = fetchedGenres;
+    comic.condition = fetchedCondition;
+    comic.edition = fetchedEdition;
+    comic.merchandises = fetchedMerchandises;
+
+    return await this.comicRepository.save(comic).then(() => this.getOne(id));
   }
 
   async remove(id: string): Promise<void> {

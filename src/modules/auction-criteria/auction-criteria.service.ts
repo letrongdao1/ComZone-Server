@@ -1,9 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuctionCriteria } from 'src/entities/auction-criteria.entity';
 import { Repository } from 'typeorm';
 import { UpdateAuctionCriteriaDTO } from './dto/update-criteria.dto';
 import { EditionsService } from '../editions/editions.service';
+import { ConditionsService } from '../conditions/conditions.service';
 
 @Injectable()
 export class AuctionCriteriaService {
@@ -11,7 +12,8 @@ export class AuctionCriteriaService {
     @InjectRepository(AuctionCriteria)
     private readonly auctionCriteriaRepository: Repository<AuctionCriteria>,
 
-    @Inject(EditionsService) private readonly editionsService: EditionsService,
+    private readonly conditionsService: ConditionsService,
+    private readonly editionsService: EditionsService,
   ) {}
 
   async getAuctionCriteriaDetails() {
@@ -25,7 +27,7 @@ export class AuctionCriteriaService {
         id: 1,
         updatedAt: new Date(),
         isFullInfoFilled: false,
-        conditionLevel: 4,
+        conditionLevel: await this.conditionsService.getConditionByValue(4),
         editionRestricted: false,
       }))
     );
@@ -43,7 +45,9 @@ export class AuctionCriteriaService {
       { id: 1 },
       {
         isFullInfoFilled: dto.isFullInfoFilled,
-        conditionLevel: dto.conditionLevel,
+        conditionLevel: await this.conditionsService.getConditionByValue(
+          dto.conditionLevel,
+        ),
         editionRestricted:
           dto.disallowedEdition && dto.disallowedEdition.length > 0,
       },

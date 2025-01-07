@@ -10,10 +10,12 @@ import { SellerDetailsModule } from '../seller-details/seller-details.module';
 import { Auction } from 'src/entities/auction.entity';
 import { EditionsModule } from '../editions/editions.module';
 import { MerchandisesModule } from '../merchandises/merchandises.module';
+import { ConditionsModule } from '../conditions/conditions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Comic, Genre, User, Auction]),
+    ConditionsModule,
     EditionsModule,
     MerchandisesModule,
     SellerDetailsModule,

@@ -1,9 +1,11 @@
 import {
   Column,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Condition } from './condition.entity';
 
 @Entity('auction-criteria')
 export class AuctionCriteria {
@@ -18,8 +20,8 @@ export class AuctionCriteria {
   @Column({ name: 'is_full_info_filled', type: 'boolean', nullable: false })
   isFullInfoFilled: boolean;
 
-  @Column({ name: 'condition_level', type: 'int', nullable: false })
-  conditionLevel: number;
+  @ManyToOne(() => Condition, (condition) => condition.criteria)
+  conditionLevel: Condition;
 
   @Column({ name: 'edition_restricted', type: 'boolean', nullable: false })
   editionRestricted: boolean;

@@ -21,6 +21,7 @@ import { Merchandise } from './merchandise.entity';
 import { Edition } from './edition.entity';
 import { AuctionRequest } from './auction-request.entity';
 import { Auction } from './auction.entity';
+import { Condition } from './condition.entity';
 
 @Entity('comics')
 export class Comic extends BaseEntity {
@@ -97,10 +98,8 @@ export class Comic extends BaseEntity {
   @Column({ name: 'release_year', type: 'int', nullable: true })
   releaseYear?: number;
 
-  @Column({
-    type: 'int',
-  })
-  condition: number;
+  @ManyToOne(() => Condition, (condition) => condition.comics, { eager: true })
+  condition: Condition;
 
   @ManyToOne(() => Edition, (edition) => edition.comics, { eager: true })
   @JoinColumn()
