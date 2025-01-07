@@ -6,8 +6,6 @@ import {
   IsString,
   IsArray,
   IsPositive,
-  MinLength,
-  MaxLength,
   Min,
   IsBoolean,
 } from 'class-validator';
@@ -172,6 +170,15 @@ export class CreateComicDto {
   edition: string;
 
   @ApiProperty({
+    example: ['Ảnh bìa', 'Trang truyện'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsString({ each: true })
+  editionEvidence?: string[];
+
+  @ApiProperty({
     example: false,
     default: false,
   })
@@ -186,7 +193,6 @@ export class CreateComicDto {
   coverImage: string;
 
   @ApiProperty({
-    description: 'Array of preview chapter URLs',
     example: [
       'https://example.com/preview1.jpg',
       'https://example.com/preview2.jpg',
@@ -208,145 +214,202 @@ export class CreateComicDto {
 
 export class UpdateComicDto {
   @ApiProperty({
-    description: 'ID of the seller updating the comic',
-    example: '123456',
-    required: false,
+    example: 'Conan 101',
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  sellerId?: string;
+  title: string;
 
   @ApiProperty({
-    description: 'Array of genre IDs associated with the comic',
-    example: ['genre1', 'genre2'],
-    required: false,
+    example: 'Gashimoto Kinya',
+  })
+  @IsNotEmpty()
+  @IsString()
+  author: string;
+
+  @ApiProperty({
+    description: 'Quantity of comics',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  @Min(1)
+  quantity: number;
+
+  @ApiProperty({
+    description: 'Episodes list of comics collection',
+    example: ['Volume 19', 'Episode 73'],
+    nullable: true,
   })
   @IsOptional()
   @IsArray()
   @IsNotEmpty({ each: true })
   @IsString({ each: true })
-  genreIds?: string[];
+  episodesList?: string[];
 
   @ApiProperty({
-    description: 'Title of the comic',
-    example: 'Updated Comic Title',
-    required: false,
+    description: 'Array of genre IDs associated with the comic',
+    example: ['genreID1', 'genreID2'],
   })
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(100)
-  title?: string;
-
-  @ApiProperty({
-    description: 'Author of the comic',
-    example: 'Updated Author Name',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  author?: string;
-
-  @ApiProperty({
-    description: 'Description of the comic',
-    example: 'This is an updated description for the comic...',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  @MinLength(10)
-  description?: string;
-
-  @ApiProperty({
-    description: 'Array of URLs for comic cover images',
-    example: [
-      'https://example.com/image1.jpg',
-      'https://example.com/image2.jpg',
-    ],
-    required: false,
-  })
-  @IsOptional()
+  @IsArray()
   @IsNotEmpty({ each: true })
   @IsString({ each: true })
-  coverImage?: string;
+  genres: string[];
 
   @ApiProperty({
-    description: 'Price of the comic',
-    example: 24.99,
-    required: false,
+    example: 'This is a great comic about...',
+  })
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @ApiProperty({
+    example: 'SOFT',
+  })
+  @IsNotEmpty()
+  @IsEnum({ SOFT: 'SOFT', HARD: 'HARD', DETACHED: 'DETACHED' })
+  cover: 'SOFT' | 'HARD' | 'DETACHED';
+
+  @ApiProperty({
+    example: 'GRAYSCALE',
+  })
+  @IsNotEmpty()
+  @IsEnum({ GRAYSCALE: 'GRAYSCALE', COLORED: 'COLORED' })
+  color: 'GRAYSCALE' | 'COLORED';
+
+  @ApiProperty({
+    example: 224,
+    nullable: true,
+  })
+  @IsPositive()
+  @IsOptional()
+  page?: number;
+
+  @ApiProperty({
+    example: 224,
+    nullable: true,
+  })
+  @IsPositive()
+  @IsOptional()
+  length?: number;
+
+  @ApiProperty({
+    example: 224,
+    nullable: true,
+  })
+  @IsPositive()
+  @IsOptional()
+  width?: number;
+
+  @ApiProperty({
+    example: 224,
+    nullable: true,
+  })
+  @IsPositive()
+  @IsOptional()
+  thickness?: number;
+
+  @ApiProperty({
+    example: ['merchandiseID1', 'merchandiseID2'],
+    nullable: true,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsString({ each: true })
+  merchandises?: string[];
+
+  @ApiProperty({
+    example: 'Nhà xuất bản Kim Đồng',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  publisher?: string;
+
+  @ApiProperty({
+    example: 2019,
+    nullable: true,
   })
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  price?: number;
+  publicationYear?: number;
 
   @ApiProperty({
-    example: 'string',
+    example: 'Nhật Bản',
+    nullable: true,
   })
   @IsOptional()
-  publishedDate?: string;
+  @IsString()
+  originCountry?: string;
 
   @ApiProperty({
-    description: 'Status of the comic',
-    example: 'AVAILABLE',
-    required: false,
+    example: 2019,
+    nullable: true,
   })
   @IsOptional()
-  @IsEnum(ComicsStatusEnum)
-  status?: ComicsStatusEnum;
+  @IsNumber()
+  @IsPositive()
+  releaseYear?: number;
 
   @ApiProperty({
-    description: 'Quantity of comics available',
     example: 5,
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   @IsPositive()
-  quantity?: number;
+  condition: number;
 
   @ApiProperty({
-    description: 'Array of preview chapter URLs',
+    example: 'editionID',
+  })
+  @IsNotEmpty()
+  @IsString()
+  edition: string;
+
+  @ApiProperty({
+    example: ['Ảnh bìa', 'Trang truyện'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsNotEmpty({ each: true })
+  @IsString({ each: true })
+  editionEvidence?: string[];
+
+  @ApiProperty({
+    example: false,
+    default: false,
+  })
+  @IsBoolean()
+  willNotAuction: boolean;
+
+  @ApiProperty({
+    example: 'https://example.com/image1.jpg',
+  })
+  @IsNotEmpty()
+  @IsString()
+  coverImage: string;
+
+  @ApiProperty({
     example: [
       'https://example.com/preview1.jpg',
       'https://example.com/preview2.jpg',
     ],
-    required: false,
   })
-  @IsOptional()
   @IsArray()
   @IsNotEmpty({ each: true })
   @IsString({ each: true })
-  previewChapter?: string[];
-  @ApiProperty({
-    description: 'Edition type of the comic (e.g., REGULAR, SPECIAL, LIMITED)',
-    example: 'REGULAR',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(['REGULAR', 'SPECIAL', 'LIMITED'])
-  edition?: string;
+  previewChapter: string[];
 
   @ApiProperty({
-    description: 'Condition of the comic (e.g., USED, SEALED)',
-    example: 'USED',
-    required: false,
+    example: 25000,
   })
-  @IsOptional()
-  @IsEnum(['USED', 'SEALED'])
-  condition?: string;
-
-  @ApiProperty({
-    description: 'Total number of pages in the comic',
-    example: 120,
-    required: false,
-  })
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   @IsPositive()
-  page?: number;
+  price: number;
 }
 
 export class UpdateComicStatusDto {

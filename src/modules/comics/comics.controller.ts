@@ -55,7 +55,7 @@ export class ComicController {
     return this.comicsExchangeService.createExchangeComics(req.user.id, dto);
   }
 
-  @Roles(Role.MODERATOR)
+  @Roles(Role.MODERATOR, Role.ADMIN)
   @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -192,8 +192,6 @@ export class ComicController {
     return this.comicService.findOneWithGenres(id);
   }
 
-  @Roles(Role.MEMBER, Role.SELLER, Role.MODERATOR)
-  @UseGuards(PermissionsGuard)
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(@Param('id') id: string, @Body() updateComicDto: UpdateComicDto) {

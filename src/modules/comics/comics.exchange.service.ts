@@ -31,14 +31,10 @@ export class ComicsExchangeService extends BaseService<Comic> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User cannot be found!');
 
-    const edition = await this.editionsService.getOne(dto.edition);
-
     const newExchangeComics = this.comicsRepository.create({
       sellerId: user,
       ...dto,
-      edition,
-      genres: null,
-      merchandises: null,
+      condition: dto.condition,
       type: ComicsTypeEnum.EXCHANGE,
       status: ComicsStatusEnum.AVAILABLE,
     });
