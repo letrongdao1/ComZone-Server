@@ -132,6 +132,7 @@ export class ComicService extends BaseService<Comic> {
   }
 
   async update(id: string, dto: UpdateComicDto): Promise<Comic> {
+    console.log({ dto });
     const { genres, merchandises, condition, edition, ...otherDto } = dto;
 
     const comic = await this.comicRepository.findOne({
@@ -165,7 +166,7 @@ export class ComicService extends BaseService<Comic> {
     comic.edition = fetchedEdition;
     comic.merchandises = fetchedMerchandises;
 
-    return await this.comicRepository.save(comic).then(() => this.getOne(id));
+    return await this.comicRepository.save(comic);
   }
 
   async remove(id: string): Promise<void> {
