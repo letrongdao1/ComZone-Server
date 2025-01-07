@@ -48,6 +48,7 @@ import { AuctionCriteriaModule } from './modules/auction-criteria/auction-criter
 import { EditionsModule } from './modules/editions/editions.module';
 import { MerchandisesModule } from './modules/merchandises/merchandises.module';
 import { AuctionRequestModule } from './modules/auction-request/auction-request.module';
+import { ConditionsModule } from './modules/conditions/conditions.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { AuctionRequestModule } from './modules/auction-request/auction-request.
     AuctionCriteriaModule,
     EditionsModule,
     MerchandisesModule,
+    ConditionsModule,
   ],
   controllers: [AppController],
   providers: [
