@@ -20,7 +20,9 @@ export class AuctionCriteria {
   @Column({ name: 'is_full_info_filled', type: 'boolean', nullable: false })
   isFullInfoFilled: boolean;
 
-  @ManyToOne(() => Condition, (condition) => condition.criteria)
+  @ManyToOne(() => Condition, (condition) => condition.criteria, {
+    eager: true,
+  })
   conditionLevel: Condition;
 
   @Column({ name: 'edition_restricted', type: 'boolean', nullable: false })
