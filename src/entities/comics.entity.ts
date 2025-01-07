@@ -56,11 +56,11 @@ export class Comic extends BaseEntity {
   @Column('text')
   description: string;
 
-  @Column({ type: 'varchar' })
-  cover: 'SOFT' | 'HARD' | 'DETACHED';
+  @Column({ type: 'varchar', nullable: true })
+  cover?: 'SOFT' | 'HARD' | 'DETACHED';
 
-  @Column({ type: 'varchar' })
-  color: 'GRAYSCALE' | 'COLORED';
+  @Column({ type: 'varchar', nullable: true })
+  color?: 'GRAYSCALE' | 'COLORED';
 
   @Column({
     type: 'int',
@@ -104,7 +104,7 @@ export class Comic extends BaseEntity {
 
   @ManyToOne(() => Edition, (edition) => edition.comics, { eager: true })
   @JoinColumn()
-  edition: Edition;
+  edition?: Edition;
 
   @Column({ name: 'edition_evidence', type: 'simple-json', nullable: true })
   editionEvidence?: string[];
