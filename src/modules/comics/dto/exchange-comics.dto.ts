@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
-  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -54,33 +53,12 @@ export class CreateExchangeComicsDTO {
   description: string;
 
   @ApiProperty({
-    example: 'SOFT',
-  })
-  @IsNotEmpty()
-  @IsEnum({ SOFT: 'SOFT', HARD: 'HARD', DETACHED: 'DETACHED' })
-  cover: 'SOFT' | 'HARD' | 'DETACHED';
-
-  @ApiProperty({
-    example: 'GRAYSCALE',
-  })
-  @IsNotEmpty()
-  @IsEnum({ GRAYSCALE: 'GRAYSCALE', COLORED: 'COLORED' })
-  color: 'GRAYSCALE' | 'COLORED';
-
-  @ApiProperty({
     example: 5,
   })
   @IsNotEmpty()
   @IsNumber()
   @IsPositive()
   condition: number;
-
-  @ApiProperty({
-    example: 'editionID',
-  })
-  @IsNotEmpty()
-  @IsString()
-  edition: string;
 
   @ApiProperty({
     example: 'https://example.com/image1.jpg',

@@ -122,42 +122,36 @@ export class ComicService extends BaseService<Comic> {
     });
   }
 
-  async update(id: string, updateComicDto: UpdateComicDto): Promise<Comic> {
-    const { genreIds, ...comicData } = updateComicDto;
-
-    // Fetch the existing comic entity
+  async update(id: string, dto: UpdateComicDto): Promise<Comic> {
     const comic = await this.comicRepository.findOne({
       where: { id },
-      relations: ['genres'], // Ensure to load the existing genres
+      relations: ['genres', 'edition', 'merchandises'],
     });
 
     if (!comic) {
-      throw new Error('Comic not found');
+      throw new Error('Comic cannot be found!');
     }
 
-    // Retrieve the seller if sellerId is provided
-    // if (sellerId) {
-    //   const seller = await this.userRepository.findOne({
-    //     where: { id: sellerId },
-    //   });
-    //   if (!seller) {
-    //     throw new Error('Seller not found');
-    //   }
-    //   comic.sellerId = seller; // Assign the seller entity
-    // }
+    Object.assign(comic, dto);
 
-    // Retrieve genres based on provided genreIds
-    if (genreIds) {
-      const genres = await this.genreRepository.find({
-        where: genreIds.map((id) => ({ id })),
-      });
-      comic.genres = genres; // Assign the retrieved genres
-    }
-    Object.assign(comic, comicData);
+    const genres = await this.genreRepository.find({
+      where: dto.genres.map((id) => ({ id })),
+    });
 
-    await this.comicRepository.save(comic);
+    Object.assign(comic, { genres });
 
-    return this.findOne(id);
+    const merchandises = await Promise.all(
+      dto.merchandises.map(async (merch) => {
+        return await this.merchandisesService.getOne(merch);
+      }),
+    );
+    Object.assign(comic, { merchandises });
+
+    Object.assign(comic, {
+      edition: await this.editionsService.getOne(dto.edition),
+    });
+
+    return await this.comicRepository.save(comic);
   }
 
   async remove(id: string): Promise<void> {
@@ -197,8 +191,8 @@ export class ComicService extends BaseService<Comic> {
     comics.sort((a, b) => {
       const statusOrder = [
         ComicsStatusEnum.UNAVAILABLE,
-        ComicsStatusEnum.PRE_ORDER,
         ComicsStatusEnum.AVAILABLE,
+        ComicsStatusEnum.PRE_ORDER,
         ComicsStatusEnum.SOLD,
       ];
 
