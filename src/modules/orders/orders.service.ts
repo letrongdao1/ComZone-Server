@@ -113,56 +113,114 @@ export class OrdersService extends BaseService<Order> {
 
     await this.ordersRepository.save(newOrder);
 
-    //Create transaction if paid via WALLET
+    const depositAmount = createOrderDto.depositAmount || 0;
+    const remainingAmount =
+      createOrderDto.totalPrice + delivery.deliveryFee - depositAmount;
+
+    // Create transaction if paid via WALLET
     if (createOrderDto.paymentMethod === 'WALLET') {
-      if (user.balance < createOrderDto.totalPrice)
-        throw new ForbiddenException('Insufficient balance!');
+      if (remainingAmount > 0) {
+        if (user.balance < remainingAmount) {
+          throw new ForbiddenException('Insufficient balance!');
+        }
 
-      await this.usersService.updateBalance(
-        userId,
-        -(createOrderDto.totalPrice + delivery.deliveryFee),
-      );
+        await this.usersService.updateBalance(userId, -remainingAmount);
 
-      await this.usersService.updateNonWithdrawableAmount(
-        createOrderDto.sellerId,
-        createOrderDto.totalPrice,
-      );
-
-      const userTransaction =
-        await this.transactionsService.createOrderTransaction(
-          userId,
-          newOrder.id,
-          'SUBTRACT',
-        );
-
-      const sellerTransaction =
-        await this.transactionsService.createOrderTransaction(
+        await this.usersService.updateNonWithdrawableAmount(
           createOrderDto.sellerId,
-          newOrder.id,
-          'ADD',
+          createOrderDto.totalPrice,
         );
 
-      await this.eventsGateway.notifyUser(
-        userId,
-        `Thanh toán đơn hàng #${newCode} với số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ thành công.`,
-        { transactionId: userTransaction.id },
-        'Thanh toán thành công',
-        AnnouncementType.TRANSACTION_SUBTRACT,
-        RecipientType.USER,
-        'SUCCESSFUL',
-      );
+        const userTransaction =
+          await this.transactionsService.createOrderTransactionAuctionComic(
+            userId,
+            newOrder.id,
+            'SUBTRACT',
+            remainingAmount,
+          );
 
-      await this.eventsGateway.notifyUser(
-        createOrderDto.sellerId,
-        `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng #${newCode}. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
-        { transactionId: sellerTransaction.id },
-        'Nhận tiền đơn hàng',
-        AnnouncementType.TRANSACTION_ADD,
-        RecipientType.SELLER,
-        'SUCCESSFUL',
-      );
+        const sellerTransaction =
+          await this.transactionsService.createOrderTransaction(
+            createOrderDto.sellerId,
+            newOrder.id,
+            'ADD',
+          );
+
+        await this.eventsGateway.notifyUser(
+          userId,
+          `Thanh toán đơn hàng #${newCode} với số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ thành công.`,
+          { transactionId: userTransaction.id },
+          'Thanh toán thành công',
+          AnnouncementType.TRANSACTION_SUBTRACT,
+          RecipientType.USER,
+          'SUCCESSFUL',
+        );
+
+        await this.eventsGateway.notifyUser(
+          createOrderDto.sellerId,
+          `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng #${newCode}. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
+          { transactionId: sellerTransaction.id },
+          'Nhận tiền đơn hàng',
+          AnnouncementType.TRANSACTION_ADD,
+          RecipientType.SELLER,
+          'SUCCESSFUL',
+        );
+      } else {
+        const refundAmount =
+          depositAmount - (createOrderDto.totalPrice + delivery.deliveryFee);
+
+        await this.usersService.updateBalance(userId, refundAmount);
+
+        const refundTransaction =
+          await this.transactionsService.createRefundTransactionOrder(
+            userId,
+            newOrder.id,
+            refundAmount,
+          );
+        const userTransaction =
+          await this.transactionsService.createOrderTransaction(
+            userId,
+            newOrder.id,
+            'SUBTRACT',
+          );
+
+        await this.eventsGateway.notifyUser(
+          userId,
+          `Thanh toán đơn hàng #${newCode} với số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ thành công.`,
+          { transactionId: userTransaction.id },
+          'Thanh toán thành công',
+          AnnouncementType.TRANSACTION_SUBTRACT,
+          RecipientType.USER,
+          'SUCCESSFUL',
+        );
+
+        await this.eventsGateway.notifyUser(
+          userId,
+          `Hoàn lại ${refundAmount.toLocaleString('vi-VN')}đ tiền cọc cho đơn hàng #${newCode}.`,
+          { transactionId: refundTransaction.id },
+          'Hoàn tiền cọc',
+          AnnouncementType.TRANSACTION_ADD,
+          RecipientType.USER,
+          'SUCCESSFUL',
+        );
+        const sellerTransaction =
+          await this.transactionsService.createOrderTransaction(
+            createOrderDto.sellerId,
+            newOrder.id,
+            'ADD',
+          );
+        await this.eventsGateway.notifyUser(
+          createOrderDto.sellerId,
+          `Nhận ${newOrder.totalPrice.toLocaleString('vi-VN')}đ vào ví ComZone tiền đơn hàng #${newCode}. Bạn chưa thể sử dụng hay rút số tiền này cho đến khi người đặt hàng nhận hàng thành công.`,
+          { transactionId: sellerTransaction.id },
+          'Nhận tiền đơn hàng',
+          AnnouncementType.TRANSACTION_ADD,
+          RecipientType.SELLER,
+          'SUCCESSFUL',
+        );
+      }
     }
-
+    // Notify the seller about the new order
     await this.eventsGateway.notifyUser(
       createOrderDto.sellerId,
       `Bạn nhận được đơn hàng #${newCode} từ tài khoản ${user.name} trị giá ${newOrder.totalPrice.toLocaleString('vi-VN')}đ`,
@@ -172,9 +230,9 @@ export class OrdersService extends BaseService<Order> {
       RecipientType.SELLER,
       'SUCCESSFUL',
     );
+
     return await this.getOne(newOrder.id);
   }
-
   async getById(orderId: string) {
     await this.autoUpdateOrderStatus(orderId);
     return await this.getOrderFullAddress(orderId);

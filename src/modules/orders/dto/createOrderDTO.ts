@@ -19,6 +19,9 @@ export class CreateOrderDTO {
   @ApiProperty()
   type?: string;
 
+  @ApiProperty()
+  depositAmount?: number;
+
   @ApiProperty({ nullable: true })
   note?: string;
 }

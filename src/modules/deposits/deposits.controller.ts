@@ -56,10 +56,10 @@ export class DepositsController {
   // async refundAllDepositsOfAnAuction(@Param('auctionId') auctionId: string) {
   //   return await this.depositsService.refundAllDepositsExceptWinner(auctionId);
   // }
-  @Patch('/auction/:auctionId/refund-winner')
-  async refundWinner(@Param('auctionId') auctionId: string) {
-    return await this.depositsService.refundDepositToWinner(auctionId);
-  }
+  // @Patch('/auction/:auctionId/refund-winner')
+  // async refundWinner(@Param('auctionId') auctionId: string) {
+  //   return await this.depositsService.refundDepositToWinner(auctionId,);
+  // }
 
   // @UseGuards(JwtAuthGuard)
   @Get('auction/:id')

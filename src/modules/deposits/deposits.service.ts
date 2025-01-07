@@ -246,7 +246,7 @@ export class DepositsService extends BaseService<Deposit> {
     };
   }
 
-  async refundDepositToWinner(auctionId: string) {
+  async refundDepositToWinner(auctionId: string, totalDeliveryPrice:number) {
     const auction = await this.auctionService.findAuctionById(auctionId);
     if (!auction) throw new NotFoundException('Auction cannot be found!');
 
@@ -268,28 +268,58 @@ export class DepositsService extends BaseService<Deposit> {
         'The winner deposit is not being held by the system!',
       );
 
-    await this.usersService.updateBalance(
-      winnerDeposit.user.id,
-      winnerDeposit.amount,
-    );
+    const totalPayment = auction.currentPrice;
+    const depositAmount = winnerDeposit.amount;
 
-    const transaction = await this.transactionsService.createDepositTransaction(
-      winnerDeposit.user.id,
-      winnerDeposit.id,
-      'ADD',
-    );
-    await this.eventsGateway.notifyUser(
-      winnerDeposit.user.id,
-      `Hệ thống đã hoàn số tiền cọc ${CurrencySplitter(winnerDeposit.amount)}đ vào ví của bạn.`,
-      { transactionId: transaction.id },
-      'Hoàn cọc thành công',
-      AnnouncementType.TRANSACTION_ADD,
-      RecipientType.USER,
-    );
+    if (depositAmount >= totalPayment) {
+      const refundAmount = depositAmount - totalPayment;
 
-    await this.depositsRepository.update(winnerDeposit.id, {
-      status: DepositStatusEnum.REFUNDED,
-    });
+      if (refundAmount > 0) {
+        // await this.usersService.updateBalance(
+        //   winnerDeposit.user.id,
+        //   refundAmount,
+        // );
+      }
+      // const transaction =
+      //   await this.transactionsService.createDepositTransaction(
+      //     winnerDeposit.user.id,
+      //     winnerDeposit.id,
+      //     'ADD',
+      //   );
+      // await this.eventsGateway.notifyUser(
+      //   winnerDeposit.user.id,
+      //   `Số tiền dư còn lại sau khi thanh toán bằng cọc ${CurrencySplitter(refundAmount)}đ đã được hoàn trả.`,
+      //   { transactionId: transaction.id },
+      //   'Hoàn cọc thành công',
+      //   AnnouncementType.TRANSACTION_ADD,
+      //   RecipientType.USER,
+      // );
+      await this.depositsRepository.update(winnerDeposit.id, {
+        status: DepositStatusEnum.USED,
+      });
+    } else {
+      // const remainingPayment = totalPayment - depositAmount;
+
+      await this.depositsRepository.update(winnerDeposit.id, {
+        status: DepositStatusEnum.USED,
+      });
+    }
+
+    // Record the transaction
+    // const transaction = await this.transactionsService.createDepositTransaction(
+    //   winnerDeposit.user.id,
+    //   winnerDeposit.id,
+    //   'ADD',
+    // );
+
+    // await this.eventsGateway.notifyUser(
+    //   winnerDeposit.user.id,
+    //   `Hệ thống đã hoàn tất xử lý số tiền cọc ${CurrencySplitter(depositAmount)}đ.`,
+    //   { transactionId: transaction.id },
+    //   'Hoàn cọc thành công',
+    //   AnnouncementType.TRANSACTION_ADD,
+    //   RecipientType.USER,
+    // );
 
     return this.getOne(winnerDeposit.id);
   }

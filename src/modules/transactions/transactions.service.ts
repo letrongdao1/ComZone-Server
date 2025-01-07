@@ -74,6 +74,36 @@ export class TransactionsService extends BaseService<Transaction> {
 
     return await this.transactionsRepository.save(newTransaction);
   }
+  async createOrderTransactionAuctionComic(
+    userId: string,
+    orderId: string,
+    type: 'ADD' | 'SUBTRACT',
+    amount: number,
+  ) {
+    const user = await this.usersService.getOne(userId);
+    if (!user) {
+      throw new NotFoundException('User cannot be found!');
+    }
+
+    const order = await this.ordersRepository.findOneBy({ id: orderId });
+    if (!order) {
+      throw new NotFoundException(
+        'Order cannot be found to create transaction!',
+      );
+    }
+
+    const newTransaction = this.transactionsRepository.create({
+      user,
+      code: generateNumericCode(8), // Ensure this function is defined or imported
+      order,
+      amount,
+      profitAmount: type === 'SUBTRACT' ? order.delivery.deliveryFee : null,
+      status: TransactionStatusEnum.SUCCESSFUL,
+      type,
+    });
+
+    return await this.transactionsRepository.save(newTransaction);
+  }
 
   async createCancelledOrderTransaction(
     userId: string,
@@ -141,7 +171,33 @@ export class TransactionsService extends BaseService<Transaction> {
 
     return await this.transactionsRepository.save(newTransaction);
   }
+  async createRefundTransactionOrder(
+    userId: string,
+    orderId: string,
+    refundAmount: number,
+  ) {
+    const user = await this.usersService.getOne(userId);
+    if (!user) throw new NotFoundException('User not found');
+    const order = await this.ordersRepository.findOne({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
 
+    // Create a new refund transaction
+    const newTransaction = this.transactionsRepository.create({
+      user,
+      order,
+      amount: refundAmount,
+      type: 'ADD',
+      status: TransactionStatusEnum.SUCCESSFUL,
+      code: generateNumericCode(8),
+    });
+
+    // Save the transaction
+    await this.transactionsRepository.save(newTransaction);
+
+    return newTransaction;
+  }
   async createDepositTransaction(
     userId: string,
     depositId: string,
