@@ -98,10 +98,9 @@ export class EventsGateway implements OnModuleInit {
       currentPrice: number;
       user: User;
       type: string;
-      totalDeliveryPrice: number;
     },
   ) {
-    const { auctionId, currentPrice, user, type, totalDeliveryPrice } = data;
+    const { auctionId, currentPrice, user, type } = data;
     console.log('data', data);
     let updatedAuction;
     if (type === 'maxPrice') {
@@ -125,10 +124,7 @@ export class EventsGateway implements OnModuleInit {
         );
     }
 
-    await this.depositsService.refundDepositToWinner(
-      auctionId,
-      totalDeliveryPrice,
-    );
+    await this.depositsService.refundDepositToWinner(auctionId);
 
     // Emit the updated auction to notify clients
     this.server.emit('auctionUpdated', updatedAuction);

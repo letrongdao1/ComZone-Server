@@ -246,7 +246,7 @@ export class DepositsService extends BaseService<Deposit> {
     };
   }
 
-  async refundDepositToWinner(auctionId: string, totalDeliveryPrice:number) {
+  async refundDepositToWinner(auctionId: string) {
     const auction = await this.auctionService.findAuctionById(auctionId);
     if (!auction) throw new NotFoundException('Auction cannot be found!');
 

@@ -148,7 +148,7 @@ export class OrdersService extends BaseService<Order> {
 
         await this.eventsGateway.notifyUser(
           userId,
-          `Thanh toán đơn hàng #${newCode} với số tiền ${(newOrder.totalPrice + newOrder.delivery.deliveryFee).toLocaleString('vi-VN')}đ thành công.`,
+          `Thanh toán đơn hàng #${newCode} với số tiền ${remainingAmount.toLocaleString('vi-VN')}đ thành công.`,
           { transactionId: userTransaction.id },
           'Thanh toán thành công',
           AnnouncementType.TRANSACTION_SUBTRACT,
