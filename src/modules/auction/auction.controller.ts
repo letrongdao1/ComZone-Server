@@ -9,10 +9,11 @@ import {
   UseGuards,
   Req,
   Patch,
+  Post,
 } from '@nestjs/common';
 import { AuctionService } from './auction.service';
 import { Auction } from '../../entities/auction.entity';
-import { UpdateAuctionDto } from './dto/auction.dto';
+import { CreateAuctionDto, UpdateAuctionDto } from './dto/auction.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../authentication/guards/jwt-auth.guard';
 import { Roles } from '../authorization/roles.decorator';
@@ -25,10 +26,10 @@ import { PermissionsGuard } from '../authorization/permission.guard';
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  // @Post()
-  // async create(@Body() createAuctionDto: CreateAuctionDto) {
-  //   return this.auctionService.createAuction(createAuctionDto);
-  // }
+  @Post()
+  async create(@Body() createAuctionDto: CreateAuctionDto) {
+    return this.auctionService.createAuction(createAuctionDto);
+  }
   // @Post('request')
   // async createAuctionRequest(
   //   @Body() createAuctionDto: CreateAuctionDto,
@@ -66,20 +67,29 @@ export class AuctionController {
       return { message: 'Failed to check for ended auctions', error };
     }
   }
+
   @UseGuards(JwtAuthGuard)
   @Get('exclude-user')
   async getAuctionsExcludingUser(@Req() req: any): Promise<Auction[]> {
     const sellerId = req.user ? req.user.id : null;
     return this.auctionService.findAuctionsExcludingUser(sellerId);
   }
+
   @Get('declare-winner/:id')
   async declareWinner(@Param('id') id: string) {
     return this.auctionService.declareWinner(id);
   }
-  @Get('upcoming')
-  async getUpcomingAuctions(): Promise<Auction[]> {
-    return this.auctionService.findUpcomingAuctions();
+
+  @Get('upcoming/limit/:limit')
+  async getUpcomingAuctions(@Param('limit') limit: string): Promise<Auction[]> {
+    return this.auctionService.getUpcomingAuctionsWithLimit(Number(limit));
   }
+
+  @Get('ongoing')
+  async getOngoingAuctions(): Promise<Auction[]> {
+    return this.auctionService.getOngoingAuctions();
+  }
+
   @Get('upcoming/123')
   async startAuction(): Promise<{
     success: boolean;
