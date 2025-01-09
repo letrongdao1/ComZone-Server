@@ -89,8 +89,8 @@ export class ExchangePostsService extends BaseService<ExchangePost> {
     return await this.postsRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
-      .where('LENGTH(post.postContent) < 100')
-      .take(5)
+      .where('post.images != "[]"')
+      .take(10)
       .getMany();
   }
 

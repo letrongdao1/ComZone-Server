@@ -234,6 +234,25 @@ export class AuctionService {
     }
     return auction;
   }
+
+  async getUpcomingAuctionsWithLimit(limit: number): Promise<Auction[]> {
+    return await this.auctionRepository.find({
+      where: { status: 'UPCOMING' },
+      relations: ['comics'],
+      order: { startTime: 'DESC' },
+      take: limit || 999999,
+    });
+  }
+
+  async getOngoingAuctions(): Promise<Auction[]> {
+    return await this.auctionRepository.find({
+      where: { status: 'ONGOING' },
+      relations: ['comics'],
+      order: { startTime: 'DESC' },
+      take: 10,
+    });
+  }
+
   async findAuctionsExcludingUser(sellerId: string): Promise<Auction[]> {
     return this.auctionRepository.find({
       where: {
