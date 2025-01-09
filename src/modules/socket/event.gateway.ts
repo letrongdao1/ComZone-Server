@@ -235,4 +235,8 @@ export class EventsGateway implements OnModuleInit {
   //   console.log('Broadcasting notification to all clients');
   //   this.server.emit('notification', { message });
   // }
+
+  refreshOrderStatus(orderId: string) {
+    this.server.emit('', orderId);
+  }
 }
