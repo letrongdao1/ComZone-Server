@@ -38,6 +38,7 @@ import { generateNumericAndUppercaseCode } from 'src/utils/generator/generators'
 import { RefundRequest } from 'src/entities/refund-request.entity';
 import { VietNamAddressService } from '../viet-nam-address/viet-nam-address.service';
 import { DeliveryInformation } from 'src/entities/delivery-information.entity';
+
 dotenv.config();
 
 @Injectable()
@@ -54,10 +55,14 @@ export class OrdersService extends BaseService<Order> {
     private readonly comicsService: ComicService,
 
     private readonly usersService: UsersService,
+
+    @Inject(forwardRef(() => DeliveriesService))
     private readonly deliveriesService: DeliveriesService,
+
     private readonly addressesService: UserAddressesService,
     private readonly transactionsService: TransactionsService,
     private readonly vnAddressesService: VietNamAddressService,
+
     @Inject(forwardRef(() => EventsGateway))
     private readonly eventsGateway: EventsGateway,
   ) {
@@ -311,7 +316,7 @@ export class OrdersService extends BaseService<Order> {
   async getOrderFullAddress(orderId: string) {
     const order = await this.ordersRepository.findOne({
       where: { id: orderId },
-      relations: ['delivery', 'delivery.from', 'delivery.to'],
+      relations: ['user', 'delivery', 'delivery.from', 'delivery.to'],
     });
 
     if (!order || !order.delivery)

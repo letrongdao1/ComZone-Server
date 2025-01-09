@@ -1,5 +1,5 @@
 // events.module.ts
-import { forwardRef, Module } from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
 import { EventsGateway } from './event.gateway';
 import { BidModule } from '../bid/bid.module';
 import { AnnouncementModule } from '../announcement/announcement.module';
@@ -8,6 +8,7 @@ import { UsersModule } from '../users/users.module';
 import { DepositsModule } from '../deposits/deposits.module';
 import { ExchangesModule } from '../exchanges/exchanges.module';
 
+@Global()
 @Module({
   imports: [
     forwardRef(() => AuctionModule),

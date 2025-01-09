@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -33,6 +34,7 @@ import {
 } from 'src/entities/announcement.entity';
 import { DepositsService } from '../deposits/deposits.service';
 import { ExchangeStatusEnum } from '../exchanges/dto/exchange-status-enum';
+import { OrdersGateway } from '../orders/order.gateway';
 
 dotenv.config();
 
@@ -58,6 +60,9 @@ export class DeliveriesService extends BaseService<Delivery> {
     private readonly eventsGateway: EventsGateway,
     @Inject(DepositsService)
     private readonly depositsService: DepositsService,
+
+    @Inject(forwardRef(() => OrdersGateway))
+    private readonly ordersGateway: OrdersGateway,
   ) {
     super(deliveriesRepository);
   }
@@ -317,7 +322,10 @@ export class DeliveriesService extends BaseService<Delivery> {
   }
 
   async autoUpdateGHNDeliveryStatus(deliveryId: string) {
-    const delivery = await this.getOne(deliveryId);
+    const delivery = await this.deliveriesRepository.findOne({
+      where: { id: deliveryId },
+      relations: ['order'],
+    });
 
     if (!delivery || !delivery.deliveryTrackingCode) return;
 
@@ -336,10 +344,17 @@ export class DeliveriesService extends BaseService<Delivery> {
       .then(async (res) => {
         const deliveryStatus: OrderDeliveryStatusEnum = res.data.data.status;
 
-        await this.deliveriesRepository.update(deliveryId, {
-          status: deliveryStatus,
-        });
-        await this.updateDeliveryOverallStatus(deliveryId, deliveryStatus);
+        if (delivery.status !== deliveryStatus) {
+          await this.deliveriesRepository.update(deliveryId, {
+            status: deliveryStatus,
+          });
+          await this.updateDeliveryOverallStatus(deliveryId, deliveryStatus);
+
+          if (delivery.order) {
+            this.ordersGateway.refreshOrderFromDelivery(delivery.order.id);
+          }
+        }
+
         return deliveryStatus;
       })
       .catch((err) => console.log('Error getting GHN delivery info: ', err));

@@ -12,19 +12,20 @@ import { TransactionsModule } from '../transactions/transactions.module';
 import { EventsModule } from '../socket/event.module';
 import { RefundRequest } from 'src/entities/refund-request.entity';
 import { VietNamAddressModule } from '../viet-nam-address/viet-nam-address.module';
+import { OrdersGateway } from './order.gateway';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderItem, RefundRequest]),
     ComicModule,
     UserAddressesModule,
-    DeliveriesModule,
+    forwardRef(() => DeliveriesModule),
     TransactionsModule,
     VietNamAddressModule,
     forwardRef(() => EventsModule),
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, OrdersScheduleService],
-  exports: [OrdersService],
+  providers: [OrdersService, OrdersScheduleService, OrdersGateway],
+  exports: [OrdersService, OrdersGateway],
 })
 export class OrdersModule {}
