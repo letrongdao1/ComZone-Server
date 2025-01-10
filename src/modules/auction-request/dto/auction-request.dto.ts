@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsDate,
   IsEnum,
   IsInt,
@@ -42,9 +43,11 @@ export class UpdateAuctionRequestDto {
   status?: string;
 
   @IsOptional()
-  @IsString()
-  rejectionReason?: string;
+  @IsArray()
+  @IsString({ each: true })
+  rejectionReason?: string[];
 }
+
 export class ApproveAuctionRequestDto {
   @IsNotEmpty()
   @IsDate()
@@ -54,6 +57,7 @@ export class ApproveAuctionRequestDto {
   @IsDate()
   endTime: Date;
 }
+
 export class AuctionRequestResponseDto {
   comicId: string;
   reservePrice: number;
@@ -62,5 +66,7 @@ export class AuctionRequestResponseDto {
   depositAmount: number;
   duration: number;
   status: string;
-  rejectionReason: string;
+
+  @IsArray()
+  rejectionReason: string[];
 }

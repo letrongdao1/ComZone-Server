@@ -11,7 +11,7 @@ export class AuctionRequest extends BaseEntity {
 
   @ManyToOne(() => Auction, (auction) => auction.requests, { nullable: true })
   @JoinColumn({ name: 'auction_id' })
-  auction: Auction; // Liên kết với phiên đấu giá (cũ hoặc mới)
+  auction: Auction;
 
   @OneToMany(() => Announcement, (announcement) => announcement.auctionRequest)
   announcements: Announcement[];
@@ -43,8 +43,8 @@ export class AuctionRequest extends BaseEntity {
   })
   status: string;
 
-  @Column({ type: 'text', nullable: true })
-  rejectionReason: string;
+  @Column('json', { nullable: true })
+  rejectionReason: string[];
 
   @Column({ type: 'timestamp', nullable: true })
   approvalDate: Date;

@@ -13,6 +13,7 @@ import { Exchange } from 'src/entities/exchange.entity';
 import { Order } from 'src/entities/orders.entity';
 import { OrderItemsService } from '../order-items/order-items.service';
 import { Transaction } from 'src/entities/transactions.entity';
+import { AuctionRequest } from 'src/entities/auction-request.entity';
 
 @Injectable()
 export class AnnouncementService {
@@ -27,6 +28,8 @@ export class AnnouncementService {
     private readonly orderItemService: OrderItemsService,
     @InjectRepository(Auction)
     private readonly auctionRepository: Repository<Auction>,
+    @InjectRepository(AuctionRequest)
+    private readonly auctionRequestRepository: Repository<AuctionRequest>,
     @InjectRepository(Exchange)
     private readonly exchangeRepository: Repository<Exchange>,
     @InjectRepository(Transaction)
@@ -72,6 +75,7 @@ export class AnnouncementService {
       orderId,
       auctionId,
       exchangeId,
+      auctionRequestId,
       transactionId,
       recipientType,
       ...rest
@@ -94,6 +98,11 @@ export class AnnouncementService {
           where: { id: transactionId },
         })
       : null;
+    const auctionRequest = auctionRequestId
+      ? await this.auctionRequestRepository.findOne({
+          where: { id: auctionRequestId },
+        })
+      : null;
 
     if (userId && !user) {
       throw new Error('User not found');
@@ -110,6 +119,9 @@ export class AnnouncementService {
     if (transactionId && !transaction) {
       throw new Error('Transaction not found');
     }
+    if (auctionRequestId && !auctionRequest) {
+      throw new Error('Auction Request not found');
+    }
 
     const announcement = this.announcementRepository.create({
       ...rest,
@@ -118,6 +130,7 @@ export class AnnouncementService {
       auction: auction || undefined,
       exchange: exchange || undefined,
       transaction: transaction || undefined,
+      auctionRequest: auctionRequest || undefined,
       recipientType,
       type: rest.type || null,
     });

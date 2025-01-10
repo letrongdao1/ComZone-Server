@@ -11,6 +11,7 @@ import { Exchange } from 'src/entities/exchange.entity';
 import { OrderItemsModule } from '../order-items/order-items.module';
 import { Order } from 'src/entities/orders.entity';
 import { Transaction } from 'src/entities/transactions.entity';
+import { AuctionRequest } from 'src/entities/auction-request.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { Transaction } from 'src/entities/transactions.entity';
       User,
       Exchange,
       Transaction,
+      AuctionRequest,
     ]),
     // UsersModule,
     forwardRef(() => OrderItemsModule),

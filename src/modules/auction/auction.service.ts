@@ -180,6 +180,9 @@ export class AuctionService {
       // No bids, so the auction failed
       auction.status = 'CANCELED';
       auction.currentCondition = 'Buổi đấu giá thất bại do không ai tham gia';
+      auction.comics.type = ComicsTypeEnum.NONE;
+      auction.comics.status = ComicsStatusEnum.UNAVAILABLE;
+      await this.comicRepository.save(auction.comics);
       await this.auctionRepository.save(auction);
       const depositorIds = await this.depositsService.getAllDepositOfAnAuction(
         auction.id,

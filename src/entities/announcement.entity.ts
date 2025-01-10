@@ -74,9 +74,11 @@ export class Announcement extends BaseEntity {
     (auctionRequest) => auctionRequest.announcements,
     {
       nullable: true,
+      eager: true,
     },
   )
   auctionRequest: AuctionRequest;
+
   @Column({
     type: 'varchar',
     nullable: false,

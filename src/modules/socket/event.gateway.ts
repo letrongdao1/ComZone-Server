@@ -145,8 +145,6 @@ export class EventsGateway implements OnModuleInit {
     recipientType: RecipientType,
     status?: string,
   ) {
-    console.log('Passed ids object:', ids);
-
     try {
       const createAnnouncementDto: CreateAnnouncementDto = {
         auctionId: ids.auctionId?.id,

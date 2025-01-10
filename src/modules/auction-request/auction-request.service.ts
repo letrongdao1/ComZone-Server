@@ -95,6 +95,20 @@ export class AuctionRequestService {
 
     return this.auctionRequestRepository.save(auctionRequest);
   }
+  // Get all auction requests by a specific seller
+  async findBySellerId(sellerId: string): Promise<AuctionRequest[]> {
+    return this.auctionRequestRepository.find({
+      where: {
+        comic: {
+          sellerId: { id: sellerId },
+        },
+      },
+      relations: ['comic', 'comic.sellerId'], // Ensure we load related seller and comic data
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+  }
 
   // Approve and create a new auction if the request is approved
   async approveAuctionRequest(
@@ -102,90 +116,114 @@ export class AuctionRequestService {
     startTime: Date,
     endTime: Date,
   ): Promise<Auction> {
-    // Fetch the auction request along with related auction and comic entities
+    // Fetch the auction request along with related comic entity
     const auctionRequest = await this.auctionRequestRepository.findOne({
       where: { id },
-      relations: ['auction', 'comic', 'comic.sellerId'],
+      relations: ['comic', 'comic.sellerId'],
     });
 
     if (!auctionRequest) {
       throw new Error('Auction Request not found');
     }
 
-    // Validate the auction request status
     if (auctionRequest.status === 'REJECTED') {
       throw new Error('Auction Request was rejected and cannot be approved');
     }
 
-    // Update auction request status if not already approved
-    if (auctionRequest.status !== 'APPROVED') {
-      auctionRequest.status = 'APPROVED';
-      auctionRequest.approvalDate = new Date();
-      await this.auctionRequestRepository.save(auctionRequest);
-    }
-
-    // Validate start and end times
     if (!startTime || !endTime || endTime <= startTime) {
       throw new Error('Invalid start time or end time');
     }
 
-    let auction: Auction;
+    let auction = await this.auctionRepository.findOne({
+      where: { comics: { id: auctionRequest.comic.id } },
+    });
 
-    if (auctionRequest.auction) {
-      // Handle reopening an existing auction
-      auction = auctionRequest.auction;
+    if (auction) {
+      if (auction.status === 'STOPPED') {
+        // Reopen the existing auction
+        auction.startTime = startTime;
+        auction.endTime = endTime;
+        auction.currentPrice = auctionRequest.reservePrice;
+        auction.maxPrice = auctionRequest.maxPrice;
+        auction.priceStep = auctionRequest.priceStep;
+        auction.depositAmount = auctionRequest.depositAmount;
+        auction.reservePrice = auctionRequest.reservePrice;
+        auction.status = 'UPCOMING';
 
-      if (auction.status !== 'FAILED') {
-        throw new Error('The linked auction is not eligible for reopening');
+        await this.auctionRepository.save(auction);
+
+        // Notify seller about reopening
+        this.eventsGateway.notifyUser(
+          auctionRequest.comic.sellerId.id,
+          `Phiên đấu giá "${auctionRequest.comic.title}" đã được mở lại.`,
+          { auctionId: auction },
+          'Cập nhật phiên đấu giá',
+          AnnouncementType.AUCTION,
+          RecipientType.SELLER,
+        );
+      } else {
+        // Create a new auction since the current one is not eligible for reopening
+        auction = await this.createNewAuction(
+          auctionRequest,
+          startTime,
+          endTime,
+        );
       }
-
-      // Update auction details
-      auction.startTime = startTime;
-      auction.endTime = endTime;
-      auction.currentPrice = auctionRequest.reservePrice;
-      auction.status = 'UPCOMING';
     } else {
-      // Create a new auction
-      auction = this.auctionRepository.create({
-        comics: auctionRequest.comic,
-        maxPrice: auctionRequest.maxPrice,
-        priceStep: auctionRequest.priceStep,
-        depositAmount: auctionRequest.depositAmount,
-        reservePrice: auctionRequest.reservePrice,
-        currentPrice: auctionRequest.reservePrice,
-        startTime,
-        endTime,
-        status: 'UPCOMING',
-      });
-
-      // Save and link the auction to the request
-      auction = await this.auctionRepository.save(auction);
-      auctionRequest.auction = auction;
-
-      // Notify the seller about the approval
-      this.eventsGateway.notifyUser(
-        auctionRequest.comic.sellerId.id,
-        `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã được chấp thuận.`,
-        { auctionRequestId: auctionRequest },
-        'Yêu cầu đấu giá',
-        AnnouncementType.AUCTION_REQUEST,
-        RecipientType.SELLER,
-      );
+      // Create a new auction if none exists
+      auction = await this.createNewAuction(auctionRequest, startTime, endTime);
     }
 
+    // Update auction request status
+    auctionRequest.status = 'APPROVED';
+    auctionRequest.approvalDate = new Date();
+    auctionRequest.auction = auction;
+    await this.auctionRequestRepository.save(auctionRequest);
+
     // Update the `onSaleSince` property of the comic
+    auctionRequest.comic.type = ComicsTypeEnum.AUCTION;
     auctionRequest.comic.onSaleSince = new Date();
     await this.comicRepository.save(auctionRequest.comic);
-
-    // Save the updated auction request
-    await this.auctionRequestRepository.save(auctionRequest);
 
     return auction;
   }
 
+  // Helper function to create a new auction
+  private async createNewAuction(
+    auctionRequest: AuctionRequest,
+    startTime: Date,
+    endTime: Date,
+  ): Promise<Auction> {
+    const auction = this.auctionRepository.create({
+      comics: auctionRequest.comic,
+      maxPrice: auctionRequest.maxPrice,
+      priceStep: auctionRequest.priceStep,
+      depositAmount: auctionRequest.depositAmount,
+      reservePrice: auctionRequest.reservePrice,
+      currentPrice: auctionRequest.reservePrice,
+      startTime,
+      endTime,
+      status: 'UPCOMING',
+    });
+
+    const savedAuction = await this.auctionRepository.save(auction);
+
+    // Notify seller about the new auction
+    this.eventsGateway.notifyUser(
+      auctionRequest.comic.sellerId.id,
+      `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã được chấp thuận.`,
+      { auctionRequestId: auctionRequest },
+      'Yêu cầu đấu giá',
+      AnnouncementType.AUCTION_REQUEST,
+      RecipientType.SELLER,
+    );
+
+    return savedAuction;
+  }
+
   async rejectAuctionRequest(
     id: string,
-    rejectionReason: string,
+    rejectionReasons: string[],
   ): Promise<AuctionRequest> {
     const auctionRequest = await this.auctionRequestRepository.findOne({
       where: { id },
@@ -195,22 +233,31 @@ export class AuctionRequestService {
     if (!auctionRequest) {
       throw new Error('Auction Request not found');
     }
+
+    // Update comic status and type
     auctionRequest.comic.status = ComicsStatusEnum.UNAVAILABLE;
     auctionRequest.comic.type = ComicsTypeEnum.NONE;
     await this.comicRepository.save(auctionRequest.comic);
+
+    // Update auction request status and rejection reasons
     auctionRequest.status = 'REJECTED';
-    auctionRequest.rejectionReason = rejectionReason;
+    auctionRequest.rejectionReason = rejectionReasons;
+
+    const savedAuctionRequest =
+      await this.auctionRequestRepository.save(auctionRequest);
 
     // Optionally, notify the seller about the rejection
     this.eventsGateway.notifyUser(
-      auctionRequest.comic.sellerId.id,
-      `Yêu cầu duyệt đấu giá ${auctionRequest.comic.title} đã bị từ chối. Lý do: ${rejectionReason}`,
-      { auctionRequestId: auctionRequest },
+      savedAuctionRequest.comic.sellerId.id,
+      `Yêu cầu duyệt đấu giá ${savedAuctionRequest.comic.title} đã bị từ chối. Lý do: ${rejectionReasons.join(
+        ' ',
+      )}`,
+      { auctionRequestId: savedAuctionRequest },
       'Yêu cầu đấu giá',
       AnnouncementType.AUCTION_REQUEST_FAIL,
       RecipientType.SELLER,
     );
 
-    return this.auctionRequestRepository.save(auctionRequest);
+    return savedAuctionRequest;
   }
 }

@@ -197,6 +197,7 @@ export class ComicService extends BaseService<Comic> {
         type: In([
           ComicsTypeEnum.SELL,
           ComicsTypeEnum.AUCTION,
+          ComicsTypeEnum.AUCTION_REQUEST,
           ComicsTypeEnum.NONE,
         ]),
       },
