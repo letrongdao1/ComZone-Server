@@ -19,7 +19,11 @@ export class VietNamAddressService {
       .then((res) => {
         const data: any[] = res.data.data;
         data.sort((a, b) => a.ProvinceID - b.ProvinceID);
+
         const filteredData = data.map((p) => {
+          //Test province
+          if (p.ProvinceID === 286) return;
+
           let provinceName = '';
           if (
             p.ProvinceID === 201 ||
@@ -28,9 +32,10 @@ export class VietNamAddressService {
             p.ProvinceID === 220 ||
             p.ProvinceID === 224
           )
-            provinceName = p.NameExtension[4];
-          else if (p.ProvinceID === 223) provinceName = p.NameExtension[2];
-          else provinceName = p.NameExtension[1];
+            provinceName = p.NameExtension[4] || p.ProvinceName;
+          else if (p.ProvinceID === 223)
+            provinceName = p.NameExtension[2] || p.ProvinceName;
+          else provinceName = p.NameExtension[1] || p.ProvinceName;
           return {
             id: p.ProvinceID,
             name: provinceName,
@@ -39,7 +44,7 @@ export class VietNamAddressService {
 
         return filteredData;
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log('Error fetching province: ', err));
   }
 
   async getDistrictsByProvinceCode(province_id: string) {
