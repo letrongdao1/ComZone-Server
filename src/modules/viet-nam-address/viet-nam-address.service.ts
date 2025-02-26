@@ -20,10 +20,12 @@ export class VietNamAddressService {
         const data: any[] = res.data.data;
         data.sort((a, b) => a.ProvinceID - b.ProvinceID);
 
-        const filteredData = data.map((p) => {
-          //Test province
-          if (p.ProvinceID === 286) return;
+        //Exclude test province
+        const testAddressFilteredData = data.filter(
+          (p) => p.ProvinceID !== 286,
+        );
 
+        const filteredData = testAddressFilteredData.map((p) => {
           let provinceName = '';
           if (
             p.ProvinceID === 201 ||
@@ -41,7 +43,6 @@ export class VietNamAddressService {
             name: provinceName,
           };
         });
-
         return filteredData;
       })
       .catch((err) => console.log('Error fetching province: ', err));
